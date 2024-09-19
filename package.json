@@ -1,0 +1,23 @@
+{
+  "name": "tsxlink",
+  "version": "1.0.0",
+  "description": "Links a design model to React components in Typescript",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "bin": {
+    "tsxlink": "dist/index.js"
+  },
+  "scripts": {
+    "make": "tsc",
+    "test": "jest"
+  },
+  "author": "Teemu Lehtinen, Debyte Oy",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "typescript": "^5.6.2"
+  }
+}
