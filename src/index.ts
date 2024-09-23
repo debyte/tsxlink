@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { DESC, HEADER } from "./assets";
+import { USAGE, HEADER } from "./assets";
 
 console.log(HEADER);
-console.log(DESC);
+console.log(USAGE);
