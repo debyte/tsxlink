@@ -7,4 +7,7 @@ export const HEADER = from(
 export const USAGE = from(
   "Link components from HTML design systems to presentation TSX in React.",
   "Read more at https://github.com/debyte/tsxlink",
+  "Usage:",
+  "  Run `tsxlink init` to interactively configure the link.",
+  "  Once configured, run `tsxlink` to synchronize changes.",
 );

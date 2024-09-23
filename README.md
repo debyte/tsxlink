@@ -59,7 +59,7 @@ to the HTML output of the design system.
     example `React.ButtonHTMLAttributes<HTMLButtonElement>`, and it may be
     used to add necessary element attributes that do not exist in the design.
 
-* **`data-tsx-slot="name:type"`**
+* **`data-tsx-slot="name"`**
 
     This element is inside a component and renders content specified as a
     property. The content has a type `React.ReactNode` which accepts string,
