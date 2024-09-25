@@ -56,16 +56,18 @@ export class BaseConvert {
     if (propAttr !== null) {
       element.removeAttribute(PROPERTY_ATTRIBUTE);
       for (const prop of propAttr.split(",")) {
-        const [name, ...tags] = prop.split(":");
+        const [name, ...tags] = prop.split(":").map(t => t.trim());
         const p = new NamedProp(name, element);
         if (tags.length > 0) {
           if (isPropType(tags[0])) {
             p.type.push(tags[0]);
-            if (tags.length > 1 && !isPropType(tags[1])) {
+            if (tags.length > 1 && tags[1] !== "") {
               p.target.push(tags[1]);
             }
           } else {
-            p.target.push(tags[0]);
+            if (tags[0] !== "") {
+              p.target.push(tags[0]);
+            }
             if (tags.length > 1 && isPropType(tags[1])) {
               p.type.push(tags[1]);
             }

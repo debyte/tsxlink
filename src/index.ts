@@ -7,12 +7,14 @@ import { DocPool } from "./DocPool";
 console.log(HEADER);
 console.log(USAGE);
 
-export const parseFiles = async (paths: string[]): Promise<void> => {
+export const parse = async (pool: DocPool): Promise<void> => {
+  // TODO: use source flavor to select converter
   const convert = new BaseConvert();
-  const docs = new DocPool(paths);
-  const components = await convert.parseComponentDesigns(docs);
+  const components = await convert.parseComponentDesigns(pool);
   for (const component of components) {
-    const props = convert.parsePropDesigns(component);
-    console.log(props);
+    for (const prop of convert.parsePropDesigns(component)) {
+      const [type, target] = prop.resolveTypeAndTarget();
+      
+    }
   }
 };
