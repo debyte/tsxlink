@@ -85,7 +85,7 @@ to the HTML output of the design system.
       <img src="placeholder.png" class="flex-none w-20" data-tsx-prop="image:src" />
       <div class="grow">
         <h1 data-tsx-prop="name">Item A</h1>
-        <p data-tsx-prop="text">This is the exhibit A.</p>
+        <p>Item code: <span data-tsx-prop="code">101</span></p>
         <button data-tsx-prop="button:map,action:text">Display</button>
       </div>
     </div>
@@ -93,7 +93,7 @@ to the HTML output of the design system.
       <img src="placeholder.png" class="flex-none w-20" data-tsx-prop="image:src" />
       <div class="grow">
         <h1 data-tsx-prop="name">Item B</h1>
-        <p data-tsx-prop="text">This is the exhibit B.</p>
+        <p>Item code: <span data-tsx-prop="code">110</span></p>
         <button data-tsx-prop="button:map,action:text">Listen</button>
       </div>
     </div>
@@ -109,7 +109,7 @@ export interface SearchProps {
   button?: React.ButtonHTMLAttributes<HTMLButtonElement>,
   loading?: boolean,
   results: React.ReactNode,
-};
+}
 
 export const Search: React.FC<SearchProps> = (
   { query, button, loading, results }
@@ -119,13 +119,13 @@ export const Search: React.FC<SearchProps> = (
       <input type="text" name="query" {...query} />
       <button {...button}>Search</button>
     </div>
-    ${loading && (
+    {loading && (
       <div>
         <span className="loading loading-spinner"></span>
       </div>
     )}
     <div className="flex flex-col gap-4">
-      ${results}
+      {results}
     </div>
   </div>
 );
@@ -139,19 +139,19 @@ import React from "react";
 export interface SearchResultProps {
   image: string,
   name: string,
-  text: string,
+  code: number,
   button?: React.ButtonHTMLAttributes<HTMLButtonElement>,
   action: string,
-};
+}
 
 export const SearchResult: React.FC<SearchResultProps> = (
-  {image, name, text, button, action}
+  {image, name, code, button, action}
 ) => (
   <div className="flex flex-row items-stretch">
       <img src={image} className="flex-none w-20" />
       <div className="grow">
         <h1>{name}</h1>
-        <p>{text}</p>
+        <p>Item code: <span>{code}</span></p>
         <button {...button}>{action}</button>
       </div>
   </div>

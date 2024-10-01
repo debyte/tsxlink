@@ -7,7 +7,7 @@ const COMPONENT_ATTRIBUTE = "data-tsx";
 const PROPERTY_ATTRIBUTE = "data-tsx-prop";
 const SLOT_ATTRIBUTE = "data-tsx-slot";
 
-export class BaseConvert {
+export class BaseParser {
 
   async parseComponentDesigns(docs: DocPool): Promise<NamedComponent[]> {
     const desings = new NamedObjectSet<NamedComponent>();
@@ -28,8 +28,7 @@ export class BaseConvert {
   protected parseComponent(element: Element): NamedComponent[] {
     const name = element.getAttribute(COMPONENT_ATTRIBUTE);
     if (name !== null) {
-      element.removeAttribute(COMPONENT_ATTRIBUTE);
-      return [new NamedComponent(name, element)];
+      return [new NamedComponent(name, element.cloneNode(true) as Element)];
     }
     return [];
   }
@@ -40,7 +39,10 @@ export class BaseConvert {
       for (
         const element of template.querySelectorAll(this.getPropertySelector())
       ) {
-        designs.merge(...this.parseProp(element));
+        const containing = element.closest(this.getComponentSelector());
+        if (containing === template || containing === null) {
+          designs.merge(...this.parseProp(element));
+        }
       }
     }
     return designs.all();
@@ -54,7 +56,6 @@ export class BaseConvert {
     const props: NamedProp[] = [];
     const propAttr = element.getAttribute(PROPERTY_ATTRIBUTE);
     if (propAttr !== null) {
-      element.removeAttribute(PROPERTY_ATTRIBUTE);
       for (const prop of propAttr.split(",")) {
         const [name, ...tags] = prop.split(":").map(t => t.trim());
         const p = new NamedProp(name, element);
@@ -78,9 +79,36 @@ export class BaseConvert {
     }
     const slotAttr = element.getAttribute(SLOT_ATTRIBUTE);
     if (slotAttr !== null) {
-      element.removeAttribute(SLOT_ATTRIBUTE);
       props.push(new NamedProp(slotAttr, element, "slot"));
     }
     return props;
+  }
+
+  exportTemplate(component: NamedComponent, props: NamedProp[]) {
+    const template = component.templates[0];
+    template.removeAttribute(COMPONENT_ATTRIBUTE);
+    for (const p of props) {
+      const { name, target } = p.resolveTypeAndTarget();
+      const el = p.templates[0];
+      el.removeAttribute(PROPERTY_ATTRIBUTE);
+      if (target === "text") {
+        el.textContent = `{${name}}`;
+      } else if (target === "slot") {
+        el.removeAttribute(SLOT_ATTRIBUTE);
+        el.textContent = `{${name}}`;
+      } else if (target === "visibility") {
+        const pre = el.ownerDocument.createElement("div");
+        pre.setAttribute("data-tsx-cond", name);
+        el.before(pre);
+        const post = el.ownerDocument.createElement("div");
+        post.setAttribute("data-tsx-cond", "");
+        el.after(post);
+      } else if (target === "map") {
+        el.setAttribute("data-tsx-map", name);
+      } else {
+        el.setAttribute(target, `{tsx:${name}}`);
+      }
+    }
+    return template.outerHTML;
   }
 }
