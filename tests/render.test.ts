@@ -10,9 +10,22 @@ beforeAll(async () => {
   docs.add({ type: "string", data: await getReadmeHtmlExample() });
 });
 
-test("Should render React.FC from TSX component", async () => {
+test("Should render React.FC from detected components", async () => {
   for (const component of await parse(docs)) {
     const out = renderFC(component);
-    console.log(out);
+    if (component.name === "Search") {
+      expect(out.match(
+        /query\?: React\.InputHTMLAttributes<HTMLInputElement>/
+      )).not.toBeNull();
+      expect(/<input [^>]*{...query}/).not.toBeNull();
+      expect(/{loading && \(.+\)}/s).not.toBeNull();
+      expect(/<div[^>]*>{results}<\/div>/).not.toBeNull();
+    }
+    if (component.name === "SearchResult") {
+      expect(out.match(/image: string/)).not.toBeNull();
+      expect(out.match(/code: number/)).not.toBeNull();
+      expect(out.match(/<img [^>]*src={image}/)).not.toBeNull();
+      expect(out.match(/<span>{code}<\/span>/)).not.toBeNull();
+    }
   }
 });

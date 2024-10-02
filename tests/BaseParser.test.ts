@@ -32,31 +32,27 @@ test("Should detect properties from HTML with TSX attributes", async () => {
 test("Sould detect property targets and types from HTML template", async () => {
   const designs = await parser.parseComponentDesigns(docs);
   for (const component of designs) {
-    const props = parser.parsePropDesigns(component).map(
-      prop => prop.resolveTypeAndTarget()
-    );
-    props.sort((a, b) => a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
-    expect(props).toEqual(expectedProps(component.name));
+    const props = parser.parsePropDesigns(component).map(prop => {
+      const p = prop.resolveTypeAndTarget();
+      return [p.name, p.type, p.target, p.elementClass];
+    });
+    props.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
+    if (component.name === "Search") {
+      expect(props).toEqual([
+        ["button", "fixed", "map", "HTMLButtonElement"],
+        ["loading", "fixed", "visibility", "HTMLDivElement"],
+        ["query", "fixed", "map", "HTMLInputElement"],
+        ["results", "fixed", "slot", "HTMLDivElement"],
+      ]);
+    }
+    if (component.name === "SearchResult") {
+      expect(props).toEqual([
+        ["action", "string", "text", "HTMLButtonElement"],
+        ["button", "fixed", "map", "HTMLButtonElement"],
+        ["code", "number", "text", "HTMLSpanElement"],
+        ["image", "string", "src", "HTMLImageElement"],
+        ["name", "string", "text", "HTMLHeadingElement"],
+      ]);
+    }
   }
 });
-
-const expectedProps = (componentName: string) => {
-  if (componentName === "Search") {
-    return [
-      { name: "button", type: "fixed", target: "map" },
-      { name: "loading", type: "fixed", target: "visibility" },
-      { name: "query", type: "fixed", target: "map" },
-      { name: "results", type: "fixed", target: "slot" },
-    ];
-  }
-  if (componentName === "SearchResult") {
-    return [
-      { name: "action", type: "string", target: "text" },
-      { name: "button", type: "fixed", target: "map" },
-      { name: "code", type: "number", target: "text" },
-      { name: "image", type: "string", target: "src" },
-      { name: "name", type: "string", target: "text" },
-    ];
-  }
-  return [];
-};

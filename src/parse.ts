@@ -14,7 +14,6 @@ export const parse = async (pool: DocPool): Promise<Component[]> => {
     return {
       name: c.name,
       props: props.map(p => p.resolveTypeAndTarget()),
-      elementClass: c.templates[0].constructor.name,
       template: parser.exportTemplate(c, props),
     };
   });

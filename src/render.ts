@@ -1,12 +1,10 @@
 import { Component, Prop } from "./types";
 
-const from = (...rows: string[]) => rows.join("\n");
-
-export const renderFC = (c: Component) => from(
+export const renderFC = (c: Component) => [
   "import React from \"react\";",
   "",
   `export interface ${c.name}Props {`,
-  from(...c.props.map(p => renderPropDefinition(p, c.elementClass))),
+  c.props.map(p => renderPropDefinition(p)).join("\n"),
   "}",
   "",
   `export const ${c.name}: React.FC<${c.name}Props> = (`,
@@ -16,15 +14,15 @@ export const renderFC = (c: Component) => from(
   ");",
   "",
   `export default ${c.name};`,
-);
+].join("\n");
 
-const renderPropDefinition = (p: Prop, cls: string) =>
-  `  ${p.name}${isOptional(p) ? "?" : ""}: ${renderPropType(p, cls)},`;
+const renderPropDefinition = (p: Prop) =>
+  `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)},`;
 
-const isOptional = (p: Prop) =>
+const isOptionalProp = (p: Prop) =>
   ["map", "visibility"].includes(p.target);
 
-const renderPropType = (p: Prop, cls: string) => {
+const renderPropType = (p: Prop) => {
   if (p.type === "fixed") {
     if (p.target === "visibility") {
       return "boolean";
@@ -33,13 +31,14 @@ const renderPropType = (p: Prop, cls: string) => {
       return "React.ReactNode";
     }
     if (p.target === "map") {
-      return `React.${ATTRIBUTE_TYPES.get(cls) || "AllHTMLAttributes"}<${cls}>`;
+      const reactClass = ATTR_TYPES.get(p.elementClass) || "AllHTMLAttributes"
+      return `React.${reactClass}<${p.elementClass}>`;
     }
   }
   return p.type;
 };
 
-const ATTRIBUTE_TYPES = new Map<string, string>([
+const ATTR_TYPES = new Map<string, string>([
   ["HTMLAnchorElement", "AnchorHTMLAttributes"],
   ["HTMLAudioElement", "AudioHTMLAttributes"],
   ["HTMLButtonElement", "ButtonHTMLAttributes"],
