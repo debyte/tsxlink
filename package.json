@@ -11,7 +11,7 @@
     "tsxlink": "dist/index.js"
   },
   "scripts": {
-    "make": "tsc",
+    "make": "rm -rf dist && tsc",
     "lint": "eslint",
     "test": "jest"
   },
