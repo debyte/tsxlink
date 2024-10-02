@@ -1,21 +1,18 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeConfig = exports.writeConfig = exports.readConfig = void 0;
-const promises_1 = __importDefault(require("fs/promises"));
-const path_1 = __importDefault(require("path"));
-const readConfig = (baseName) => returnFirstConfig([
-    () => findFiles(baseName, ["mjs"], async (filePath) => {
+exports.removeConfig = exports.writeConfig = exports.readConfig = exports.CONFIG_NAME = void 0;
+const files_1 = require("./files");
+exports.CONFIG_NAME = "tsxlink.config";
+const readConfig = () => returnFirstConfig([
+    () => tryToLoadConfig(["mjs"], async (filePath) => {
         return eval(`import("${filePath}").then(m => m.default);`);
     }),
-    () => findFiles(baseName, ["cjs", "js"], async (filePath) => {
+    () => tryToLoadConfig(["cjs", "js"], async (filePath) => {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         return require(filePath);
     }),
-    () => findFiles(baseName, ["json"], async (filePath) => {
-        return JSON.parse(await promises_1.default.readFile(filePath, "utf-8"));
+    () => tryToLoadConfig(["json"], async (filePath) => {
+        return JSON.parse(await (0, files_1.readTextFile)(filePath));
     }),
 ]);
 exports.readConfig = readConfig;
@@ -28,44 +25,32 @@ const returnFirstConfig = async (attempts) => {
     }
     return null;
 };
-const findFiles = async (baseName, extensions, loader) => {
+const tryToLoadConfig = async (extensions, loader) => {
     for (const ext of extensions) {
-        const p = absPath(baseName, ext);
-        if (await fileExists(p)) {
-            const config = await loader(p);
+        const filePath = confPath(ext);
+        if (await (0, files_1.fileExists)(filePath)) {
+            const config = await loader(filePath);
             config.configExtension = ext;
             return config;
         }
     }
     return null;
 };
-const fileExists = async (filePath) => {
-    try {
-        await promises_1.default.stat(filePath);
-        return true;
-    }
-    catch {
-        return false;
-    }
-};
-const writeConfig = async (baseName, ext, config) => {
+const writeConfig = async (ext, config) => {
     const json = JSON.stringify(config, null, 2);
     if (ext === "mjs") {
-        await writeFile(baseName, ext, `export default ${json}\n`);
+        await (0, files_1.writeTextFile)(confPath(ext), `export default ${json}\n`);
     }
     else if (ext === "cjs" || ext === "js") {
-        await writeFile(baseName, ext, `module.exports = ${json};\n`);
+        await (0, files_1.writeTextFile)(confPath(ext), `module.exports = ${json};\n`);
     }
     else if (ext === "json") {
-        await writeFile(baseName, ext, `${json}\n`);
+        await (0, files_1.writeTextFile)(confPath(ext), `${json}\n`);
     }
 };
 exports.writeConfig = writeConfig;
-const writeFile = async (baseName, ext, content) => {
-    await promises_1.default.writeFile(absPath(baseName, ext), content, "utf-8");
-};
-const removeConfig = async (baseName, ext) => {
-    await promises_1.default.unlink(absPath(baseName, ext));
+const removeConfig = async (ext) => {
+    await (0, files_1.removeFile)(confPath(ext));
 };
 exports.removeConfig = removeConfig;
-const absPath = (baseName, ext) => path_1.default.resolve(`./${baseName}.${ext}`);
+const confPath = (extension) => (0, files_1.absPath)([".", exports.CONFIG_NAME], extension);

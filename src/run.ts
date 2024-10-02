@@ -2,12 +2,10 @@ import { readConfig, removeConfig, writeConfig } from "./config";
 import { runInteractiveInit } from "./config-init";
 import { Config } from "./types";
 
-const CONFIG_BASE = "tsxlink.config";
-
 export const run = async () => {
   console.log(",=0=0=0=0=(__    T  S  X    L  I  N  K    __)=0=0=0=0='");
   const isInit = process.argv.includes("init");
-  const config = await readConfig(CONFIG_BASE);
+  const config = await readConfig();
 
   // Usage
   if (config === null && !isInit) {
@@ -31,9 +29,9 @@ export const run = async () => {
     const ext = newConfig.configExtension!;
     newConfig.configExtension = undefined;
     if (config && config.configExtension && ext !== config.configExtension) {
-      await removeConfig(CONFIG_BASE, config.configExtension);
+      await removeConfig(config.configExtension);
     }
-    await writeConfig(CONFIG_BASE, ext, newConfig);
+    await writeConfig(ext, newConfig);
     console.log("Configuration succesfully written.");
     process.exit(0);
   }

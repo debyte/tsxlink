@@ -10,7 +10,7 @@ const SLOT_ATTRIBUTE = "data-tsx-slot";
 class BaseParser {
     async parseComponentDesigns(docs) {
         const desings = new NamedObject_1.NamedObjectSet();
-        for await (const elements of docs.selectElements(this.getComponentSelector())) {
+        for await (const elements of await docs.selectElements(this.getComponentSelector())) {
             for (const element of elements) {
                 desings.merge(...this.parseComponent(element));
             }

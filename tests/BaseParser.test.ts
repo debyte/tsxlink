@@ -7,7 +7,7 @@ const docs = new DocPool();
 const parser = new BaseParser();
 
 beforeAll(async () => {
-  docs.add({ type: "string", data: await getReadmeHtmlExample() });
+  docs.source = { type: "string", data: await getReadmeHtmlExample() };
 });
 
 test("Should detect components from HTML with TSX attributes", async () => {

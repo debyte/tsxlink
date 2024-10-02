@@ -3,11 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.run = void 0;
 const config_1 = require("./config");
 const config_init_1 = require("./config-init");
-const CONFIG_BASE = "tsxlink.config";
 const run = async () => {
     console.log(",=0=0=0=0=(__    T  S  X    L  I  N  K    __)=0=0=0=0='");
     const isInit = process.argv.includes("init");
-    const config = await (0, config_1.readConfig)(CONFIG_BASE);
+    const config = await (0, config_1.readConfig)();
     // Usage
     if (config === null && !isInit) {
         console.log([
@@ -29,9 +28,9 @@ const run = async () => {
         const ext = newConfig.configExtension;
         newConfig.configExtension = undefined;
         if (config && config.configExtension && ext !== config.configExtension) {
-            await (0, config_1.removeConfig)(CONFIG_BASE, config.configExtension);
+            await (0, config_1.removeConfig)(config.configExtension);
         }
-        await (0, config_1.writeConfig)(CONFIG_BASE, ext, newConfig);
+        await (0, config_1.writeConfig)(ext, newConfig);
         console.log("Configuration succesfully written.");
         process.exit(0);
     }

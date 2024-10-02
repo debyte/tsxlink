@@ -20,8 +20,23 @@ const INIT_CHOICES = [
     },
     {
         key: "targetDir",
-        prompt: "A target directory for writing TSX presentation components",
-        default: "./src/components/presentation",
+        prompt: "A target directory for TSX presentation components",
+        default: "./src/components/tsxlink",
+    },
+    {
+        key: "targetPublicDir",
+        prompt: "A target directory for public CSS/JS files",
+        default: "./public/tsxlink",
+    },
+    {
+        key: "copyCSS",
+        prompt: "Copy any CSS files to public directory",
+        default: "no",
+    },
+    {
+        key: "copyJS",
+        prompt: "Copy any JS files to public directory",
+        default: "no",
     },
     {
         key: "configExtension",
@@ -32,7 +47,7 @@ const INIT_CHOICES = [
             ["js", "CommonJS module (using .js file extension)"],
             ["json", "JSON file"],
         ],
-    }
+    },
 ];
 const runInteractiveInit = async (current) => {
     const rl = promises_1.default.createInterface({
@@ -75,6 +90,9 @@ const runInteractiveInit = async (current) => {
         sourceType: map.get("sourceType"),
         source: map.get("source"),
         targetDir: map.get("targetDir"),
+        targetPublicDir: map.get("targetPublicDir"),
+        copyCSS: isTrue(map.get("copyCSS")),
+        copyJS: isTrue(map.get("copyJS")),
         configExtension: map.get("configExtension"),
     };
 };
@@ -94,6 +112,9 @@ const getChoiceDefault = (current, choice) => {
         return choice.default || null;
     }
     if (current !== undefined) {
+        if (typeof current === "boolean") {
+            return current ? "yes" : "no";
+        }
         return String(current);
     }
     return choice.default || null;
@@ -109,3 +130,5 @@ const getPrompt = (prompt, def, options) => {
     lines.push(`  (${def}) `);
     return lines.join("\n");
 };
+const isTrue = (val) => (val !== undefined
+    && ["yes", "y", "true", "t", "1"].includes(val.toLowerCase()));

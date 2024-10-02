@@ -3,6 +3,9 @@ export type Config = {
   sourceType?: SourceType;
   source?: string;
   targetDir?: string;
+  targetPublicDir?: string;
+  copyCSS?: boolean;
+  copyJS?: boolean;
   configExtension?: ConfigExtension;
 };
 

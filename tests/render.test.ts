@@ -7,7 +7,7 @@ import { getReadmeHtmlExample } from "./helpers";
 const docs = new DocPool();
 
 beforeAll(async () => {
-  docs.add({ type: "string", data: await getReadmeHtmlExample() });
+  docs.source = { type: "string", data: await getReadmeHtmlExample() };
 });
 
 test("Should render React.FC from detected components", async () => {

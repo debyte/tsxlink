@@ -12,7 +12,7 @@ export class BaseParser {
   async parseComponentDesigns(docs: DocPool): Promise<NamedComponent[]> {
     const desings = new NamedObjectSet<NamedComponent>();
     for await (
-      const elements of docs.selectElements(this.getComponentSelector())
+      const elements of await docs.selectElements(this.getComponentSelector())
     ) {
       for (const element of elements) {
         desings.merge(...this.parseComponent(element));

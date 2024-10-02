@@ -1,29 +1,33 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocPool = void 0;
-const promises_1 = __importDefault(require("fs/promises"));
 const jsdom_1 = require("jsdom");
+const files_1 = require("./files");
 class DocPool {
-    constructor(sources) {
-        this.sources = sources || [];
+    constructor(source) {
+        this.source = source;
     }
-    add(source) {
-        this.sources.push(source);
+    async parseDocs() {
+        if (this.source === undefined) {
+            return [];
+        }
+        if (this.source.type === "zip") {
+            return this.parseDoms(await (0, files_1.zipFiles)(this.source.data, "html"));
+        }
+        if (this.source.type === "dir") {
+            return this.parseDoms(await (0, files_1.dirFiles)(this.source.data, "html"));
+        }
+        if (this.source.type === "file") {
+            return this.parseDoms([(0, files_1.readFile)(this.source.data)]);
+        }
+        return [Promise.resolve(new jsdom_1.JSDOM(this.source.data))];
     }
-    parseDocs() {
-        return this.sources.map(async (definition) => {
-            let src = definition.data;
-            if (definition.type === "file") {
-                src = await promises_1.default.readFile(definition.data, "utf-8");
-            }
-            return new jsdom_1.JSDOM(src);
-        });
+    parseDoms(buffers) {
+        return buffers.map(async (buf) => new jsdom_1.JSDOM(await buf));
     }
-    selectElements(selectors) {
-        return this.parseDocs().map(async (dom) => {
+    async selectElements(selectors) {
+        const docs = await this.parseDocs();
+        return docs.map(async (dom) => {
             return (await dom).window.document.querySelectorAll(selectors);
         });
     }
