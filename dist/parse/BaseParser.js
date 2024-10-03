@@ -1,31 +1,47 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseParser = void 0;
-const NamedObject_1 = require("./NamedObject");
 const NamedComponent_1 = require("./NamedComponent");
+const NamedObject_1 = require("./NamedObject");
 const NamedProp_1 = require("./NamedProp");
 const COMPONENT_ATTRIBUTE = "data-tsx";
 const PROPERTY_ATTRIBUTE = "data-tsx-prop";
 const SLOT_ATTRIBUTE = "data-tsx-slot";
 class BaseParser {
-    async parseComponentDesigns(docs) {
+    constructor(docs) {
+        this.docs = docs;
+    }
+    async getComponents() {
+        return (await this.parseComponentDesigns()).map(c => {
+            const props = this.parsePropDesigns(c);
+            return {
+                name: c.name,
+                props: props.map(p => p.resolveTypeAndTarget()),
+                template: this.exportTemplate(c, props),
+            };
+        });
+    }
+    ;
+    getPublicCSSFiles() {
+        return this.docs.filesByExtension("css");
+    }
+    getPublicJSFiles() {
+        return this.docs.filesByExtension("js");
+    }
+    async parseComponentDesigns() {
         const desings = new NamedObject_1.NamedObjectSet();
-        for await (const elements of await docs.selectElements(this.getComponentSelector())) {
+        for await (const elements of await this.docs.selectElements(this.getComponentSelector())) {
             for (const element of elements) {
-                desings.merge(...this.parseComponent(element));
+                const name = element.getAttribute(COMPONENT_ATTRIBUTE);
+                if (name !== null) {
+                    desings.merge(new NamedComponent_1.NamedComponent(name, element.cloneNode(true)));
+                }
             }
         }
         return desings.all();
     }
     getComponentSelector() {
         return `[${COMPONENT_ATTRIBUTE}]`;
-    }
-    parseComponent(element) {
-        const name = element.getAttribute(COMPONENT_ATTRIBUTE);
-        if (name !== null) {
-            return [new NamedComponent_1.NamedComponent(name, element.cloneNode(true))];
-        }
-        return [];
     }
     parsePropDesigns(design) {
         const designs = new NamedObject_1.NamedObjectSet();

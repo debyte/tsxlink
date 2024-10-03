@@ -3,8 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runInteractiveInit = void 0;
+exports.runInteractiveInit = exports.applyDefaults = exports.DEFAULT_TARGET_PUBLIC_DIR = exports.DEFAULT_TARGET_DIR = void 0;
 const promises_1 = __importDefault(require("readline/promises"));
+exports.DEFAULT_TARGET_DIR = "./src/components/tsxlink";
+exports.DEFAULT_TARGET_PUBLIC_DIR = "./public/tsxlink";
 const INIT_CHOICES = [
     {
         key: "sourceType",
@@ -21,21 +23,21 @@ const INIT_CHOICES = [
     {
         key: "targetDir",
         prompt: "A target directory for TSX presentation components",
-        default: "./src/components/tsxlink",
+        default: exports.DEFAULT_TARGET_DIR,
     },
     {
         key: "targetPublicDir",
         prompt: "A target directory for public CSS/JS files",
-        default: "./public/tsxlink",
+        default: exports.DEFAULT_TARGET_PUBLIC_DIR,
     },
     {
-        key: "copyCSS",
-        prompt: "Copy any CSS files to public directory",
+        key: "writeCssFiles",
+        prompt: "Write separate CSS files to public directory",
         default: "no",
     },
     {
-        key: "copyJS",
-        prompt: "Copy any JS files to public directory",
+        key: "writeJsFiles",
+        prompt: "Write separate JS files to public directory",
         default: "no",
     },
     {
@@ -49,6 +51,15 @@ const INIT_CHOICES = [
         ],
     },
 ];
+const applyDefaults = (config) => ({
+    version: config.version || 1,
+    sourceType: config.sourceType || "custom",
+    targetDir: config.targetDir || exports.DEFAULT_TARGET_DIR,
+    targetPublicDir: config.targetPublicDir || exports.DEFAULT_TARGET_PUBLIC_DIR,
+    writeCssFiles: config.writeCssFiles || false,
+    writeJsFiles: config.writeJsFiles || false,
+});
+exports.applyDefaults = applyDefaults;
 const runInteractiveInit = async (current) => {
     const rl = promises_1.default.createInterface({
         input: process.stdin,
@@ -91,8 +102,8 @@ const runInteractiveInit = async (current) => {
         source: map.get("source"),
         targetDir: map.get("targetDir"),
         targetPublicDir: map.get("targetPublicDir"),
-        copyCSS: isTrue(map.get("copyCSS")),
-        copyJS: isTrue(map.get("copyJS")),
+        writeCssFiles: isTrue(map.get("writeCssFiles")),
+        writeJsFiles: isTrue(map.get("writeJsFiles")),
         configExtension: map.get("configExtension"),
     };
 };

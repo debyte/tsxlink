@@ -1,10 +1,15 @@
-import { DocPool } from "./DocPool";
+import { DocPool } from "../data/DocPool";
+import { Component, FileData } from "../types";
 import { NamedComponent } from "./NamedComponent";
 import { NamedProp } from "./NamedProp";
 export declare class BaseParser {
-    parseComponentDesigns(docs: DocPool): Promise<NamedComponent[]>;
+    docs: DocPool;
+    constructor(docs: DocPool);
+    getComponents(): Promise<Component[]>;
+    getPublicCSSFiles(): Promise<FileData[]>;
+    getPublicJSFiles(): Promise<FileData[]>;
+    parseComponentDesigns(): Promise<NamedComponent[]>;
     protected getComponentSelector(): string;
-    protected parseComponent(element: Element): NamedComponent[];
     parsePropDesigns(design: NamedComponent): NamedProp[];
     protected getPropertySelector(): string;
     protected parseProp(element: Element): NamedProp[];

@@ -1,5 +1,5 @@
+import { Prop, PropType } from "../types";
 import { NamedObject } from "./NamedObject";
-import { Prop, PropType } from "./types";
 export declare class NamedProp extends NamedObject {
     type: PropType[];
     target: string[];

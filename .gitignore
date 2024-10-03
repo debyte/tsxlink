@@ -1,3 +1,4 @@
 node_modules/
-tsxlink.config.*
-/src/components/presentation
+/tsxlink.config.*
+/src/components/tsxlink
+/public/tsxlink

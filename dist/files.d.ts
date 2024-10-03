@@ -1,9 +1,0 @@
-export declare const fileExists: (filePath: string) => Promise<boolean>;
-export declare const readFile: (filePath: string) => Promise<Buffer>;
-export declare const readTextFile: (filePath: string) => Promise<string>;
-export declare const writeTextFile: (filePath: string, content: string) => Promise<void>;
-export declare const removeFile: (filePath: string) => Promise<void>;
-export declare const dirFiles: (dirPath: string, onlyExtension?: string) => Promise<Promise<Buffer>[]>;
-export declare const zipFiles: (filePath: string, onlyExtension?: string) => Promise<Promise<Buffer>[]>;
-export declare const findFirstFile: (filePaths: string[]) => Promise<string | null>;
-export declare const absPath: (parts: string[], extension?: string) => string;
