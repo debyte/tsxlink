@@ -49,7 +49,7 @@ exports.hasExtension = hasExtension;
 const absPath = (pathName, baseName, extension) => path_1.default.resolve(path_1.default.join(pathName || ".", extension ? `${baseName}.${extension.toLowerCase()}` : baseName));
 exports.absPath = absPath;
 const writeFiles = async (dirPath, files) => {
-    await promises_1.default.mkdir(dirPath);
+    await promises_1.default.mkdir(dirPath, { recursive: true });
     return files.map(async (file) => {
         const path = (0, exports.absPath)(dirPath, file.baseName);
         if (file.buffer !== undefined) {

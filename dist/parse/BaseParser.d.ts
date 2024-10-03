@@ -6,8 +6,8 @@ export declare class BaseParser {
     docs: DocPool;
     constructor(docs: DocPool);
     getComponents(): Promise<Component[]>;
-    getPublicCSSFiles(): Promise<FileData[]>;
-    getPublicJSFiles(): Promise<FileData[]>;
+    getPublicCssFiles(): Promise<FileData[]>;
+    getPublicJsFiles(): Promise<FileData[]>;
     parseComponentDesigns(): Promise<NamedComponent[]>;
     protected getComponentSelector(): string;
     parsePropDesigns(design: NamedComponent): NamedProp[];

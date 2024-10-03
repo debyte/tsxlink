@@ -8,19 +8,25 @@ import { Config, FileData } from "./types";
 
 export const run = async () => {
   pr(",=0=0=0=0=(__    T  S  X    L  I  N  K    __)=0=0=0=0='");
+  const isUsage = ["help", "--help", "-h"].some(
+    arg => process.argv.includes(arg)
+  );
   const isInit = process.argv.includes("init");
-  const storedConfig = await readConfig();
+  const storedConfig = isUsage ? null : await readConfig();
 
   // Usage
-  if (storedConfig === null && !isInit) {
+  if (isUsage || (storedConfig === null && !isInit)) {
     pr(
       "Link components from HTML design systems to presentation TSX in React.",
       "Read more at https://github.com/debyte/tsxlink",
       "Usage:",
+      "  Run `tsxlink help` to show this usage.",
       "  Run `tsxlink init` to interactively configure the link.",
       "  Once configured, run `tsxlink [source]` to synchronize changes.",
-      "(No configuration in project root: `tsxlink.config.(mjs|cjs|js|json)`)",
     );
+    if (!isUsage && storedConfig === null) {
+      pr("No configuration found at `tsxlink.config.(mjs|cjs|js|json)`.");
+    }
     process.exit(0);
   }
 
@@ -74,12 +80,12 @@ export const run = async () => {
     ...await writeAndLogFiles(
       config.writeCssFiles,
       config.targetPublicDir,
-      await parser.getPublicCSSFiles(),
+      await parser.getPublicCssFiles(),
     ),
     ...await writeAndLogFiles(
       config.writeJsFiles,
       config.targetPublicDir,
-      await parser.getPublicJSFiles(),
+      await parser.getPublicJsFiles(),
     ),
   ]);
   await Promise.all(

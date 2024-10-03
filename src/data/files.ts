@@ -83,7 +83,7 @@ export const writeFiles = async (
   dirPath: string,
   files: FileData[],
 ): Promise<Promise<string>[]> => {
-  await fs.mkdir(dirPath);
+  await fs.mkdir(dirPath, { recursive: true });
   return files.map(async file => {
     const path = absPath(dirPath, file.baseName);
     if (file.buffer !== undefined) {

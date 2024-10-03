@@ -26,11 +26,11 @@ export class BaseParser {
     });
   };
 
-  getPublicCSSFiles(): Promise<FileData[]> {
+  getPublicCssFiles(): Promise<FileData[]> {
     return this.docs.filesByExtension("css");
   }
 
-  getPublicJSFiles(): Promise<FileData[]> {
+  getPublicJsFiles(): Promise<FileData[]> {
     return this.docs.filesByExtension("js");
   }
 

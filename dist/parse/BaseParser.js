@@ -22,10 +22,10 @@ class BaseParser {
         });
     }
     ;
-    getPublicCSSFiles() {
+    getPublicCssFiles() {
         return this.docs.filesByExtension("css");
     }
-    getPublicJSFiles() {
+    getPublicJsFiles() {
         return this.docs.filesByExtension("js");
     }
     async parseComponentDesigns() {
