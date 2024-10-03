@@ -1,6 +1,6 @@
 import { beforeAll, expect, test } from "@jest/globals";
-import { DocPool } from "../src/DocPool";
-import { parse } from "../src/parse";
+import { DocPool } from "../src/data/DocPool";
+import { selectParser } from "../src/parse";
 import { renderFC } from "../src/render";
 import { getReadmeHtmlExample } from "./helpers";
 
@@ -11,7 +11,8 @@ beforeAll(async () => {
 });
 
 test("Should render React.FC from detected components", async () => {
-  for (const component of await parse(docs)) {
+  const parser = selectParser(docs, "custom");
+  for (const component of await parser.getComponents()) {
     const out = renderFC(component);
     if (component.name === "Search") {
       expect(out.match(

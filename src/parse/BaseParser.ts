@@ -1,6 +1,7 @@
-import { DocPool } from "./DocPool";
-import { NamedObjectSet } from "./NamedObject";
+import { DocPool } from "../data/DocPool";
+import { Component, FileData } from "../types";
 import { NamedComponent } from "./NamedComponent";
+import { NamedObjectSet } from "./NamedObject";
 import { isPropType, NamedProp } from "./NamedProp";
 
 const COMPONENT_ATTRIBUTE = "data-tsx";
@@ -8,14 +9,44 @@ const PROPERTY_ATTRIBUTE = "data-tsx-prop";
 const SLOT_ATTRIBUTE = "data-tsx-slot";
 
 export class BaseParser {
+  docs: DocPool;
 
-  async parseComponentDesigns(docs: DocPool): Promise<NamedComponent[]> {
+  constructor(docs: DocPool) {
+    this.docs = docs;
+  }
+
+  async getComponents(): Promise<Component[]> {
+    return (await this.parseComponentDesigns()).map(c => {
+      const props = this.parsePropDesigns(c);
+      return {
+        name: c.name,
+        props: props.map(p => p.resolveTypeAndTarget()),
+        template: this.exportTemplate(c, props),
+      };
+    });
+  };
+
+  getPublicCSSFiles(): Promise<FileData[]> {
+    return this.docs.filesByExtension("css");
+  }
+
+  getPublicJSFiles(): Promise<FileData[]> {
+    return this.docs.filesByExtension("js");
+  }
+
+  async parseComponentDesigns(): Promise<NamedComponent[]> {
     const desings = new NamedObjectSet<NamedComponent>();
     for await (
-      const elements of await docs.selectElements(this.getComponentSelector())
+      const elements of
+      await this.docs.selectElements(this.getComponentSelector())
     ) {
       for (const element of elements) {
-        desings.merge(...this.parseComponent(element));
+        const name = element.getAttribute(COMPONENT_ATTRIBUTE);
+        if (name !== null) {
+          desings.merge(
+            new NamedComponent(name, element.cloneNode(true) as Element)
+          );
+        }
       }
     }
     return desings.all();
@@ -23,14 +54,6 @@ export class BaseParser {
 
   protected getComponentSelector() {
     return `[${COMPONENT_ATTRIBUTE}]`;
-  }
-
-  protected parseComponent(element: Element): NamedComponent[] {
-    const name = element.getAttribute(COMPONENT_ATTRIBUTE);
-    if (name !== null) {
-      return [new NamedComponent(name, element.cloneNode(true) as Element)];
-    }
-    return [];
   }
 
   parsePropDesigns(design: NamedComponent): NamedProp[] {

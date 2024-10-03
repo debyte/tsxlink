@@ -4,9 +4,19 @@ export type Config = {
   source?: string;
   targetDir?: string;
   targetPublicDir?: string;
-  copyCSS?: boolean;
-  copyJS?: boolean;
+  writeCssFiles?: boolean;
+  writeJsFiles?: boolean;
   configExtension?: ConfigExtension;
+};
+
+export type RuntimeConfig = {
+  version: number;
+  sourceType: SourceType;
+  source?: string;
+  targetDir: string;
+  targetPublicDir: string;
+  writeCssFiles: boolean;
+  writeJsFiles: boolean;
 };
 
 export type SourceType = "custom" | "webflow/export";
@@ -26,3 +36,29 @@ export type Prop = {
 };
 
 export type PropType = "string" | "number" | "boolean" | "fixed";
+
+export type DocSource = {
+  type: "string" | "file" | "zip" | "dir" | "url";
+  data: string;
+};
+
+export type FileExistsResult = { isDirectory: boolean } | null;
+
+export type FileData = {
+  baseName: string;
+  buffer?: Promise<Buffer>;
+  content?: string;
+};
+
+export type InitChoice = {
+  key: keyof Config;
+  prompt: string;
+  options?: InitChoiceOption[];
+  default?: string;
+}
+
+export type InitChoiceOption = [
+  key: string,
+  description: string,
+  isDefault?: boolean,
+];

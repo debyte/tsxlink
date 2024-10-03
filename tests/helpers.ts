@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { readTextFile } from "../src/files";
+import { readTextFile } from "../src/data/files";
 
 export const getReadmeHtmlExample = async () => {
   const text = await readTextFile("README.md");

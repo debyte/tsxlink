@@ -1,5 +1,15 @@
 import readline from "readline/promises";
-import { Config, ConfigExtension, SourceType } from "./types";
+import {
+  Config,
+  ConfigExtension,
+  InitChoice,
+  InitChoiceOption,
+  RuntimeConfig,
+  SourceType,
+} from "./types";
+
+export const DEFAULT_TARGET_DIR = "./src/components/tsxlink";
+export const DEFAULT_TARGET_PUBLIC_DIR = "./public/tsxlink";
 
 const INIT_CHOICES: InitChoice[] = [
   {
@@ -17,21 +27,21 @@ const INIT_CHOICES: InitChoice[] = [
   {
     key: "targetDir",
     prompt: "A target directory for TSX presentation components",
-    default: "./src/components/tsxlink",
+    default: DEFAULT_TARGET_DIR,
   },
   {
     key: "targetPublicDir",
     prompt: "A target directory for public CSS/JS files",
-    default: "./public/tsxlink",
+    default: DEFAULT_TARGET_PUBLIC_DIR,
   },
   {
-    key: "copyCSS",
-    prompt: "Copy any CSS files to public directory",
+    key: "writeCssFiles",
+    prompt: "Write separate CSS files to public directory",
     default: "no",
   },
   {
-    key: "copyJS",
-    prompt: "Copy any JS files to public directory",
+    key: "writeJsFiles",
+    prompt: "Write separate JS files to public directory",
     default: "no",
   },
   {
@@ -46,18 +56,14 @@ const INIT_CHOICES: InitChoice[] = [
   },
 ];
 
-export type InitChoice = {
-  key: keyof Config;
-  prompt: string;
-  options?: InitChoiceOption[];
-  default?: string;
-}
-
-export type InitChoiceOption = [
-  key: string,
-  description: string,
-  isDefault?: boolean,
-];
+export const applyDefaults = (config: Config): RuntimeConfig => ({
+  version: config.version || 1,
+  sourceType: config.sourceType || "custom",
+  targetDir: config.targetDir || DEFAULT_TARGET_DIR,
+  targetPublicDir: config.targetPublicDir || DEFAULT_TARGET_PUBLIC_DIR,
+  writeCssFiles: config.writeCssFiles || false,
+  writeJsFiles: config.writeJsFiles || false,
+});
 
 export const runInteractiveInit = async (
   current?: Config
@@ -106,8 +112,8 @@ export const runInteractiveInit = async (
     source: map.get("source"),
     targetDir: map.get("targetDir"),
     targetPublicDir: map.get("targetPublicDir"),
-    copyCSS: isTrue(map.get("copyCSS")),
-    copyJS: isTrue(map.get("copyJS")),
+    writeCssFiles: isTrue(map.get("writeCssFiles")),
+    writeJsFiles: isTrue(map.get("writeJsFiles")),
     configExtension: map.get("configExtension") as ConfigExtension,
   };
 };

@@ -1,24 +1,24 @@
 import { beforeAll, expect, test } from "@jest/globals";
-import { BaseParser } from "../src/BaseParser";
-import { DocPool } from "../src/DocPool";
+import { DocPool } from "../src/data/DocPool";
+import { BaseParser } from "../src/parse/BaseParser";
 import { getReadmeHtmlExample } from "./helpers";
 
 const docs = new DocPool();
-const parser = new BaseParser();
+const parser = new BaseParser(docs);
 
 beforeAll(async () => {
   docs.source = { type: "string", data: await getReadmeHtmlExample() };
 });
 
 test("Should detect components from HTML with TSX attributes", async () => {
-  const designs = await parser.parseComponentDesigns(docs);
+  const designs = await parser.parseComponentDesigns();
   const component = designs.find(({ name }) => name === "SearchResult");
   expect(component).toBeDefined();
   expect(component!.templates).toHaveLength(2);
 });
 
 test("Should detect properties from HTML with TSX attributes", async () => {
-  const designs = await parser.parseComponentDesigns(docs);
+  const designs = await parser.parseComponentDesigns();
   const component = designs.find(({ name }) => name === "SearchResult");
   expect(component).toBeDefined();
   const props = parser.parsePropDesigns(component!);
@@ -30,7 +30,7 @@ test("Should detect properties from HTML with TSX attributes", async () => {
 });
 
 test("Sould detect property targets and types from HTML template", async () => {
-  const designs = await parser.parseComponentDesigns(docs);
+  const designs = await parser.parseComponentDesigns();
   for (const component of designs) {
     const props = parser.parsePropDesigns(component).map(prop => {
       const p = prop.resolveTypeAndTarget();

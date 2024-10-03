@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { DocPool } from "../src/DocPool";
+import { DocPool } from "../src/data/DocPool";
 
 const pool = new DocPool({ type: "file", data: "tests/webflowish.html" });
 

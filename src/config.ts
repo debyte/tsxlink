@@ -4,64 +4,61 @@ import {
   readTextFile,
   removeFile,
   writeTextFile,
-} from "./files";
+} from "./data/files";
 import { Config, ConfigExtension } from "./types";
 
 export const CONFIG_NAME = "tsxlink.config";
 
 export const readConfig = () => returnFirstConfig([
-  () => tryToLoadConfig(["mjs"], async (filePath: string) => {
+  [["mjs"], async (filePath: string) => {
     return eval(`import("${filePath}").then(m => m.default);`) as Config;
-  }),
-  () => tryToLoadConfig(["cjs", "js"], async (filePath: string) => {
+  }],
+  [["cjs", "js"], async (filePath: string) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(filePath) as Config;
-  }),
-  () => tryToLoadConfig(["json"], async (filePath: string) => {
+  }],
+  [["json"], async (filePath: string) => {
     return JSON.parse(await readTextFile(filePath)) as Config;
-  }),
+  }],
 ]);
 
 const returnFirstConfig = async (
-  attempts: Array<() => Promise<Config | null>>
-) => {
-  for (const attempt of attempts) {
-    const config = await attempt();
-    if (config !== null) {
-      return config;
-    }
-  }
-  return null;
-};
-
-const tryToLoadConfig = async (
-  extensions: ConfigExtension[],
-  loader: (filePath: string) => Promise<Config>,
+  attempts: Array<[
+    extensions: ConfigExtension[],
+    loader: (filePath: string) => Promise<Config>,
+  ]>
 ): Promise<Config | null> => {
-  for (const ext of extensions) {
-    const filePath = confPath(ext);
-    if (await fileExists(filePath)) {
-      const config = await loader(filePath);
-      config.configExtension = ext;
-      return config;
+  for (const [extensions, loader] of attempts) {
+    for (const ext of extensions) {
+      const filePath = confPath(ext);
+      if (await fileExists(filePath)) {
+        const config = await loader(filePath);
+        config.configExtension = ext;
+        return config;
+      }
     }
   }
   return null;
 };
 
-export const writeConfig = async (ext: ConfigExtension, config: Config) => {
+export const writeConfig = async (
+  extension: ConfigExtension,
+  config: Config,
+): Promise<string> => {
+  const filePath = confPath(extension);
   const json = JSON.stringify(config, null, 2);
-  if (ext === "mjs") {
-    await writeTextFile(confPath(ext), `export default ${json}\n`);
-  } else if (ext === "cjs" || ext === "js") {
-    await writeTextFile(confPath(ext), `module.exports = ${json};\n`);
-  } else if (ext === "json") {
-    await writeTextFile(confPath(ext), `${json}\n`);
+  if (extension === "mjs") {
+    await writeTextFile(filePath, `export default ${json}\n`);
+  } else if (extension === "cjs" || extension === "js") {
+    await writeTextFile(filePath, `module.exports = ${json};\n`);
+  } else if (extension === "json") {
+    await writeTextFile(filePath, `${json}\n`);
   }
+  return filePath;
 };
 
-export const removeConfig = async (ext: ConfigExtension) => {
-  await removeFile(confPath(ext));
+export const removeConfig = async (extension: ConfigExtension) => {
+  await removeFile(confPath(extension));
 };
 
-const confPath = (extension: string) => absPath([".", CONFIG_NAME], extension);
+const confPath = (extension: string) => absPath(".", CONFIG_NAME, extension);
