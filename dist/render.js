@@ -56,11 +56,18 @@ const ATTR_TYPES = new Map([
 ]);
 const renderDOM = (template) => {
     return template
-        .replace(/"{tsx:(\w+)}"/g, "{$1}")
-        .replace(/data-tsx-map="(\w+)"/g, "{...$1}")
-        .replace(/<div data-tsx-cond="(\w+)"><\/div>/g, "{$1 && (")
-        .replace(/<div data-tsx-cond=""><\/div>/g, ")}");
+        .replace(/"{tsx:(\w+)}"/gi, "{$1}")
+        .replace(/data-tsx-map="(\w+)"/gi, "{...$1}")
+        .replace(/<div data-tsx-cond="(\w+)"><\/div>/gi, "{$1 && (")
+        .replace(/<div data-tsx-cond=""><\/div>/gi, ")}")
+        .replace(/ class="([^"]*)"/gi, " className=\"$1\"")
+        .replace(closeTagsRegexp, "<$1$2/>");
 };
+const singletonTags = [
+    "area", "base", "br", "col", "command", "embed", "hr", "img", "input",
+    "keygen", "link", "meta", "param", "source", "track", "wbr",
+];
+const closeTagsRegexp = new RegExp(`<(${singletonTags.join("|")})( ([^>]*[^/])?)?>`, "gi");
 const indentRows = (src) => {
     const rows = src.replace("\t", "  ").split("\n");
     if (rows.length > 0) {
