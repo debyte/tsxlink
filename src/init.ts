@@ -59,6 +59,7 @@ const INIT_CHOICES: InitChoice[] = [
 export const applyDefaults = (config: Config): RuntimeConfig => ({
   version: config.version || 1,
   sourceType: config.sourceType || "custom",
+  source: config.source,
   targetDir: config.targetDir || DEFAULT_TARGET_DIR,
   targetPublicDir: config.targetPublicDir || DEFAULT_TARGET_PUBLIC_DIR,
   writeCssFiles: config.writeCssFiles || false,

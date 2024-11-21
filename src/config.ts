@@ -48,7 +48,10 @@ export const writeConfig = async (
   const filePath = confPath(extension);
   const json = JSON.stringify(config, null, 2);
   if (extension === "mjs") {
-    await writeTextFile(filePath, `export default ${json}\n`);
+    await writeTextFile(
+      filePath,
+      `const tsxlinkConfig = ${json};\n\nexport default tsxlinkConfig;\n`
+    );
   } else if (extension === "cjs" || extension === "js") {
     await writeTextFile(filePath, `module.exports = ${json};\n`);
   } else if (extension === "json") {
