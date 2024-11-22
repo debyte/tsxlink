@@ -42,7 +42,7 @@ const run = async () => {
         pr("Provide data source as a command line argument (or in configuration).");
         process.exit(0);
     }
-    const docs = await (0, data_1.createDocPool)(source);
+    const docs = await (0, data_1.createDocPool)(source, config.ignoreFiles);
     if (docs === null) {
         pr("The provided source is not an existing path or a valid HTTP URL.");
         process.exit(0);
@@ -51,17 +51,21 @@ const run = async () => {
     pr("Parsing and synchronizing.");
     const parser = (0, parse_1.selectParser)(docs, config.sourceType);
     const components = await parser.getComponents();
-    const tsxFileNames = await Promise.all(await writeAndLogFiles(true, config.targetDir, components.map(component => ({
+    const tsxFileNames = await Promise.all(await writeAndLogFiles(true, config.componentDir, components.map(component => ({
         baseName: `${component.name}.tsx`,
         content: (0, render_1.renderFC)(component),
     }))));
-    await Promise.all(await removeAndLogFiles(config.targetDir, tsxFileNames));
-    const publicFileNames = await Promise.all([
-        ...await writeAndLogFiles(config.writeCssFiles, config.targetPublicDir, await parser.getPublicCssFiles()),
-        ...await writeAndLogFiles(config.writeJsFiles, config.targetPublicDir, await parser.getPublicJsFiles()),
+    await Promise.all(await removeAndLogFiles(config.componentDir, tsxFileNames));
+    const assetsFileNames = await Promise.all([
+        ...await writeAndLogFiles(config.exportStyleElements, config.assetsDir, [{
+                baseName: config.styleFile,
+                content: (await parser.getStyleElements()).join("\n\n"),
+            }]),
+        ...await writeAndLogFiles(config.copyCssFiles, config.assetsDir, await parser.getSeparateCssFiles()),
+        ...await writeAndLogFiles(config.copyJsFiles, config.assetsDir, await parser.getSeparateJsFiles()),
     ]);
-    await Promise.all(await removeAndLogFiles(config.targetPublicDir, publicFileNames));
-    const n = tsxFileNames.length + publicFileNames.length;
+    await Promise.all(await removeAndLogFiles(config.assetsDir, assetsFileNames));
+    const n = tsxFileNames.length + assetsFileNames.length;
     pr(`Synchronized ${n} linked files.`);
 };
 exports.run = run;

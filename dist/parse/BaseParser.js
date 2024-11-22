@@ -24,10 +24,21 @@ class BaseParser {
         });
     }
     ;
-    getPublicCssFiles() {
+    async getStyleElements() {
+        const styles = [];
+        for await (const elements of await this.docs.selectElements("style")) {
+            for (const element of elements) {
+                if (element.textContent !== null) {
+                    styles.push(element.textContent);
+                }
+            }
+        }
+        return styles;
+    }
+    getSeparateCssFiles() {
         return this.docs.filesByExtension("css");
     }
-    getPublicJsFiles() {
+    getSeparateJsFiles() {
         return this.docs.filesByExtension("js");
     }
     async parseComponentDesigns() {

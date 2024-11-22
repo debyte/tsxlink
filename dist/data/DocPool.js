@@ -4,8 +4,11 @@ exports.DocPool = void 0;
 const jsdom_1 = require("jsdom");
 const files_1 = require("./files");
 class DocPool {
-    constructor(source) {
+    constructor(source, ignore) {
         this.source = source;
+        this.ignore = ignore !== undefined
+            ? ignore.map(i => (0, files_1.wildcardRegexp)(i))
+            : [];
     }
     async parseDocs() {
         if (this.source === undefined) {
@@ -36,10 +39,10 @@ class DocPool {
                 throw new Error("TODO implement url docs");
             }
             if (this.source.type === "zip") {
-                return await (0, files_1.zipFiles)(this.source.data, extension);
+                return await (0, files_1.zipFiles)(this.source.data, this.ignore, extension);
             }
             if (this.source.type === "dir") {
-                return await (0, files_1.dirFiles)(this.source.data, extension);
+                return await (0, files_1.dirFiles)(this.source.data, this.ignore, extension);
             }
         }
         return [];

@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runInteractiveInit = exports.applyDefaults = exports.DEFAULT_TARGET_PUBLIC_DIR = exports.DEFAULT_TARGET_DIR = void 0;
+exports.runInteractiveInit = exports.applyDefaults = exports.DEFAULT_IMAGE_DIR = exports.DEFAULT_STYLE_FILE = exports.DEFAULT_ASSETS_DIR = exports.DEFAULT_COMPONENT_DIR = void 0;
 const promises_1 = __importDefault(require("readline/promises"));
-exports.DEFAULT_TARGET_DIR = "./src/components/tsxlink";
-exports.DEFAULT_TARGET_PUBLIC_DIR = "./public/tsxlink";
+exports.DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
+exports.DEFAULT_ASSETS_DIR = "./src/app/tsxlink";
+exports.DEFAULT_STYLE_FILE = "export.css";
+exports.DEFAULT_IMAGE_DIR = "images";
 const INIT_CHOICES = [
     {
         key: "sourceType",
@@ -21,24 +23,29 @@ const INIT_CHOICES = [
         prompt: "Source file, directory, or URL, unless provided on command line",
     },
     {
-        key: "targetDir",
-        prompt: "A target directory for TSX presentation components",
-        default: exports.DEFAULT_TARGET_DIR,
+        key: "exportStyleElements",
+        prompt: "Export CSS from possible style elements to assets",
+        default: "yes",
     },
     {
-        key: "targetPublicDir",
-        prompt: "A target directory for public CSS/JS files",
-        default: exports.DEFAULT_TARGET_PUBLIC_DIR,
+        key: "copyCssFiles",
+        prompt: "Copy separate CSS files to assets",
+        default: "yes",
     },
     {
-        key: "writeCssFiles",
-        prompt: "Write separate CSS files to public directory",
+        key: "copyJsFiles",
+        prompt: "Copy separate JS files to assets",
         default: "no",
     },
     {
-        key: "writeJsFiles",
-        prompt: "Write separate JS files to public directory",
-        default: "no",
+        key: "componentDir",
+        prompt: "A directory to write TSX presentation components",
+        default: exports.DEFAULT_COMPONENT_DIR,
+    },
+    {
+        key: "assetsDir",
+        prompt: "A directory to write and copy CSS & JS",
+        default: exports.DEFAULT_ASSETS_DIR,
     },
     {
         key: "configExtension",
@@ -55,10 +62,15 @@ const applyDefaults = (config) => ({
     version: config.version || 1,
     sourceType: config.sourceType || "custom",
     source: config.source,
-    targetDir: config.targetDir || exports.DEFAULT_TARGET_DIR,
-    targetPublicDir: config.targetPublicDir || exports.DEFAULT_TARGET_PUBLIC_DIR,
-    writeCssFiles: config.writeCssFiles || false,
-    writeJsFiles: config.writeJsFiles || false,
+    exportStyleElements: config.exportStyleElements || true,
+    copyCssFiles: config.copyCssFiles || true,
+    copyJsFiles: config.copyJsFiles || false,
+    componentDir: config.componentDir || exports.DEFAULT_COMPONENT_DIR,
+    assetsDir: config.assetsDir || exports.DEFAULT_ASSETS_DIR,
+    styleFile: config.styleFile || exports.DEFAULT_STYLE_FILE,
+    imageDir: config.imageDir || exports.DEFAULT_IMAGE_DIR,
+    ignoreFiles: config.ignoreFiles || [],
+    ignoreStyleClasses: config.ignoreStyleClasses || [],
 });
 exports.applyDefaults = applyDefaults;
 const runInteractiveInit = async (current) => {
@@ -101,10 +113,11 @@ const runInteractiveInit = async (current) => {
     return {
         sourceType: map.get("sourceType"),
         source: map.get("source"),
-        targetDir: map.get("targetDir"),
-        targetPublicDir: map.get("targetPublicDir"),
-        writeCssFiles: isTrue(map.get("writeCssFiles")),
-        writeJsFiles: isTrue(map.get("writeJsFiles")),
+        exportStyleElements: isTrue(map.get("exportStyleElements")),
+        copyCssFiles: isTrue(map.get("copyCssFiles")),
+        copyJsFiles: isTrue(map.get("copyJsFiles")),
+        componentDir: map.get("componentDir"),
+        assetsDir: map.get("assetsDir"),
         configExtension: map.get("configExtension"),
     };
 };
