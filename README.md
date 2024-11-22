@@ -53,11 +53,15 @@ to the HTML output of the design system.
     * `value`, `src`, and *other attribute names* target the value of the named
     attribute.
     * `visibility` controls whether the element appears in the DOM or not. The
-    type is always boolean.
+    type is always boolean. As a property name it targets visibility rather
+    than text on default, i.e., `visibility` has the effect of
+    `visibility:visibility`.
     * `map` is typically used to attach *event listeners*, such as `onClick`
     and `onSubmit`. The type is an attribute map for the target element, for
     example `React.ButtonHTMLAttributes<HTMLButtonElement>`, and it may be
     used to add necessary element attributes that do not exist in the design.
+    Property name `map` targets map on default, i.e., `map` has the effect of
+    `map:map`.
 
 * **`data-tsx-slot="name"`**
 
@@ -86,7 +90,7 @@ to the HTML output of the design system.
       <div class="grow">
         <h1 data-tsx-prop="name">Item A</h1>
         <p>Item code: <span data-tsx-prop="code">101</span></p>
-        <button data-tsx-prop="button:map,action:text">Display</button>
+        <button data-tsx-prop="action,map">Display</button>
       </div>
     </div>
     <div class="flex flex-row items-stretch" data-tsx="SearchResult">
@@ -94,7 +98,7 @@ to the HTML output of the design system.
       <div class="grow">
         <h1 data-tsx-prop="name">Item B</h1>
         <p>Item code: <span data-tsx-prop="code">110</span></p>
-        <button data-tsx-prop="button:map,action:text">Listen</button>
+        <button data-tsx-prop="action,map">Listen</button>
       </div>
     </div>
   </div>

@@ -48,9 +48,9 @@ test("Sould detect property targets and types from HTML template", async () => {
     if (component.name === "SearchResult") {
       expect(props).toEqual([
         ["action", "string", "text", "HTMLButtonElement"],
-        ["button", "fixed", "map", "HTMLButtonElement"],
         ["code", "number", "text", "HTMLSpanElement"],
         ["image", "string", "src", "HTMLImageElement"],
+        ["map", "fixed", "map", "HTMLButtonElement"],
         ["name", "string", "text", "HTMLHeadingElement"],
       ]);
     }
