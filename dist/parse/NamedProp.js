@@ -23,14 +23,24 @@ class NamedProp extends NamedObject_1.NamedObject {
         if (target === null || type === null) {
             const templateTargets = this.templateTargets();
             if (target === null) {
-                target = "text";
-                const changed = templateTargets.filter(t => t.content.some(s => s !== t.content[0]));
-                if (changed.length > 0) {
-                    let idx = 0;
-                    if (changed[0].name.toLowerCase() === "id" && changed.length > 1) {
-                        idx = 1;
+                if (type === null && this.name === "visibility") {
+                    target = "visibility";
+                    type = "fixed";
+                }
+                else if (type === null && this.name === "map") {
+                    target = "map";
+                    type = "fixed";
+                }
+                else {
+                    target = "text";
+                    const changed = templateTargets.filter(t => t.content.some(s => s !== t.content[0]));
+                    if (changed.length > 0) {
+                        let idx = 0;
+                        if (changed[0].name.toLowerCase() === "id" && changed.length > 1) {
+                            idx = 1;
+                        }
+                        target = changed[idx].name;
                     }
-                    target = changed[idx].name;
                 }
             }
             if (type === null) {

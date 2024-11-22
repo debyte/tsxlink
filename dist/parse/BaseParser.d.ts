@@ -13,5 +13,5 @@ export declare class BaseParser {
     parsePropDesigns(design: NamedComponent): NamedProp[];
     protected getPropertySelector(): string;
     protected parseProp(element: Element): NamedProp[];
-    exportTemplate(component: NamedComponent, props: NamedProp[]): string;
+    exportTemplate(component: NamedComponent, props: NamedProp[]): [template: string, rootVisibility: string | undefined];
 }

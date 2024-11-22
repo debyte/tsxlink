@@ -1,23 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renderFC = void 0;
-const renderFC = (c) => [
-    "import React from \"react\";",
-    "",
-    `export interface ${c.name}Props {`,
-    c.props.map(p => renderPropDefinition(p)).join("\n"),
-    "}",
-    "",
-    `export const ${c.name}: React.FC<${c.name}Props> = (`,
-    `  { ${c.props.map(p => p.name).join(", ")} }`,
-    ") => (",
-    indentRows(renderDOM(c.template)),
-    ");",
-    "",
-    `export default ${c.name};`,
-].join("\n");
+const renderFC = (c) => r("import React from \"react\";", renderProps(c), `export const ${c.name}: ${renderFCType(c)} = (`, `  { ${c.props.map(p => p.name).join(", ")} }`, `) => ${renderVisibility(c.rootVisibility)}(`, indentRows(renderDOM(c.template)), ");", "", `export default ${c.name};`);
 exports.renderFC = renderFC;
-const renderPropDefinition = (p) => `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)},`;
+const renderProps = (c) => c.props.length > 0
+    ? r("", `export interface ${c.name}Props {`, r(c.props.map(p => `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)},`)), "}", "") : "";
 const isOptionalProp = (p) => ["map", "visibility"].includes(p.target);
 const renderPropType = (p) => {
     if (p.type === "fixed") {
@@ -54,6 +41,8 @@ const ATTR_TYPES = new Map([
     ["HTMLTextAreaElement", "TextareaHTMLAttributes"],
     ["HTMLVideoElement", "VideoHTMLAttributes"],
 ]);
+const renderFCType = (c) => `React.FC${c.props.length > 0 ? `<${c.name}Props>` : ""}`;
+const renderVisibility = (name) => name !== undefined ? `${name} && ` : "";
 const renderDOM = (template) => {
     return template
         .replace(/"{tsx:(\w+)}"/gi, "{$1}")
@@ -92,7 +81,7 @@ const indentRows = (src) => {
             }
         }
     }
-    return rows.join("\n");
+    return r(rows);
 };
 const getIndent = (row) => {
     for (let i = 0; i < row.length; i++) {
@@ -106,3 +95,4 @@ const addIndent = (row, num) => {
     const spaces = new Array(num).fill(" ").join("");
     return `${spaces}${row}`;
 };
+const r = (...rows) => rows.flatMap(r => r).join("\n");

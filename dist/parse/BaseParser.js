@@ -14,10 +14,12 @@ class BaseParser {
     async getComponents() {
         return (await this.parseComponentDesigns()).map(c => {
             const props = this.parsePropDesigns(c);
+            const [template, rootVisibility] = this.exportTemplate(c, props);
             return {
                 name: c.name,
                 props: props.map(p => p.resolveTypeAndTarget()),
-                template: this.exportTemplate(c, props),
+                template,
+                rootVisibility,
             };
         });
     }
@@ -46,6 +48,7 @@ class BaseParser {
     parsePropDesigns(design) {
         const designs = new NamedObject_1.NamedObjectSet();
         for (const template of design.templates) {
+            designs.merge(...this.parseProp(template));
             for (const element of template.querySelectorAll(this.getPropertySelector())) {
                 const containing = element.closest(this.getComponentSelector());
                 if (containing === template || containing === null) {
@@ -92,6 +95,7 @@ class BaseParser {
     }
     exportTemplate(component, props) {
         const template = component.templates[0];
+        let rootVisibility;
         template.removeAttribute(COMPONENT_ATTRIBUTE);
         for (const p of props) {
             const { name, target } = p.resolveTypeAndTarget();
@@ -105,12 +109,17 @@ class BaseParser {
                 el.textContent = `{${name}}`;
             }
             else if (target === "visibility") {
-                const pre = el.ownerDocument.createElement("div");
-                pre.setAttribute("data-tsx-cond", name);
-                el.before(pre);
-                const post = el.ownerDocument.createElement("div");
-                post.setAttribute("data-tsx-cond", "");
-                el.after(post);
+                if (el === template) {
+                    rootVisibility = name;
+                }
+                else {
+                    const pre = el.ownerDocument.createElement("div");
+                    pre.setAttribute("data-tsx-cond", name);
+                    el.before(pre);
+                    const post = el.ownerDocument.createElement("div");
+                    post.setAttribute("data-tsx-cond", "");
+                    el.after(post);
+                }
             }
             else if (target === "map") {
                 el.setAttribute("data-tsx-map", name);
@@ -119,7 +128,7 @@ class BaseParser {
                 el.setAttribute(target, `{tsx:${name}}`);
             }
         }
-        return template.outerHTML;
+        return [template.outerHTML, rootVisibility];
     }
 }
 exports.BaseParser = BaseParser;

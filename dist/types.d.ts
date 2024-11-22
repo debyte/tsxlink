@@ -23,6 +23,7 @@ export type Component = {
     name: string;
     props: Prop[];
     template: string;
+    rootVisibility?: string;
 };
 export type Prop = {
     name: string;
