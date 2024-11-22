@@ -5,7 +5,7 @@ export const renderFC = (c: Component) => r(
   renderProps(c),
   `export const ${c.name}: ${renderFCType(c)} = (`,
   `  { ${c.props.map(p => p.name).join(", ")} }`,
-  ") => (",
+  `) => ${renderVisibility(c.rootVisibility)}(`,
   indentRows(renderDOM(c.template)),
   ");",
   "",
@@ -65,6 +65,9 @@ const ATTR_TYPES = new Map<string, string>([
 
 const renderFCType = (c: Component) =>
   `React.FC${c.props.length > 0 ? `<${c.name}Props>` : ""}`;
+
+const renderVisibility = (name?: string) =>
+  name !== undefined ? `${name} && ` : "";
 
 const renderDOM = (template: string) => {
   return template

@@ -2,12 +2,14 @@ import { expect, test } from "@jest/globals";
 import { DocPool } from "../src/data/DocPool";
 import { selectParser } from "../src/parse";
 import { renderFC } from "../src/render";
-import { getReadmeHtmlExample } from "./helpers";
+import {
+  getReadmeHtmlExample,
+  ONE_ELEMENT_COMPONENT,
+  WEBFLOWISH_CODE_FILE,
+} from "./helpers";
 
 test("Should render React.FC from detected components", async () => {
-  const docs = new DocPool(
-    { type: "string", data: await getReadmeHtmlExample() }
-  );
+  const docs = new DocPool(await getReadmeHtmlExample());
   const parser = selectParser(docs, "custom");
   for (const component of await parser.getComponents()) {
     const out = renderFC(component);
@@ -29,7 +31,7 @@ test("Should render React.FC from detected components", async () => {
 });
 
 test("Should format class names and singleton tags for tsx", async () => {
-  const docs = new DocPool({ type: "file", data: "tests/webflowish.html" });
+  const docs = new DocPool(WEBFLOWISH_CODE_FILE);
   const parser = selectParser(docs, "webflow/export");
   for (const component of await parser.getComponents()) {
     const out = renderFC(component);
@@ -40,4 +42,14 @@ test("Should format class names and singleton tags for tsx", async () => {
       expect(out.match(/<img [^>]+\/>/)).not.toBeNull();
     }
   }
+});
+
+test("Should render one element component correctly", async () => {
+  const docs = new DocPool(ONE_ELEMENT_COMPONENT);
+  const parser = selectParser(docs, "custom");
+  const components = await parser.getComponents();
+  expect(components).toHaveLength(1);
+  const out = renderFC(components[0]);
+  expect(out.match(/=> visibility && \(/)).not.toBeNull();
+  expect(out.match(/<div [^>]+>{children}<\/div>/)).not.toBeNull();
 });

@@ -1,13 +1,14 @@
 import { beforeAll, expect, test } from "@jest/globals";
 import { DocPool } from "../src/data/DocPool";
 import { BaseParser } from "../src/parse/BaseParser";
-import { getReadmeHtmlExample } from "./helpers";
+import { NamedProp } from "../src/parse/NamedProp";
+import { getReadmeHtmlExample, ONE_ELEMENT_COMPONENT } from "./helpers";
 
 const docs = new DocPool();
 const parser = new BaseParser(docs);
 
 beforeAll(async () => {
-  docs.source = { type: "string", data: await getReadmeHtmlExample() };
+  docs.source = await getReadmeHtmlExample();
 });
 
 test("Should detect components from HTML with TSX attributes", async () => {
@@ -32,11 +33,7 @@ test("Should detect properties from HTML with TSX attributes", async () => {
 test("Sould detect property targets and types from HTML template", async () => {
   const designs = await parser.parseComponentDesigns();
   for (const component of designs) {
-    const props = parser.parsePropDesigns(component).map(prop => {
-      const p = prop.resolveTypeAndTarget();
-      return [p.name, p.type, p.target, p.elementClass];
-    });
-    props.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
+    const props = sortedPropsValues(parser.parsePropDesigns(component));
     if (component.name === "Search") {
       expect(props).toEqual([
         ["button", "fixed", "map", "HTMLButtonElement"],
@@ -56,3 +53,23 @@ test("Sould detect property targets and types from HTML template", async () => {
     }
   }
 });
+
+test("Should parse properties and slots from component element", async () => {
+  const parser = new BaseParser(new DocPool(ONE_ELEMENT_COMPONENT));
+  const designs = await parser.parseComponentDesigns();
+  expect(designs).toHaveLength(1);
+  expect(designs[0].name).toEqual("StrangerThings");
+  const props = sortedPropsValues(parser.parsePropDesigns(designs[0]));
+  props.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
+  expect(props).toEqual([
+    ["children", "fixed", "slot", "HTMLDivElement"],
+    ["visibility", "fixed", "visibility", "HTMLDivElement"],
+  ]);
+});
+
+function sortedPropsValues(props: NamedProp[]): string[][] {
+  return props.map(prop => {
+    const p = prop.resolveTypeAndTarget();
+    return [p.name, p.type, p.target, p.elementClass];
+  }).sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
+}
