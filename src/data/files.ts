@@ -30,13 +30,15 @@ export const removeFile = (filePath: string) => fs.unlink(filePath);
 
 export const dirFiles = async (
   dirPath: string,
+  ignore: RegExp[],
   onlyExtension?: string,
 ): Promise<FileData[]> => {
   const end = extensionEnding(onlyExtension);
   return (
     await fs.readdir(dirPath)
   ).filter(
-    name => !end || name.toLowerCase().endsWith(end)
+    name => (!end || name.toLowerCase().endsWith(end))
+      && ignore.every(r => !r.test(name))
   ).map(
     name => ({
       baseName: name,
@@ -47,13 +49,15 @@ export const dirFiles = async (
 
 export const zipFiles = async (
   filePath: string,
+  ignore: RegExp[],
   onlyExtension?: string,
 ): Promise<FileData[]> => {
   const end = extensionEnding(onlyExtension);
   return (
     await unzipper.Open.file(filePath)
   ).files.filter(
-    file => !end || file.path.toLowerCase().endsWith(end)
+    file => (!end || file.path.toLowerCase().endsWith(end))
+      && ignore.every(r => !r.test(file.path))
   ).map(
     file => ({
       baseName: path.basename(file.path),
@@ -67,6 +71,17 @@ const extensionEnding = (extension?: string) =>
 
 export const hasExtension = (filePath: string, extension: string): boolean =>
   path.extname(filePath).toLowerCase() === `.${extension.toLowerCase()}`;
+
+export const wildcardRegexp = (ignore: string) => new RegExp(
+  ignore.includes("/")
+    ? `^${starsAndQuestionMarks(ignore)}(.*)?$`
+    : `^(.*/)?${starsAndQuestionMarks(ignore)}$`
+);
+
+const starsAndQuestionMarks = (src: string) => src
+  .replace("?", "[^/]?")
+  .replace(/(?<!\*)\*(?!\*)/g, "[^/]*")
+  .replace("**/", ".*");
 
 export const absPath = (
   pathName: string | undefined,
@@ -99,7 +114,7 @@ export const removeMissingFiles = async (
   dirPath: string,
   keepFileNames: string[],
 ): Promise<Promise<string>[]> =>
-  (await dirFiles(dirPath)).filter(
+  (await dirFiles(dirPath, [])).filter(
     file => !keepFileNames.includes(file.baseName)
   ).map(
     async file => {

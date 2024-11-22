@@ -8,8 +8,10 @@ import {
   SourceType,
 } from "./types";
 
-export const DEFAULT_TARGET_DIR = "./src/components/tsxlink";
-export const DEFAULT_TARGET_PUBLIC_DIR = "./public/tsxlink";
+export const DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
+export const DEFAULT_ASSETS_DIR = "./src/app/tsxlink";
+export const DEFAULT_STYLE_FILE = "export.css";
+export const DEFAULT_IMAGE_DIR = "images";
 
 const INIT_CHOICES: InitChoice[] = [
   {
@@ -25,24 +27,29 @@ const INIT_CHOICES: InitChoice[] = [
     prompt: "Source file, directory, or URL, unless provided on command line",
   },
   {
-    key: "targetDir",
-    prompt: "A target directory for TSX presentation components",
-    default: DEFAULT_TARGET_DIR,
+    key: "exportStyleElements",
+    prompt: "Export CSS from possible style elements to assets",
+    default: "yes",
   },
   {
-    key: "targetPublicDir",
-    prompt: "A target directory for public CSS/JS files",
-    default: DEFAULT_TARGET_PUBLIC_DIR,
+    key: "copyCssFiles",
+    prompt: "Copy separate CSS files to assets",
+    default: "yes",
   },
   {
-    key: "writeCssFiles",
-    prompt: "Write separate CSS files to public directory",
+    key: "copyJsFiles",
+    prompt: "Copy separate JS files to assets",
     default: "no",
   },
   {
-    key: "writeJsFiles",
-    prompt: "Write separate JS files to public directory",
-    default: "no",
+    key: "componentDir",
+    prompt: "A directory to write TSX presentation components",
+    default: DEFAULT_COMPONENT_DIR,
+  },
+  {
+    key: "assetsDir",
+    prompt: "A directory to write and copy CSS & JS",
+    default: DEFAULT_ASSETS_DIR,
   },
   {
     key: "configExtension",
@@ -60,10 +67,15 @@ export const applyDefaults = (config: Config): RuntimeConfig => ({
   version: config.version || 1,
   sourceType: config.sourceType || "custom",
   source: config.source,
-  targetDir: config.targetDir || DEFAULT_TARGET_DIR,
-  targetPublicDir: config.targetPublicDir || DEFAULT_TARGET_PUBLIC_DIR,
-  writeCssFiles: config.writeCssFiles || false,
-  writeJsFiles: config.writeJsFiles || false,
+  exportStyleElements: config.exportStyleElements || true,
+  copyCssFiles: config.copyCssFiles || true,
+  copyJsFiles: config.copyJsFiles || false,
+  componentDir: config.componentDir || DEFAULT_COMPONENT_DIR,
+  assetsDir: config.assetsDir || DEFAULT_ASSETS_DIR,
+  styleFile: config.styleFile || DEFAULT_STYLE_FILE,
+  imageDir: config.imageDir || DEFAULT_IMAGE_DIR,
+  ignoreFiles: config.ignoreFiles || [],
+  ignoreStyleClasses: config.ignoreStyleClasses || [],
 });
 
 export const runInteractiveInit = async (
@@ -111,16 +123,17 @@ export const runInteractiveInit = async (
   return {
     sourceType: map.get("sourceType") as SourceType,
     source: map.get("source"),
-    targetDir: map.get("targetDir"),
-    targetPublicDir: map.get("targetPublicDir"),
-    writeCssFiles: isTrue(map.get("writeCssFiles")),
-    writeJsFiles: isTrue(map.get("writeJsFiles")),
+    exportStyleElements: isTrue(map.get("exportStyleElements")),
+    copyCssFiles: isTrue(map.get("copyCssFiles")),
+    copyJsFiles: isTrue(map.get("copyJsFiles")),
+    componentDir: map.get("componentDir"),
+    assetsDir: map.get("assetsDir"),
     configExtension: map.get("configExtension") as ConfigExtension,
   };
 };
 
 const getChoiceDefault = (
-  current: string | number | boolean | undefined,
+  current: string | number | boolean | string[] | undefined,
   choice: InitChoice,
 ) => {
   if (choice.options) {

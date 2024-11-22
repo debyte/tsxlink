@@ -53,7 +53,7 @@ export const run = async () => {
     pr("Provide data source as a command line argument (or in configuration).");
     process.exit(0);
   }
-  const docs = await createDocPool(source);
+  const docs = await createDocPool(source, config.ignoreFiles);
   if (docs === null) {
     pr("The provided source is not an existing path or a valid HTTP URL.");
     process.exit(0);
@@ -66,7 +66,7 @@ export const run = async () => {
   const tsxFileNames = await Promise.all(
     await writeAndLogFiles(
       true,
-      config.targetDir,
+      config.componentDir,
       components.map(component => ({
         baseName: `${component.name}.tsx`,
         content: renderFC(component),
@@ -74,24 +74,32 @@ export const run = async () => {
     )
   );
   await Promise.all(
-    await removeAndLogFiles(config.targetDir, tsxFileNames)
+    await removeAndLogFiles(config.componentDir, tsxFileNames)
   );
-  const publicFileNames = await Promise.all([
+  const assetsFileNames = await Promise.all([
     ...await writeAndLogFiles(
-      config.writeCssFiles,
-      config.targetPublicDir,
-      await parser.getPublicCssFiles(),
+      config.exportStyleElements,
+      config.assetsDir,
+      [{
+        baseName: config.styleFile,
+        content: (await parser.getStyleElements()).join("\n\n"),
+      }],
     ),
     ...await writeAndLogFiles(
-      config.writeJsFiles,
-      config.targetPublicDir,
-      await parser.getPublicJsFiles(),
+      config.copyCssFiles,
+      config.assetsDir,
+      await parser.getSeparateCssFiles(),
+    ),
+    ...await writeAndLogFiles(
+      config.copyJsFiles,
+      config.assetsDir,
+      await parser.getSeparateJsFiles(),
     ),
   ]);
   await Promise.all(
-    await removeAndLogFiles(config.targetPublicDir, publicFileNames)
+    await removeAndLogFiles(config.assetsDir, assetsFileNames)
   );
-  const n = tsxFileNames.length + publicFileNames.length;
+  const n = tsxFileNames.length + assetsFileNames.length;
   pr(`Synchronized ${n} linked files.`);
 };
 

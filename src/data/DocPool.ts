@@ -1,12 +1,16 @@
 import { JSDOM } from "jsdom";
 import { DocSource, FileData } from "../types";
-import { dirFiles, readFile, zipFiles } from "./files";
+import { dirFiles, readFile, wildcardRegexp, zipFiles } from "./files";
 
 export class DocPool {
   source?: DocSource;
+  ignore: RegExp[];
 
-  constructor(source?: DocSource) {
+  constructor(source?: DocSource, ignore?: string[]) {
     this.source = source;
+    this.ignore = ignore !== undefined
+      ? ignore.map(i => wildcardRegexp(i))
+      : [];
   }
 
   async parseDocs() {
@@ -41,10 +45,10 @@ export class DocPool {
         throw new Error("TODO implement url docs");
       }
       if (this.source.type === "zip") {
-        return await zipFiles(this.source.data, extension);
+        return await zipFiles(this.source.data, this.ignore, extension);
       }
       if (this.source.type === "dir") {
-        return await dirFiles(this.source.data, extension);
+        return await dirFiles(this.source.data, this.ignore, extension);
       }
     }
     return [];

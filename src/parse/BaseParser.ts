@@ -28,11 +28,23 @@ export class BaseParser {
     });
   };
 
-  getPublicCssFiles(): Promise<FileData[]> {
+  async getStyleElements(): Promise<string[]> {
+    const styles: string[] = [];
+    for await (const elements of await this.docs.selectElements("style")) {
+      for (const element of elements) {
+        if (element.textContent !== null) {
+          styles.push(element.textContent);
+        }
+      }
+    }
+    return styles;
+  }
+
+  getSeparateCssFiles(): Promise<FileData[]> {
     return this.docs.filesByExtension("css");
   }
 
-  getPublicJsFiles(): Promise<FileData[]> {
+  getSeparateJsFiles(): Promise<FileData[]> {
     return this.docs.filesByExtension("js");
   }
 
