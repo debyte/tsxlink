@@ -1,23 +1,27 @@
 import { Component, Prop } from "./types";
 
-export const renderFC = (c: Component) => [
+export const renderFC = (c: Component) => r(
   "import React from \"react\";",
-  "",
-  `export interface ${c.name}Props {`,
-  c.props.map(p => renderPropDefinition(p)).join("\n"),
-  "}",
-  "",
-  `export const ${c.name}: React.FC<${c.name}Props> = (`,
+  renderProps(c),
+  `export const ${c.name}: ${renderFCType(c)} = (`,
   `  { ${c.props.map(p => p.name).join(", ")} }`,
   ") => (",
   indentRows(renderDOM(c.template)),
   ");",
   "",
   `export default ${c.name};`,
-].join("\n");
+);
 
-const renderPropDefinition = (p: Prop) =>
-  `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)},`;
+const renderProps = (c: Component) => c.props.length > 0
+  ? r(
+    "",
+    `export interface ${c.name}Props {`,
+    r(c.props.map(p =>
+      `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)},`
+    )),
+    "}",
+    "",
+  ) : "";
 
 const isOptionalProp = (p: Prop) =>
   ["map", "visibility"].includes(p.target);
@@ -58,6 +62,9 @@ const ATTR_TYPES = new Map<string, string>([
   ["HTMLTextAreaElement", "TextareaHTMLAttributes"],
   ["HTMLVideoElement", "VideoHTMLAttributes"],
 ]);
+
+const renderFCType = (c: Component) =>
+  `React.FC${c.props.length > 0 ? `<${c.name}Props>` : ""}`;
 
 const renderDOM = (template: string) => {
   return template
@@ -100,7 +107,7 @@ const indentRows = (src: string) => {
       }
     }
   }
-  return rows.join("\n");
+  return r(rows);
 };
 
 const getIndent = (row: string) => {
@@ -116,3 +123,5 @@ const addIndent = (row: string, num: number) => {
   const spaces = new Array(num).fill(" ").join("");
   return `${spaces}${row}`;
 };
+
+const r = (...rows: string[] | string[][]) => rows.flatMap(r => r).join("\n");
