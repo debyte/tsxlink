@@ -75,12 +75,12 @@ export const applyDefaults = (config: Config): RuntimeConfig => ({
   styleFile: config.styleFile || DEFAULT_STYLE_FILE,
   imageDir: config.imageDir || DEFAULT_IMAGE_DIR,
   ignoreFiles: config.ignoreFiles || [],
-  ignoreStyleClasses: config.ignoreStyleClasses || [],
+  ignoreStyles: config.ignoreStyles || [],
 });
 
-export const runInteractiveInit = async (
+export async function runInteractiveInit(
   current?: Config
-): Promise<Config> => {
+): Promise<Config> {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -128,14 +128,18 @@ export const runInteractiveInit = async (
     copyJsFiles: isTrue(map.get("copyJsFiles")),
     componentDir: map.get("componentDir"),
     assetsDir: map.get("assetsDir"),
+    styleFile: current?.styleFile || DEFAULT_STYLE_FILE,
+    imageDir: current?.imageDir || DEFAULT_IMAGE_DIR,
+    ignoreFiles: current?.ignoreFiles || [],
+    ignoreStyles: current?.ignoreStyles || [],
     configExtension: map.get("configExtension") as ConfigExtension,
   };
-};
+}
 
-const getChoiceDefault = (
+function getChoiceDefault(
   current: string | number | boolean | string[] | undefined,
   choice: InitChoice,
-) => {
+) {
   if (choice.options) {
     let opt = current
       ? choice.options.find(opt => opt[0] === current)
@@ -156,13 +160,13 @@ const getChoiceDefault = (
     return String(current);
   }
   return choice.default || null;
-};
+}
 
-const getPrompt = (
+function getPrompt(
   prompt: string,
   def: string,
   options?: InitChoiceOption[],
-) => {
+) {
   const lines: string[] = [`${prompt}:`];
   if (options) {
     const padLength = Math.max(...options.map(opt => opt[0].length));
@@ -172,7 +176,7 @@ const getPrompt = (
   }
   lines.push(`  (${def}) `);
   return lines.join("\n");
-};
+}
 
 const isTrue = (val: string | undefined) => (
   val !== undefined

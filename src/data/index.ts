@@ -1,10 +1,10 @@
 import { DocPool } from "./DocPool";
 import { fileExists, hasExtension } from "./files";
 
-export const createDocPool = async (
+export async function createDocPool(
   source: string,
   ignore: string[],
-): Promise<DocPool | null> => {
+): Promise<DocPool | null> {
   if (source.match(/^https?:\/\/\w+/)) {
     return new DocPool({ type: "url", data: source }, ignore);
   }

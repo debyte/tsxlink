@@ -1,3 +1,7 @@
+import {
+  INTERNAL_COND_ATTRIBUTE,
+  INTERNAL_MAP_ATTRIBUTE,
+} from "./parse/attributes";
 import { Component, Prop } from "./types";
 
 export const renderFC = (c: Component) => r(
@@ -26,7 +30,7 @@ const renderProps = (c: Component) => c.props.length > 0
 const isOptionalProp = (p: Prop) =>
   ["map", "visibility"].includes(p.target);
 
-const renderPropType = (p: Prop) => {
+function renderPropType(p: Prop) {
   if (p.type === "fixed") {
     if (p.target === "visibility") {
       return "boolean";
@@ -40,7 +44,7 @@ const renderPropType = (p: Prop) => {
     }
   }
   return p.type;
-};
+}
 
 const ATTR_TYPES = new Map<string, string>([
   ["HTMLAnchorElement", "AnchorHTMLAttributes"],
@@ -69,26 +73,32 @@ const renderFCType = (c: Component) =>
 const renderVisibility = (name?: string) =>
   name !== undefined ? `${name} && ` : "";
 
-const renderDOM = (template: string) => {
+function renderDOM(template: string) {
   return template
     .replace(/"{tsx:(\w+)}"/gi, "{$1}")
-    .replace(/data-tsx-map="(\w+)"/gi, "{...$1}")
-    .replace(/<div data-tsx-cond="(\w+)"><\/div>/gi, "{$1 && (")
-    .replace(/<div data-tsx-cond=""><\/div>/gi, ")}")
+    .replace(mapRegExp, "{...$1}")
+    .replace(condStartRegExp, "{$1 && (")
+    .replace(condEndRegExp, ")}")
     .replace(/ class="([^"]*)"/gi, " className=\"$1\"")
     .replace(closeTagsRegexp, "<$1$2/>");
-};
+}
 
+const mapRegExp = new RegExp(`${INTERNAL_MAP_ATTRIBUTE}="(\\w+)"`, "gi");
+const condStartRegExp = new RegExp(
+  `<div ${INTERNAL_COND_ATTRIBUTE}="(\\w+)"></div>`, "gi"
+);
+const condEndRegExp = new RegExp(
+  `<div ${INTERNAL_COND_ATTRIBUTE}=""></div>`, "gi"
+);
 const singletonTags = [
   "area", "base", "br", "col", "command", "embed", "hr", "img", "input",
   "keygen", "link", "meta", "param", "source", "track", "wbr",
 ];
-
 const closeTagsRegexp = new RegExp(
   `<(${singletonTags.join("|")})( ([^>]*[^/])?)?>`, "gi"
 );
 
-const indentRows = (src: string) => {
+function indentRows(src: string) {
   const rows = src.replace("\t", "  ").split("\n");
   if (rows.length > 0) {
     const ind = getIndent(rows[0]);
@@ -111,20 +121,20 @@ const indentRows = (src: string) => {
     }
   }
   return r(rows);
-};
+}
 
-const getIndent = (row: string) => {
+function getIndent(row: string) {
   for (let i = 0; i < row.length; i++) {
     if (row[i] !== " ") {
       return i;
     }
   }
   return row.length;
-};
+}
 
-const addIndent = (row: string, num: number) => {
+function addIndent(row: string, num: number) {
   const spaces = new Array(num).fill(" ").join("");
   return `${spaces}${row}`;
-};
+}
 
 const r = (...rows: string[] | string[][]) => rows.flatMap(r => r).join("\n");

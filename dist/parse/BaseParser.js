@@ -1,27 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseParser = void 0;
+const attributes_1 = require("./attributes");
 const NamedComponent_1 = require("./NamedComponent");
 const NamedObject_1 = require("./NamedObject");
 const NamedProp_1 = require("./NamedProp");
-const COMPONENT_ATTRIBUTE = "data-tsx";
-const PROPERTY_ATTRIBUTE = "data-tsx-prop";
-const SLOT_ATTRIBUTE = "data-tsx-slot";
+const rewrite_1 = require("./rewrite");
 class BaseParser {
-    constructor(docs) {
+    constructor(docs, config) {
         this.docs = docs;
+        this.config = config;
+        this.cssIgnore = config.ignoreStyles.map(i => new RegExp(`^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`, "g"));
     }
     async getComponents() {
-        return (await this.parseComponentDesigns()).map(c => {
-            const props = this.parsePropDesigns(c);
-            const [template, rootVisibility] = this.exportTemplate(c, props);
-            return {
+        const components = [];
+        for (const c of await this.parseComponentDesigns()) {
+            const props = await this.parsePropDesigns(c);
+            const [template, rootVisibility] = await this.formatTemplate(c, props);
+            components.push({
                 name: c.name,
                 props: props.map(p => p.resolveTypeAndTarget()),
                 template,
                 rootVisibility,
-            };
-        });
+            });
+        }
+        return components;
     }
     ;
     async getStyleElements() {
@@ -33,19 +36,19 @@ class BaseParser {
                 }
             }
         }
-        return styles;
+        return this.formatCss({ baseName: this.config.styleFile, content: styles.join("\n\n") });
     }
-    getSeparateCssFiles() {
-        return this.docs.filesByExtension("css");
+    async getSeparateCssFiles() {
+        return (await this.docs.selectFiles({ extension: "css" })).map(f => this.formatCss(f));
     }
-    getSeparateJsFiles() {
-        return this.docs.filesByExtension("js");
+    async getSeparateJsFiles() {
+        return this.docs.selectFiles({ extension: "js" });
     }
     async parseComponentDesigns() {
         const desings = new NamedObject_1.NamedObjectSet();
         for await (const elements of await this.docs.selectElements(this.getComponentSelector())) {
             for (const element of elements) {
-                const name = element.getAttribute(COMPONENT_ATTRIBUTE);
+                const name = element.getAttribute(attributes_1.COMPONENT_ATTRIBUTE);
                 if (name !== null) {
                     desings.merge(new NamedComponent_1.NamedComponent(name, element.cloneNode(true)));
                 }
@@ -54,9 +57,9 @@ class BaseParser {
         return desings.all();
     }
     getComponentSelector() {
-        return `[${COMPONENT_ATTRIBUTE}]`;
+        return `[${attributes_1.COMPONENT_ATTRIBUTE}]`;
     }
-    parsePropDesigns(design) {
+    async parsePropDesigns(design) {
         const designs = new NamedObject_1.NamedObjectSet();
         for (const template of design.templates) {
             designs.merge(...this.parseProp(template));
@@ -70,11 +73,11 @@ class BaseParser {
         return designs.all();
     }
     getPropertySelector() {
-        return `[${PROPERTY_ATTRIBUTE}],[${SLOT_ATTRIBUTE}]`;
+        return `[${attributes_1.PROPERTY_ATTRIBUTE}],[${attributes_1.SLOT_ATTRIBUTE}]`;
     }
     parseProp(element) {
         const props = [];
-        const propAttr = element.getAttribute(PROPERTY_ATTRIBUTE);
+        const propAttr = element.getAttribute(attributes_1.PROPERTY_ATTRIBUTE);
         if (propAttr !== null) {
             for (const prop of propAttr.split(",")) {
                 const [name, ...tags] = prop.split(":").map(t => t.trim());
@@ -98,48 +101,23 @@ class BaseParser {
                 props.push(p);
             }
         }
-        const slotAttr = element.getAttribute(SLOT_ATTRIBUTE);
+        const slotAttr = element.getAttribute(attributes_1.SLOT_ATTRIBUTE);
         if (slotAttr !== null) {
             props.push(new NamedProp_1.NamedProp(slotAttr, element, "slot"));
         }
         return props;
     }
-    exportTemplate(component, props) {
-        const template = component.templates[0];
-        let rootVisibility;
-        template.removeAttribute(COMPONENT_ATTRIBUTE);
-        for (const p of props) {
-            const { name, target } = p.resolveTypeAndTarget();
-            const el = p.templates[0];
-            el.removeAttribute(PROPERTY_ATTRIBUTE);
-            if (target === "text") {
-                el.textContent = `{${name}}`;
-            }
-            else if (target === "slot") {
-                el.removeAttribute(SLOT_ATTRIBUTE);
-                el.textContent = `{${name}}`;
-            }
-            else if (target === "visibility") {
-                if (el === template) {
-                    rootVisibility = name;
-                }
-                else {
-                    const pre = el.ownerDocument.createElement("div");
-                    pre.setAttribute("data-tsx-cond", name);
-                    el.before(pre);
-                    const post = el.ownerDocument.createElement("div");
-                    post.setAttribute("data-tsx-cond", "");
-                    el.after(post);
-                }
-            }
-            else if (target === "map") {
-                el.setAttribute("data-tsx-map", name);
-            }
-            else {
-                el.setAttribute(target, `{tsx:${name}}`);
-            }
-        }
-        return [template.outerHTML, rootVisibility];
+    async formatTemplate(component, props) {
+        return (0, rewrite_1.rewriteTemplate)(component, props);
+    }
+    async formatCss(data) {
+        const [css, copyFromTo] = (0, rewrite_1.rewriteCss)(data.buffer !== undefined
+            ? (await data.buffer).toString()
+            : data.content || "", this.config.imageDir, s => this.cssIgnore.every(i => !i.test(s)));
+        return [
+            { baseName: data.baseName, content: css },
+            ...(await this.docs.copyFiles(copyFromTo)),
+        ];
     }
 }
 exports.BaseParser = BaseParser;

@@ -10,7 +10,7 @@ export type Config = {
   styleFile?: string;
   imageDir?: string;
   ignoreFiles?: string[];
-  ignoreStyleClasses?: string[];
+  ignoreStyles?: string[];
   configExtension?: ConfigExtension;
 };
 
@@ -26,11 +26,24 @@ export type RuntimeConfig = {
   styleFile: string;
   imageDir: string;
   ignoreFiles: string[];
-  ignoreStyleClasses: string[];
+  ignoreStyles: string[];
 };
 
 export type SourceType = "custom" | "webflow/export";
 export type ConfigExtension = "mjs" | "cjs" | "js" | "json";
+
+export type InitChoice = {
+  key: keyof Config;
+  prompt: string;
+  options?: InitChoiceOption[];
+  default?: string;
+}
+
+export type InitChoiceOption = [
+  key: string,
+  description: string,
+  isDefault?: boolean,
+];
 
 export type Component = {
   name: string;
@@ -59,17 +72,10 @@ export type FileData = {
   baseName: string;
   buffer?: Promise<Buffer>;
   content?: string;
+  dirName?: string;
 };
 
-export type InitChoice = {
-  key: keyof Config;
-  prompt: string;
-  options?: InitChoiceOption[];
-  default?: string;
-}
-
-export type InitChoiceOption = [
-  key: string,
-  description: string,
-  isDefault?: boolean,
-];
+export type CopyFile = {
+  from: string;
+  to: string;
+};

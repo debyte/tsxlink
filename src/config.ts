@@ -22,12 +22,12 @@ export const readConfig = () => returnFirstConfig([
   }],
 ]);
 
-const returnFirstConfig = async (
+async function returnFirstConfig(
   attempts: Array<[
     extensions: ConfigExtension[],
     loader: (filePath: string) => Promise<Config>,
   ]>
-): Promise<Config | null> => {
+): Promise<Config | null> {
   for (const [extensions, loader] of attempts) {
     for (const ext of extensions) {
       const filePath = confPath(ext);
@@ -39,12 +39,12 @@ const returnFirstConfig = async (
     }
   }
   return null;
-};
+}
 
-export const writeConfig = async (
+export async function writeConfig(
   extension: ConfigExtension,
   config: Config,
-): Promise<string> => {
+): Promise<string> {
   const filePath = confPath(extension);
   const json = JSON.stringify(config, null, 2);
   if (extension === "mjs") {
@@ -58,10 +58,10 @@ export const writeConfig = async (
     await writeTextFile(filePath, `${json}\n`);
   }
   return filePath;
-};
+}
 
-export const removeConfig = async (extension: ConfigExtension) => {
+export async function removeConfig(extension: ConfigExtension) {
   await removeFile(confPath(extension));
-};
+}
 
 const confPath = (extension: string) => absPath(".", CONFIG_NAME, extension);

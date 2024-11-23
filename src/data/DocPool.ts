@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom";
-import { DocSource, FileData } from "../types";
-import { dirFiles, readFile, wildcardRegexp, zipFiles } from "./files";
+import { CopyFile, DocSource, FileData } from "../types";
+import { dirFiles, ext, readFile, wildcardRegexp, zipFiles } from "./files";
 
 export class DocPool {
   source?: DocSource;
@@ -18,7 +18,7 @@ export class DocPool {
       return [];
     }
     if (["url", "zip", "dir"].includes(this.source.type)) {
-      return this.parseDoms(await this.filesByExtension("html"));
+      return this.parseDoms(await this.selectFiles({ extension: "html" }));
     }
     if (this.source.type === "file") {
       return this.parseDoms([
@@ -39,18 +39,42 @@ export class DocPool {
     });
   }
 
-  async filesByExtension(extension: string) {
+  async selectFiles(opt: { extension?: string, names?: string[] }) {
     if (this.source !== undefined) {
+      let select: (name: string) => boolean = () => true;
+      if (opt.extension) {
+        const end = ext(opt.extension);
+        const ign = this.ignore;
+        select = n => (
+          (!end || n.toLowerCase().endsWith(end)) && ign.every(i => !i.test(n))
+        );
+      } else if (opt.names) {
+        const names = opt.names;
+        select = n => names.includes(n);
+      }
       if (this.source.type === "url") {
         throw new Error("TODO implement url docs");
       }
       if (this.source.type === "zip") {
-        return await zipFiles(this.source.data, this.ignore, extension);
+        return await zipFiles(this.source.data, select);
       }
       if (this.source.type === "dir") {
-        return await dirFiles(this.source.data, this.ignore, extension);
+        return await dirFiles(this.source.data, select);
       }
     }
     return [];
+  }
+
+  async copyFiles(copy: CopyFile[], dirName?: string): Promise<FileData[]> {
+    const files = await this.selectFiles({ names: copy.map(cp => cp.from) });
+    return copy.map(cp => {
+      const from = files.find(f => f.baseName === cp.from);
+      return {
+        baseName: cp.to,
+        buffer: from?.buffer,
+        content: from?.content,
+        dirName
+      };
+    });
   }
 }

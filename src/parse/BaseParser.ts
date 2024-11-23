@@ -1,34 +1,44 @@
 import { DocPool } from "../data/DocPool";
-import { Component, FileData } from "../types";
+import { Component, FileData, RuntimeConfig } from "../types";
+import {
+  COMPONENT_ATTRIBUTE,
+  PROPERTY_ATTRIBUTE,
+  SLOT_ATTRIBUTE,
+} from "./attributes";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
 import { isPropType, NamedProp } from "./NamedProp";
-
-const COMPONENT_ATTRIBUTE = "data-tsx";
-const PROPERTY_ATTRIBUTE = "data-tsx-prop";
-const SLOT_ATTRIBUTE = "data-tsx-slot";
+import { rewriteCss, rewriteTemplate } from "./rewrite";
 
 export class BaseParser {
   docs: DocPool;
+  config: RuntimeConfig;
+  cssIgnore: RegExp[];
 
-  constructor(docs: DocPool) {
+  constructor(docs: DocPool, config: RuntimeConfig) {
     this.docs = docs;
+    this.config = config;
+    this.cssIgnore = config.ignoreStyles.map(i => new RegExp(
+      `^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`, "g"
+    ));
   }
 
   async getComponents(): Promise<Component[]> {
-    return (await this.parseComponentDesigns()).map(c => {
-      const props = this.parsePropDesigns(c);
-      const [template, rootVisibility] = this.exportTemplate(c, props);
-      return {
+    const components: Component[] = [];
+    for (const c of await this.parseComponentDesigns()) {
+      const props = await this.parsePropDesigns(c);
+      const [template, rootVisibility] = await this.formatTemplate(c, props);
+      components.push({
         name: c.name,
         props: props.map(p => p.resolveTypeAndTarget()),
         template,
         rootVisibility,
-      };
-    });
+      });
+    }
+    return components;
   };
 
-  async getStyleElements(): Promise<string[]> {
+  async getStyleElements(): Promise<FileData[]> {
     const styles: string[] = [];
     for await (const elements of await this.docs.selectElements("style")) {
       for (const element of elements) {
@@ -37,15 +47,19 @@ export class BaseParser {
         }
       }
     }
-    return styles;
+    return this.formatCss(
+      { baseName: this.config.styleFile, content: styles.join("\n\n") }
+    );
   }
 
-  getSeparateCssFiles(): Promise<FileData[]> {
-    return this.docs.filesByExtension("css");
+  async getSeparateCssFiles(): Promise<Promise<FileData[]>[]> {
+    return (await this.docs.selectFiles({ extension: "css" })).map(
+      f => this.formatCss(f)
+    );
   }
 
-  getSeparateJsFiles(): Promise<FileData[]> {
-    return this.docs.filesByExtension("js");
+  async getSeparateJsFiles(): Promise<FileData[]> {
+    return this.docs.selectFiles({ extension: "js" });
   }
 
   async parseComponentDesigns(): Promise<NamedComponent[]> {
@@ -70,7 +84,7 @@ export class BaseParser {
     return `[${COMPONENT_ATTRIBUTE}]`;
   }
 
-  parsePropDesigns(design: NamedComponent): NamedProp[] {
+  async parsePropDesigns(design: NamedComponent): Promise<NamedProp[]> {
     const designs = new NamedObjectSet<NamedProp>();
     for (const template of design.templates) {
       designs.merge(...this.parseProp(template));
@@ -122,39 +136,24 @@ export class BaseParser {
     return props;
   }
 
-  exportTemplate(
+  protected async formatTemplate(
     component: NamedComponent,
     props: NamedProp[],
-  ): [template: string, rootVisibility: string | undefined] {
-    const template = component.templates[0];
-    let rootVisibility: string | undefined;
-    template.removeAttribute(COMPONENT_ATTRIBUTE);
-    for (const p of props) {
-      const { name, target } = p.resolveTypeAndTarget();
-      const el = p.templates[0];
-      el.removeAttribute(PROPERTY_ATTRIBUTE);
-      if (target === "text") {
-        el.textContent = `{${name}}`;
-      } else if (target === "slot") {
-        el.removeAttribute(SLOT_ATTRIBUTE);
-        el.textContent = `{${name}}`;
-      } else if (target === "visibility") {
-        if (el === template) {
-          rootVisibility = name;
-        } else {
-          const pre = el.ownerDocument.createElement("div");
-          pre.setAttribute("data-tsx-cond", name);
-          el.before(pre);
-          const post = el.ownerDocument.createElement("div");
-          post.setAttribute("data-tsx-cond", "");
-          el.after(post);
-        }
-      } else if (target === "map") {
-        el.setAttribute("data-tsx-map", name);
-      } else {
-        el.setAttribute(target, `{tsx:${name}}`);
-      }
-    }
-    return [template.outerHTML, rootVisibility];
+  ): Promise<[template: string, rootVisibilityProp: string | undefined]> {
+    return rewriteTemplate(component, props);
+  }
+
+  protected async formatCss(data: FileData): Promise<FileData[]> {
+    const [css, copyFromTo] = rewriteCss(
+      data.buffer !== undefined
+        ? (await data.buffer).toString()
+        : data.content || "",
+      this.config.imageDir,
+      s => this.cssIgnore.every(i => !i.test(s)),
+    );
+    return [
+      { baseName: data.baseName, content: css },
+      ...(await this.docs.copyFiles(copyFromTo)),
+    ];
   }
 }

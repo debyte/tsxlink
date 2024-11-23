@@ -3,11 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeMissingFiles = exports.writeFiles = exports.absPath = exports.wildcardRegexp = exports.hasExtension = exports.zipFiles = exports.dirFiles = exports.removeFile = exports.writeTextFile = exports.readTextFile = exports.writeFile = exports.readFile = exports.fileExists = void 0;
+exports.copyFile = exports.wildcardRegexp = exports.hasExtension = exports.ext = exports.zipFiles = exports.dirFiles = exports.removeFile = exports.writeTextFile = exports.readTextFile = exports.writeFile = exports.readFile = void 0;
+exports.fileExists = fileExists;
+exports.absPath = absPath;
+exports.writeFiles = writeFiles;
+exports.removeMissingFiles = removeMissingFiles;
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const unzipper_1 = __importDefault(require("unzipper"));
-const fileExists = async (filePath) => {
+async function fileExists(filePath) {
     try {
         const stats = await promises_1.default.stat(filePath);
         return { isDirectory: stats.isDirectory() };
@@ -15,8 +19,7 @@ const fileExists = async (filePath) => {
     catch {
         return null;
     }
-};
-exports.fileExists = fileExists;
+}
 const readFile = (filePath) => promises_1.default.readFile(filePath);
 exports.readFile = readFile;
 const writeFile = (filePath, content) => promises_1.default.writeFile(filePath, content);
@@ -27,53 +30,61 @@ const writeTextFile = (filePath, content) => promises_1.default.writeFile(filePa
 exports.writeTextFile = writeTextFile;
 const removeFile = (filePath) => promises_1.default.unlink(filePath);
 exports.removeFile = removeFile;
-const dirFiles = async (dirPath, ignore, onlyExtension) => {
-    const end = extensionEnding(onlyExtension);
-    return (await promises_1.default.readdir(dirPath)).filter(name => (!end || name.toLowerCase().endsWith(end))
-        && ignore.every(r => !r.test(name))).map(name => ({
-        baseName: name,
-        buffer: promises_1.default.readFile(path_1.default.join(dirPath, name)),
-    }));
-};
+const dirFiles = async (dirPath, select) => (await promises_1.default.readdir(dirPath))
+    .filter(name => select(name))
+    .map(name => ({
+    baseName: name,
+    buffer: promises_1.default.readFile(path_1.default.join(dirPath, name)),
+}));
 exports.dirFiles = dirFiles;
-const zipFiles = async (filePath, ignore, onlyExtension) => {
-    const end = extensionEnding(onlyExtension);
-    return (await unzipper_1.default.Open.file(filePath)).files.filter(file => (!end || file.path.toLowerCase().endsWith(end))
-        && ignore.every(r => !r.test(file.path))).map(file => ({
-        baseName: path_1.default.basename(file.path),
-        buffer: file.buffer(),
-    }));
-};
+const zipFiles = async (filePath, select) => (await unzipper_1.default.Open.file(filePath)).files
+    .filter(file => select(file.path))
+    .map(file => ({
+    baseName: path_1.default.basename(file.path),
+    buffer: file.buffer(),
+}));
 exports.zipFiles = zipFiles;
-const extensionEnding = (extension) => extension ? `.${extension.toLowerCase()}` : null;
-const hasExtension = (filePath, extension) => path_1.default.extname(filePath).toLowerCase() === `.${extension.toLowerCase()}`;
+const ext = (extension) => extension ? `.${extension.toLowerCase()}` : null;
+exports.ext = ext;
+const hasExtension = (filePath, extension) => path_1.default.extname(filePath).toLowerCase() === (0, exports.ext)(extension);
 exports.hasExtension = hasExtension;
-const wildcardRegexp = (ignore) => new RegExp(ignore.includes("/")
-    ? `^${starsAndQuestionMarks(ignore)}(.*)?$`
-    : `^(.*/)?${starsAndQuestionMarks(ignore)}$`);
+const wildcardRegexp = (ignore) => new RegExp(`^${wcPre(ignore)}${wcPattern(ignore)}${wcPost(ignore)}$`);
 exports.wildcardRegexp = wildcardRegexp;
-const starsAndQuestionMarks = (src) => src
+const wcPre = (i) => i.includes("/") ? "" : "(.*/)?";
+const wcPattern = (src) => src
     .replace("?", "[^/]?")
     .replace(/(?<!\*)\*(?!\*)/g, "[^/]*")
     .replace("**/", ".*");
-const absPath = (pathName, baseName, extension) => path_1.default.resolve(path_1.default.join(pathName || ".", extension ? `${baseName}.${extension.toLowerCase()}` : baseName));
-exports.absPath = absPath;
-const writeFiles = async (dirPath, files) => {
+const wcPost = (i) => i.endsWith("/") ? "(.*)?" : "(/.*)?";
+function absPath(pathName, baseName, extension, dirName) {
+    const p = pathName || ".";
+    const f = extension ? `${baseName}${(0, exports.ext)(extension)}` : baseName;
+    return path_1.default.resolve(dirName ? path_1.default.join(p, dirName, f) : path_1.default.join(p, f));
+}
+async function writeFiles(dirPath, files) {
     await promises_1.default.mkdir(dirPath, { recursive: true });
     return files.map(async (file) => {
-        const path = (0, exports.absPath)(dirPath, file.baseName);
+        if (file.dirName !== undefined) {
+            await promises_1.default.mkdir(path_1.default.join(dirPath, file.dirName), { recursive: true });
+        }
+        const filePath = absPath(dirPath, file.baseName, undefined, file.dirName);
         if (file.buffer !== undefined) {
-            await (0, exports.writeFile)(path, await file.buffer);
+            await (0, exports.writeFile)(filePath, await file.buffer);
         }
         else {
-            await (0, exports.writeTextFile)(path, file.content || "");
+            await (0, exports.writeTextFile)(filePath, file.content || "");
         }
         return file.baseName;
     });
-};
-exports.writeFiles = writeFiles;
-const removeMissingFiles = async (dirPath, keepFileNames) => (await (0, exports.dirFiles)(dirPath, [])).filter(file => !keepFileNames.includes(file.baseName)).map(async (file) => {
-    await (0, exports.removeFile)(path_1.default.join(dirPath, file.baseName));
-    return file.baseName;
-});
-exports.removeMissingFiles = removeMissingFiles;
+}
+;
+const copyFile = (src, baseName, dirName) => (src.buffer !== undefined
+    ? { baseName, buffer: src.buffer, dirName }
+    : { baseName, content: src.content || "", dirName });
+exports.copyFile = copyFile;
+async function removeMissingFiles(dirPath, keepFileNames) {
+    return (await (0, exports.dirFiles)(dirPath, n => !keepFileNames.includes(n))).map(async (file) => {
+        await (0, exports.removeFile)(path_1.default.join(dirPath, file.baseName));
+        return file.baseName;
+    });
+}

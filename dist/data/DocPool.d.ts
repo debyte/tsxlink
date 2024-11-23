@@ -1,5 +1,5 @@
 import { JSDOM } from "jsdom";
-import { DocSource, FileData } from "../types";
+import { CopyFile, DocSource, FileData } from "../types";
 export declare class DocPool {
     source?: DocSource;
     ignore: RegExp[];
@@ -7,5 +7,9 @@ export declare class DocPool {
     parseDocs(): Promise<Promise<JSDOM>[]>;
     private parseDoms;
     selectElements(selectors: string): Promise<Promise<NodeListOf<Element>>[]>;
-    filesByExtension(extension: string): Promise<FileData[]>;
+    selectFiles(opt: {
+        extension?: string;
+        names?: string[];
+    }): Promise<FileData[]>;
+    copyFiles(copy: CopyFile[], dirName?: string): Promise<FileData[]>;
 }

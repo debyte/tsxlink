@@ -1,11 +1,16 @@
 import { beforeAll, expect, test } from "@jest/globals";
 import { DocPool } from "../src/data/DocPool";
+import { applyDefaults } from "../src/init";
 import { BaseParser } from "../src/parse/BaseParser";
 import { NamedProp } from "../src/parse/NamedProp";
-import { getReadmeHtmlExample, ONE_ELEMENT_COMPONENT } from "./helpers";
+import {
+  getReadmeHtmlExample,
+  ONE_ELEMENT_COMPONENT,
+  WEBFLOWISH_CODE_FILE,
+} from "./helpers";
 
 const docs = new DocPool();
-const parser = new BaseParser(docs);
+const parser = new BaseParser(docs, applyDefaults({}));
 
 beforeAll(async () => {
   docs.source = await getReadmeHtmlExample();
@@ -22,7 +27,7 @@ test("Should detect properties from HTML with TSX attributes", async () => {
   const designs = await parser.parseComponentDesigns();
   const component = designs.find(({ name }) => name === "SearchResult");
   expect(component).toBeDefined();
-  const props = parser.parsePropDesigns(component!);
+  const props = await parser.parsePropDesigns(component!);
   const image = props.find(({ name }) => name === "image");
   expect(image).toBeDefined();
   expect(image!.type).toEqual([]);
@@ -33,7 +38,7 @@ test("Should detect properties from HTML with TSX attributes", async () => {
 test("Sould detect property targets and types from HTML template", async () => {
   const designs = await parser.parseComponentDesigns();
   for (const component of designs) {
-    const props = sortedPropsValues(parser.parsePropDesigns(component));
+    const props = sortedPropsValues(await parser.parsePropDesigns(component));
     if (component.name === "Search") {
       expect(props).toEqual([
         ["button", "fixed", "map", "HTMLButtonElement"],
@@ -55,11 +60,13 @@ test("Sould detect property targets and types from HTML template", async () => {
 });
 
 test("Should parse properties and slots from component element", async () => {
-  const parser = new BaseParser(new DocPool(ONE_ELEMENT_COMPONENT));
+  const parser = new BaseParser(
+    new DocPool(ONE_ELEMENT_COMPONENT), applyDefaults({})
+  );
   const designs = await parser.parseComponentDesigns();
   expect(designs).toHaveLength(1);
   expect(designs[0].name).toEqual("StrangerThings");
-  const props = sortedPropsValues(parser.parsePropDesigns(designs[0]));
+  const props = sortedPropsValues(await parser.parsePropDesigns(designs[0]));
   props.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
   expect(props).toEqual([
     ["children", "fixed", "slot", "HTMLDivElement"],
@@ -73,3 +80,16 @@ function sortedPropsValues(props: NamedProp[]): string[][] {
     return [p.name, p.type, p.target, p.elementClass];
   }).sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
 }
+
+test("Should ignore named CSS blocks and rewrite all images", async () => {
+  const parser = new BaseParser(
+    new DocPool(WEBFLOWISH_CODE_FILE), applyDefaults({
+      ignoreStyles: ["bo*", "@media \\*"],
+    })
+  );
+  const css = await parser.getStyleElements();
+  expect(css).toHaveLength(1);
+  expect(css[0].content?.match(/body {/)).toBeNull();
+  expect(css[0].content?.match(/@media /)).not.toBeNull();
+  console.log(css);
+});

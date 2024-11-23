@@ -4,4 +4,4 @@ export declare const DEFAULT_ASSETS_DIR = "./src/app/tsxlink";
 export declare const DEFAULT_STYLE_FILE = "export.css";
 export declare const DEFAULT_IMAGE_DIR = "images";
 export declare const applyDefaults: (config: Config) => RuntimeConfig;
-export declare const runInteractiveInit: (current?: Config) => Promise<Config>;
+export declare function runInteractiveInit(current?: Config): Promise<Config>;

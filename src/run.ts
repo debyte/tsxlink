@@ -3,10 +3,11 @@ import { createDocPool } from "./data";
 import { removeMissingFiles, writeFiles } from "./data/files";
 import { applyDefaults, runInteractiveInit } from "./init";
 import { selectParser } from "./parse";
+import { BaseParser } from "./parse/BaseParser";
 import { renderFC } from "./render";
-import { Config, FileData } from "./types";
+import { Config, FileData, RuntimeConfig } from "./types";
 
-export const run = async () => {
+export async function run() {
   pr(",=0=0=0=0=(__    T  S  X    L  I  N  K    __)=0=0=0=0='");
   const isUsage = ["help", "--help", "-h"].some(
     arg => process.argv.includes(arg)
@@ -61,11 +62,19 @@ export const run = async () => {
 
   // Process
   pr("Parsing and synchronizing.")
-  const parser = selectParser(docs, config.sourceType);
+  const parser = selectParser(docs, config);
+  const tsxFiles = await syncComponents(parser, config);
+  const assetsFiles = await syncAssets(parser, config);
+  pr(`Synchronized ${tsxFiles.length + assetsFiles.length} linked files.`);
+}
+
+async function syncComponents(
+  parser: BaseParser,
+  config: RuntimeConfig,
+): Promise<string[]> {
   const components = await parser.getComponents();
-  const tsxFileNames = await Promise.all(
+  const fileNames = await Promise.all(
     await writeAndLogFiles(
-      true,
       config.componentDir,
       components.map(component => ({
         baseName: `${component.name}.tsx`,
@@ -73,60 +82,60 @@ export const run = async () => {
       })),
     )
   );
-  await Promise.all(
-    await removeAndLogFiles(config.componentDir, tsxFileNames)
-  );
-  const assetsFileNames = await Promise.all([
-    ...await writeAndLogFiles(
-      config.exportStyleElements,
-      config.assetsDir,
-      [{
-        baseName: config.styleFile,
-        content: (await parser.getStyleElements()).join("\n\n"),
-      }],
-    ),
-    ...await writeAndLogFiles(
-      config.copyCssFiles,
-      config.assetsDir,
-      await parser.getSeparateCssFiles(),
-    ),
-    ...await writeAndLogFiles(
-      config.copyJsFiles,
-      config.assetsDir,
-      await parser.getSeparateJsFiles(),
-    ),
-  ]);
-  await Promise.all(
-    await removeAndLogFiles(config.assetsDir, assetsFileNames)
-  );
-  const n = tsxFileNames.length + assetsFileNames.length;
-  pr(`Synchronized ${n} linked files.`);
-};
+  await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
+  return fileNames;
+}
 
-const writeAndLogFiles = async (
-  writeFlag: boolean,
-  dirPath: string,
-  files: FileData[],
-): Promise<Promise<string>[]> => (
-  writeFlag
-    ? prNamePromises(await writeFiles(dirPath, files), name => `  + ${name}`)
-    : []
-);
+async function syncAssets(
+  parser: BaseParser,
+  config: RuntimeConfig,
+): Promise<string[]> {
+  const fileNamePromises: Promise<string>[] = [];
+  if (config.exportStyleElements) {
+    fileNamePromises.push(...await writeAndLogFiles(
+      config.assetsDir, await parser.getStyleElements(),
+    ));
+  }
+  if (config.copyCssFiles) {
+    for (const writeAndCopy of await parser.getSeparateCssFiles()) {
+      fileNamePromises.push(...await writeAndLogFiles(
+        config.assetsDir, await writeAndCopy,
+      ));
+    }
+  }
+  if (config.copyJsFiles) {
+    fileNamePromises.push(...await writeAndLogFiles(
+      config.assetsDir, await parser.getSeparateJsFiles(),
+    ));
+  }
+  const fileNames = await Promise.all(fileNamePromises);
+  await Promise.all(await removeAndLogFiles(config.assetsDir, fileNames));
+  return fileNames;
+}
 
-const removeAndLogFiles = async (dirPath: string, keepFileNames: string[]) =>
-  prNamePromises(
+async function writeAndLogFiles(dirPath: string, files: FileData[]) {
+  return prNamePromises(
+    await writeFiles(dirPath, files),
+    name => ` + ${name}`,
+  );
+}
+
+async function removeAndLogFiles(dirPath: string, keepFileNames: string[]) {
+  return prNamePromises(
     await removeMissingFiles(dirPath, keepFileNames),
     name => `  - ${name}`,
   );
+}
 
-const prNamePromises = (
+function prNamePromises(
   promises: Promise<string>[],
   format: (name: string) => string,
-): Promise<string>[] =>
-  promises.map(async namePromise => {
+): Promise<string>[] {
+  return promises.map(async namePromise => {
     const name = await namePromise;
     pr(format(name));
     return name;
   });
+}
 
 const pr = (...lines: string[]) => console.log(lines.join("\n"));

@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { DocPool } from "../src/data/DocPool";
+import { applyDefaults } from "../src/init";
 import { selectParser } from "../src/parse";
 import { renderFC } from "../src/render";
 import {
@@ -10,7 +11,7 @@ import {
 
 test("Should render React.FC from detected components", async () => {
   const docs = new DocPool(await getReadmeHtmlExample());
-  const parser = selectParser(docs, "custom");
+  const parser = selectParser(docs, applyDefaults({}));
   for (const component of await parser.getComponents()) {
     const out = renderFC(component);
     if (component.name === "Search") {
@@ -32,7 +33,10 @@ test("Should render React.FC from detected components", async () => {
 
 test("Should format class names and singleton tags for tsx", async () => {
   const docs = new DocPool(WEBFLOWISH_CODE_FILE);
-  const parser = selectParser(docs, "webflow/export");
+  const parser = selectParser(
+    docs,
+    applyDefaults({ sourceType: "webflow/export" }),
+  );
   for (const component of await parser.getComponents()) {
     const out = renderFC(component);
     if (component.name === "Testimonial") {
@@ -46,7 +50,7 @@ test("Should format class names and singleton tags for tsx", async () => {
 
 test("Should render one element component correctly", async () => {
   const docs = new DocPool(ONE_ELEMENT_COMPONENT);
-  const parser = selectParser(docs, "custom");
+  const parser = selectParser(docs, applyDefaults({}));
   const components = await parser.getComponents();
   expect(components).toHaveLength(1);
   const out = renderFC(components[0]);

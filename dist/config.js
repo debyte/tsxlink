@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeConfig = exports.writeConfig = exports.readConfig = exports.CONFIG_NAME = void 0;
+exports.readConfig = exports.CONFIG_NAME = void 0;
+exports.writeConfig = writeConfig;
+exports.removeConfig = removeConfig;
 const files_1 = require("./data/files");
 exports.CONFIG_NAME = "tsxlink.config";
 const readConfig = () => returnFirstConfig([
@@ -16,7 +18,7 @@ const readConfig = () => returnFirstConfig([
         }],
 ]);
 exports.readConfig = readConfig;
-const returnFirstConfig = async (attempts) => {
+async function returnFirstConfig(attempts) {
     for (const [extensions, loader] of attempts) {
         for (const ext of extensions) {
             const filePath = confPath(ext);
@@ -28,8 +30,8 @@ const returnFirstConfig = async (attempts) => {
         }
     }
     return null;
-};
-const writeConfig = async (extension, config) => {
+}
+async function writeConfig(extension, config) {
     const filePath = confPath(extension);
     const json = JSON.stringify(config, null, 2);
     if (extension === "mjs") {
@@ -42,10 +44,8 @@ const writeConfig = async (extension, config) => {
         await (0, files_1.writeTextFile)(filePath, `${json}\n`);
     }
     return filePath;
-};
-exports.writeConfig = writeConfig;
-const removeConfig = async (extension) => {
+}
+async function removeConfig(extension) {
     await (0, files_1.removeFile)(confPath(extension));
-};
-exports.removeConfig = removeConfig;
+}
 const confPath = (extension) => (0, files_1.absPath)(".", exports.CONFIG_NAME, extension);

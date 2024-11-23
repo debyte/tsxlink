@@ -3,7 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runInteractiveInit = exports.applyDefaults = exports.DEFAULT_IMAGE_DIR = exports.DEFAULT_STYLE_FILE = exports.DEFAULT_ASSETS_DIR = exports.DEFAULT_COMPONENT_DIR = void 0;
+exports.applyDefaults = exports.DEFAULT_IMAGE_DIR = exports.DEFAULT_STYLE_FILE = exports.DEFAULT_ASSETS_DIR = exports.DEFAULT_COMPONENT_DIR = void 0;
+exports.runInteractiveInit = runInteractiveInit;
 const promises_1 = __importDefault(require("readline/promises"));
 exports.DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
 exports.DEFAULT_ASSETS_DIR = "./src/app/tsxlink";
@@ -70,10 +71,10 @@ const applyDefaults = (config) => ({
     styleFile: config.styleFile || exports.DEFAULT_STYLE_FILE,
     imageDir: config.imageDir || exports.DEFAULT_IMAGE_DIR,
     ignoreFiles: config.ignoreFiles || [],
-    ignoreStyleClasses: config.ignoreStyleClasses || [],
+    ignoreStyles: config.ignoreStyles || [],
 });
 exports.applyDefaults = applyDefaults;
-const runInteractiveInit = async (current) => {
+async function runInteractiveInit(current) {
     const rl = promises_1.default.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -118,11 +119,14 @@ const runInteractiveInit = async (current) => {
         copyJsFiles: isTrue(map.get("copyJsFiles")),
         componentDir: map.get("componentDir"),
         assetsDir: map.get("assetsDir"),
+        styleFile: (current === null || current === void 0 ? void 0 : current.styleFile) || exports.DEFAULT_STYLE_FILE,
+        imageDir: (current === null || current === void 0 ? void 0 : current.imageDir) || exports.DEFAULT_IMAGE_DIR,
+        ignoreFiles: (current === null || current === void 0 ? void 0 : current.ignoreFiles) || [],
+        ignoreStyles: (current === null || current === void 0 ? void 0 : current.ignoreStyles) || [],
         configExtension: map.get("configExtension"),
     };
-};
-exports.runInteractiveInit = runInteractiveInit;
-const getChoiceDefault = (current, choice) => {
+}
+function getChoiceDefault(current, choice) {
     if (choice.options) {
         let opt = current
             ? choice.options.find(opt => opt[0] === current)
@@ -143,8 +147,8 @@ const getChoiceDefault = (current, choice) => {
         return String(current);
     }
     return choice.default || null;
-};
-const getPrompt = (prompt, def, options) => {
+}
+function getPrompt(prompt, def, options) {
     const lines = [`${prompt}:`];
     if (options) {
         const padLength = Math.max(...options.map(opt => opt[0].length));
@@ -154,6 +158,6 @@ const getPrompt = (prompt, def, options) => {
     }
     lines.push(`  (${def}) `);
     return lines.join("\n");
-};
+}
 const isTrue = (val) => (val !== undefined
     && ["yes", "y", "true", "t", "1"].includes(val.toLowerCase()));
