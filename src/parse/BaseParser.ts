@@ -8,7 +8,7 @@ import {
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
 import { isPropType, NamedProp } from "./NamedProp";
-import { rewriteCss, rewriteTemplate } from "./rewrite";
+import { CssFix, rewriteTemplate } from "./rewrite";
 
 export class BaseParser {
   docs: DocPool;
@@ -144,7 +144,7 @@ export class BaseParser {
   }
 
   protected async formatCss(data: FileData): Promise<FileData[]> {
-    const [css, copyFromTo] = rewriteCss(
+    const [css, copyFromTo] = CssFix.runWithCopyFiles(
       data.buffer !== undefined
         ? (await data.buffer).toString()
         : data.content || "",
@@ -153,7 +153,7 @@ export class BaseParser {
     );
     return [
       { baseName: data.baseName, content: css },
-      ...(await this.docs.copyFiles(copyFromTo)),
+      ...(await this.docs.copyFiles(data.dirName || ".", copyFromTo)),
     ];
   }
 }

@@ -6,7 +6,7 @@ import { renderFC } from "../src/render";
 import {
   getReadmeHtmlExample,
   ONE_ELEMENT_COMPONENT,
-  WEBFLOWISH_CODE_FILE,
+  WEBFLOWISH_CODE,
 } from "./helpers";
 
 test("Should render React.FC from detected components", async () => {
@@ -15,24 +15,24 @@ test("Should render React.FC from detected components", async () => {
   for (const component of await parser.getComponents()) {
     const out = renderFC(component);
     if (component.name === "Search") {
-      expect(out.match(
-        /query\?: React\.InputHTMLAttributes<HTMLInputElement>/
-      )).not.toBeNull();
-      expect(/<input [^>]*{...query}/).not.toBeNull();
-      expect(/{loading && \(.+\)}/s).not.toBeNull();
-      expect(/<div[^>]*>{results}<\/div>/).not.toBeNull();
+      expect(out).toContain(
+        "query?: React.InputHTMLAttributes<HTMLInputElement>"
+      );
+      expect(out).toMatch(/<input [^>]*{...query}/);
+      expect(out).toMatch(/{loading && \(.+\)}/s);
+      expect(out).toMatch(/<div[^>]*>{results}<\/div>/);
     }
     if (component.name === "SearchResult") {
-      expect(out.match(/image: string/)).not.toBeNull();
-      expect(out.match(/code: number/)).not.toBeNull();
-      expect(out.match(/<img [^>]*src={image}/)).not.toBeNull();
-      expect(out.match(/<span>{code}<\/span>/)).not.toBeNull();
+      expect(out).toContain("image: string");
+      expect(out).toContain("code: number");
+      expect(out).toMatch(/<img [^>]*src={image}/);
+      expect(out).toContain("<span>{code}</span>");
     }
   }
 });
 
 test("Should format class names and singleton tags for tsx", async () => {
-  const docs = new DocPool(WEBFLOWISH_CODE_FILE);
+  const docs = new DocPool(WEBFLOWISH_CODE);
   const parser = selectParser(
     docs,
     applyDefaults({ sourceType: "webflow/export" }),
@@ -40,10 +40,9 @@ test("Should format class names and singleton tags for tsx", async () => {
   for (const component of await parser.getComponents()) {
     const out = renderFC(component);
     if (component.name === "Testimonial") {
-      expect(out.match(/<h3 className="testimonial-main-heading">/))
-        .not.toBeNull();
-      expect(out.match(/<hr\/>/)).not.toBeNull();
-      expect(out.match(/<img [^>]+\/>/)).not.toBeNull();
+      expect(out).toContain("<h3 className=\"testimonial-main-heading\">");
+      expect(out).toContain("<hr/>");
+      expect(out).toMatch(/<img [^>]+\/>/);
     }
   }
 });
@@ -54,6 +53,6 @@ test("Should render one element component correctly", async () => {
   const components = await parser.getComponents();
   expect(components).toHaveLength(1);
   const out = renderFC(components[0]);
-  expect(out.match(/=> visibility && \(/)).not.toBeNull();
-  expect(out.match(/<div [^>]+>{children}<\/div>/)).not.toBeNull();
+  expect(out).toContain("=> visibility && (");
+  expect(out).toMatch(/<div [^>]+>{children}<\/div>/);
 });

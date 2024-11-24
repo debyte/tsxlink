@@ -1,4 +1,4 @@
-import css from "css";
+import path from "path";
 import { CopyFile } from "../types";
 import {
   COMPONENT_ATTRIBUTE,
@@ -7,6 +7,7 @@ import {
   PROPERTY_ATTRIBUTE,
   SLOT_ATTRIBUTE,
 } from "./attributes";
+import { CssTransform } from "./CssTransform";
 import { NamedComponent } from "./NamedComponent";
 import { NamedProp } from "./NamedProp";
 
@@ -46,148 +47,68 @@ export function rewriteTemplate(
   return [template.outerHTML, rootVisibilityProp];
 }
 
-export function rewriteCss(
-  src: string,
-  imageDir: string,
-  select: (selector: string) => boolean,
-): [code: string, copyFiles: CopyFile[]] {
-  const [styles, copy] = editCssNodes(css.parse(src), imageDir, select);
-  return [styles ? css.stringify(styles) : "", copy];
-}
+export class CssFix extends CssTransform {
+  imageDir: string;
+  select: (selector: string) => boolean;
+  copy: CopyFile[];
 
-function editCssNodes<T extends css.Node | css.KeyFrame>(
-  node: T,
-  imageDir: string,
-  select: (selector: string) => boolean,
-): [node: T | false, copy: CopyFile[]] {
-  if (node.type === "stylesheet") {
-    if (node.stylesheet !== undefined) {
-      const [stylesheet, copy] =
-        editCssRules(node.stylesheet, imageDir, select);
-      return [{ ...node, stylesheet }, copy];
-    }
-    return [node, []];
+  static runWithCopyFiles(
+    src: string,
+    imageDir: string,
+    select: (selector: string) => boolean,
+  ): [css: string, copyFromTo: CopyFile[]] {
+    const tr = new CssFix(src, imageDir, select);
+    const out = tr.tree(tr.root);
+    return [tr.stringify(out), tr.copy];
   }
-  if (node.type === "rule") {
-    const selectors = (node.selectors || []).filter(s => select(s));
-    if (selectors.length === 0) {
-      return [false, []];
-    }
-    const [n, copy] = editCssDeclarations(node, imageDir, select);
-    return [{ ...n, selectors }, copy];
-  }
-  if (node.type === "comment") {
-    return [node, []];
-  }
-  if (node.type === "charset") {
-    return [select("@charset " + node.charset || "") && node, []];
-  }
-  if (node.type === "custom-media") {
-    return [select("@ustom-media " + node.name || "") && node, []];
-  }
-  if (node.type === "document") {
-    if (select("@document " + node.document || "")) {
-      return editCssRules(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  if (node.type === "font-face") {
-    if (select("@font-face")) {
-      return editCssDeclarations(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  if (node.type === "host") {
-    if (select("@host")) {
-      return editCssRules(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  if (node.type === "import") {
-    return [select("@import " + node.import || "") && node, []];
-  }
-  if (node.type === "keyframes") {
-    if (select("@keyframes " + node.name || "")) {
-      return editCssKeyframes(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  if (node.type === "keyframe") {
-    return editCssDeclarations(node, imageDir, select);
-  }
-  if (node.type === "media") {
-    if (select("@media " + node.media || "")) {
-      return editCssRules(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  if (node.type === "namespace") {
-    return [select("@namespace " + node.namespace || "") && node, []];
-  }
-  if (node.type === "page") {
-    if (select("@page " + node.selectors?.join(", "))) {
-      return editCssDeclarations(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  if (node.type === "supports") {
-    if (select("@supports " + node.supports || "")) {
-      return editCssRules(node, imageDir, select);
-    }
-    return [false, []];
-  }
-  return [node, []];
-}
 
-function editCssRules<T extends css.Node | css.KeyFrame | css.StyleRules>(
-  node: T,
-  imageDir: string,
-  select: (selector: string) => boolean,
-): [node: T, copy: CopyFile[]] {
-  const n = node as CssRules;
-  const [rules, copy] = editCssNodeList(n.rules, imageDir, select);
-  return [{ ...node, rules }, copy];
-}
-
-function editCssDeclarations<T extends css.Node | css.KeyFrame>(
-  node: T,
-  imageDir: string,
-  sel: (selector: string) => boolean,
-): [node: T, copy: CopyFile[]] {
-  const n = node as CssDeclarations;
-  const [declarations, copy] = editCssNodeList(n.declarations, imageDir, sel);
-  return [{ ...node, declarations }, copy];
-}
-
-function editCssKeyframes<T extends css.Node | css.KeyFrame>(
-  node: T,
-  imageDir: string,
-  select: (selector: string) => boolean,
-): [node: T, copy: CopyFile[]] {
-  const n = node as css.KeyFrames;
-  const [keyframes, copy] = editCssNodeList(n.keyframes, imageDir, select);
-  return [{ ...node, keyframes }, copy];
-}
-
-function editCssNodeList<T extends css.Node | css.KeyFrame>(
-  nodes: T[] | undefined,
-  imageDir: string,
-  select: (selector: string) => boolean,
-): [nodes: T[] | undefined, copy: CopyFile[]] {
-  if (nodes === undefined) {
-    return [undefined, []];
+  constructor(
+    src: string,
+    imageDir: string,
+    select: (selector: string) => boolean,
+  ) {
+    super(src);
+    this.imageDir = imageDir;
+    this.select = select;
+    this.copy = [];
   }
-  const edited: T[] = [];
-  const copy: CopyFile[] = [];
-  for (const node of nodes) {
-    const [n, c] = editCssNodes(node, imageDir, select);
-    if (n !== false) {
-      edited.push(n);
-      copy.push(...c);
+
+  value(value: string | undefined): string | undefined {
+    return value !== undefined ? this.fixUrl(value) : undefined;
+  }
+
+  filterSelectors(selector: string): boolean {
+    return this.select(selector);
+  }
+
+  filterAtRule(atRule: string): boolean {
+    return this.select(atRule);
+  }
+
+  fixUrl(value: string): string {
+    let out = value;
+    for (const match of value.matchAll(/url\(([^)]*)\)/gi)) {
+      const url = this.stripPossibleQuotes(match[1]);
+      if (!url.startsWith("#") && !url.match(/^\w+:.*/)) {
+        const parts = url.match(/^([^?#]+)(.*)$/);
+        const oldFile = parts && parts[1];
+        if (oldFile) {
+          const newFile = path.join(this.imageDir, path.basename(oldFile));
+          out = out.replace(oldFile, newFile);
+          this.copy.push({ from: oldFile, to: newFile });
+        }
+      }
     }
+    return out;
   }
-  return [edited, copy];
-}
 
-type CssRules = css.StyleRules | css.Document | css.Host | css.Media;
-type CssDeclarations = css.Rule | css.FontFace | css.KeyFrame | css.Page;
+  stripPossibleQuotes(val: string): string {
+    if (
+      (val.startsWith("\"") && val.endsWith("\""))
+      || (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      return val.slice(1, -1);
+    }
+    return val;
+  }
+}

@@ -6,7 +6,7 @@ import { NamedProp } from "../src/parse/NamedProp";
 import {
   getReadmeHtmlExample,
   ONE_ELEMENT_COMPONENT,
-  WEBFLOWISH_CODE_FILE,
+  WEBFLOWISH_CODE,
 } from "./helpers";
 
 const docs = new DocPool();
@@ -83,13 +83,15 @@ function sortedPropsValues(props: NamedProp[]): string[][] {
 
 test("Should ignore named CSS blocks and rewrite all images", async () => {
   const parser = new BaseParser(
-    new DocPool(WEBFLOWISH_CODE_FILE), applyDefaults({
+    new DocPool(WEBFLOWISH_CODE), applyDefaults({
       ignoreStyles: ["bo*", "@media \\*"],
     })
   );
-  const css = await parser.getStyleElements();
-  expect(css).toHaveLength(1);
-  expect(css[0].content?.match(/body {/)).toBeNull();
-  expect(css[0].content?.match(/@media /)).not.toBeNull();
-  console.log(css);
+  const files = await parser.getStyleElements();
+  expect(files).toHaveLength(2);
+  expect(files[0].content).not.toContain("body {");
+  expect(files[0].content).toContain("@media ");
+  expect(files[0].content).toContain("url('images/helpers.ts')");
+  expect(files[1].baseName).toEqual("helpers.ts");
+  expect(files[1].dirName).toEqual("images");
 });

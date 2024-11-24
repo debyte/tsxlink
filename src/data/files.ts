@@ -31,26 +31,24 @@ export const removeFile = (filePath: string) => fs.unlink(filePath);
 export const dirFiles = async (
   dirPath: string,
   select: (name: string) => boolean,
-): Promise<FileData[]> => (await fs.readdir(dirPath))
+): Promise<FileData[]> => (await fs.readdir(dirPath, { recursive: true }))
   .filter(name => select(name))
-  .map(
-    name => ({
-      baseName: name,
-      buffer: fs.readFile(path.join(dirPath, name)),
-    })
-  );
+  .map(name => ({
+    dirName: path.dirname(name),
+    baseName: path.basename(name),
+    buffer: fs.readFile(path.join(dirPath, name)),
+  }));
 
 export const zipFiles = async (
   filePath: string,
   select: (name: string) => boolean,
 ): Promise<FileData[]> => (await unzipper.Open.file(filePath)).files
   .filter(file => select(file.path))
-  .map(
-    file => ({
-      baseName: path.basename(file.path),
-      buffer: file.buffer(),
-    })
-  );
+  .map(file => ({
+    dirName: path.dirname(file.path),
+    baseName: path.basename(file.path),
+    buffer: file.buffer(),
+  }));
 
 export const ext = (extension?: string) =>
   extension ? `.${extension.toLowerCase()}` : null;
@@ -98,14 +96,13 @@ export async function writeFiles(
   });
 };
 
-export const copyFile = (
-  src: FileData,
-  baseName: string,
-  dirName?: string,
-): FileData => (src.buffer !== undefined
-  ? { baseName, buffer: src.buffer, dirName }
-  : { baseName, content: src.content || "", dirName }
-);
+export function copyFile(src: FileData, filePath: string): FileData {
+  const dirName = path.dirname(filePath);
+  const baseName = path.basename(filePath);
+  return src.buffer !== undefined
+    ? { baseName, buffer: src.buffer, dirName }
+    : { baseName, content: src.content || "", dirName }
+}
 
 export async function removeMissingFiles(
   dirPath: string,

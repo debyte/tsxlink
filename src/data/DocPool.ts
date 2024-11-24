@@ -1,6 +1,14 @@
 import { JSDOM } from "jsdom";
+import path from "path";
 import { CopyFile, DocSource, FileData } from "../types";
-import { dirFiles, ext, readFile, wildcardRegexp, zipFiles } from "./files";
+import {
+  copyFile,
+  dirFiles,
+  ext,
+  readFile,
+  wildcardRegexp,
+  zipFiles,
+} from "./files";
 
 export class DocPool {
   source?: DocSource;
@@ -65,16 +73,19 @@ export class DocPool {
     return [];
   }
 
-  async copyFiles(copy: CopyFile[], dirName?: string): Promise<FileData[]> {
-    const files = await this.selectFiles({ names: copy.map(cp => cp.from) });
-    return copy.map(cp => {
-      const from = files.find(f => f.baseName === cp.from);
-      return {
-        baseName: cp.to,
-        buffer: from?.buffer,
-        content: from?.content,
-        dirName
-      };
-    });
+  async copyFiles(relDir: string, copy: CopyFile[]): Promise<FileData[]> {
+    const names = copy.map(({ from }) =>
+      from.startsWith("/") ? from.slice(1) : path.join(relDir, from)
+    );
+    const out: FileData[] = [];
+    for (const file of await this.selectFiles({ names })) {
+      const i = names.findIndex(
+        name => name === path.join(file.dirName || ".", file.baseName)
+      );
+      if (i >= 0) {
+        out.push(copyFile(file, copy[i].to));
+      }
+    }
+    return out;
   }
 }

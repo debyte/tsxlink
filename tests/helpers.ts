@@ -9,9 +9,9 @@ export const getReadmeHtmlExample = async (): Promise<DocSource> => {
   return { type: "string", data: match![0] };
 };
 
-export const WEBFLOWISH_CODE_FILE: DocSource = {
-  type: "file",
-  data: "tests/webflowish.html",
+export const WEBFLOWISH_CODE: DocSource = {
+  type: "dir",
+  data: "tests/",
 };
 
 export const ONE_ELEMENT_COMPONENT: DocSource = {
