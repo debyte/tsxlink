@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.CssFix = void 0;
 exports.rewriteTemplate = rewriteTemplate;
-exports.rewriteCss = rewriteCss;
-const css_1 = __importDefault(require("css"));
+const path_1 = __importDefault(require("path"));
 const attributes_1 = require("./attributes");
+const CssTransform_1 = require("./CssTransform");
 function rewriteTemplate(component, props) {
     const template = component.templates[0];
     let rootVisibilityProp;
@@ -44,116 +45,49 @@ function rewriteTemplate(component, props) {
     }
     return [template.outerHTML, rootVisibilityProp];
 }
-function rewriteCss(src, imageDir, select) {
-    const [styles, copy] = editCssNodes(css_1.default.parse(src), imageDir, select);
-    return [styles ? css_1.default.stringify(styles) : "", copy];
+class CssFix extends CssTransform_1.CssTransform {
+    static runWithCopyFiles(src, imageDir, select) {
+        const tr = new CssFix(src, imageDir, select);
+        const out = tr.tree(tr.root);
+        return [tr.stringify(out), tr.copy];
+    }
+    constructor(src, imageDir, select) {
+        super(src);
+        this.imageDir = imageDir;
+        this.select = select;
+        this.copy = [];
+    }
+    value(value) {
+        return value !== undefined ? this.fixUrl(value) : undefined;
+    }
+    filterSelectors(selector) {
+        return this.select(selector);
+    }
+    filterAtRule(atRule) {
+        return this.select(atRule);
+    }
+    fixUrl(value) {
+        let out = value;
+        for (const match of value.matchAll(/url\(([^)]*)\)/gi)) {
+            const url = this.stripPossibleQuotes(match[1]);
+            if (!url.startsWith("#") && !url.match(/^\w+:.*/)) {
+                const parts = url.match(/^([^?#]+)(.*)$/);
+                const oldFile = parts && parts[1];
+                if (oldFile) {
+                    const newFile = path_1.default.join(this.imageDir, path_1.default.basename(oldFile));
+                    out = out.replace(oldFile, newFile);
+                    this.copy.push({ from: oldFile, to: newFile });
+                }
+            }
+        }
+        return out;
+    }
+    stripPossibleQuotes(val) {
+        if ((val.startsWith("\"") && val.endsWith("\""))
+            || (val.startsWith("'") && val.endsWith("'"))) {
+            return val.slice(1, -1);
+        }
+        return val;
+    }
 }
-function editCssNodes(node, imageDir, select) {
-    var _a;
-    if (node.type === "stylesheet") {
-        if (node.stylesheet !== undefined) {
-            const [stylesheet, copy] = editCssRules(node.stylesheet, imageDir, select);
-            return [{ ...node, stylesheet }, copy];
-        }
-        return [node, []];
-    }
-    if (node.type === "rule") {
-        const selectors = (node.selectors || []).filter(s => select(s));
-        if (selectors.length === 0) {
-            return [false, []];
-        }
-        const [n, copy] = editCssDeclarations(node, imageDir, select);
-        return [{ ...n, selectors }, copy];
-    }
-    if (node.type === "comment") {
-        return [node, []];
-    }
-    if (node.type === "charset") {
-        return [select("@charset " + node.charset || "") && node, []];
-    }
-    if (node.type === "custom-media") {
-        return [select("@ustom-media " + node.name || "") && node, []];
-    }
-    if (node.type === "document") {
-        if (select("@document " + node.document || "")) {
-            return editCssRules(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    if (node.type === "font-face") {
-        if (select("@font-face")) {
-            return editCssDeclarations(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    if (node.type === "host") {
-        if (select("@host")) {
-            return editCssRules(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    if (node.type === "import") {
-        return [select("@import " + node.import || "") && node, []];
-    }
-    if (node.type === "keyframes") {
-        if (select("@keyframes " + node.name || "")) {
-            return editCssKeyframes(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    if (node.type === "keyframe") {
-        return editCssDeclarations(node, imageDir, select);
-    }
-    if (node.type === "media") {
-        if (select("@media " + node.media || "")) {
-            return editCssRules(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    if (node.type === "namespace") {
-        return [select("@namespace " + node.namespace || "") && node, []];
-    }
-    if (node.type === "page") {
-        if (select("@page " + ((_a = node.selectors) === null || _a === void 0 ? void 0 : _a.join(", ")))) {
-            return editCssDeclarations(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    if (node.type === "supports") {
-        if (select("@supports " + node.supports || "")) {
-            return editCssRules(node, imageDir, select);
-        }
-        return [false, []];
-    }
-    return [node, []];
-}
-function editCssRules(node, imageDir, select) {
-    const n = node;
-    const [rules, copy] = editCssNodeList(n.rules, imageDir, select);
-    return [{ ...node, rules }, copy];
-}
-function editCssDeclarations(node, imageDir, sel) {
-    const n = node;
-    const [declarations, copy] = editCssNodeList(n.declarations, imageDir, sel);
-    return [{ ...node, declarations }, copy];
-}
-function editCssKeyframes(node, imageDir, select) {
-    const n = node;
-    const [keyframes, copy] = editCssNodeList(n.keyframes, imageDir, select);
-    return [{ ...node, keyframes }, copy];
-}
-function editCssNodeList(nodes, imageDir, select) {
-    if (nodes === undefined) {
-        return [undefined, []];
-    }
-    const edited = [];
-    const copy = [];
-    for (const node of nodes) {
-        const [n, c] = editCssNodes(node, imageDir, select);
-        if (n !== false) {
-            edited.push(n);
-            copy.push(...c);
-        }
-    }
-    return [edited, copy];
-}
+exports.CssFix = CssFix;

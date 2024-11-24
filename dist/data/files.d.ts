@@ -12,5 +12,5 @@ export declare const hasExtension: (filePath: string, extension: string) => bool
 export declare const wildcardRegexp: (ignore: string) => RegExp;
 export declare function absPath(pathName: string | undefined, baseName: string, extension?: string, dirName?: string): string;
 export declare function writeFiles(dirPath: string, files: FileData[]): Promise<Promise<string>[]>;
-export declare const copyFile: (src: FileData, baseName: string, dirName?: string) => FileData;
+export declare function copyFile(src: FileData, filePath: string): FileData;
 export declare function removeMissingFiles(dirPath: string, keepFileNames: string[]): Promise<Promise<string>[]>;

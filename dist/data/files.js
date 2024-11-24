@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.copyFile = exports.wildcardRegexp = exports.hasExtension = exports.ext = exports.zipFiles = exports.dirFiles = exports.removeFile = exports.writeTextFile = exports.readTextFile = exports.writeFile = exports.readFile = void 0;
+exports.wildcardRegexp = exports.hasExtension = exports.ext = exports.zipFiles = exports.dirFiles = exports.removeFile = exports.writeTextFile = exports.readTextFile = exports.writeFile = exports.readFile = void 0;
 exports.fileExists = fileExists;
 exports.absPath = absPath;
 exports.writeFiles = writeFiles;
+exports.copyFile = copyFile;
 exports.removeMissingFiles = removeMissingFiles;
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
@@ -30,16 +31,18 @@ const writeTextFile = (filePath, content) => promises_1.default.writeFile(filePa
 exports.writeTextFile = writeTextFile;
 const removeFile = (filePath) => promises_1.default.unlink(filePath);
 exports.removeFile = removeFile;
-const dirFiles = async (dirPath, select) => (await promises_1.default.readdir(dirPath))
+const dirFiles = async (dirPath, select) => (await promises_1.default.readdir(dirPath, { recursive: true }))
     .filter(name => select(name))
     .map(name => ({
-    baseName: name,
+    dirName: path_1.default.dirname(name),
+    baseName: path_1.default.basename(name),
     buffer: promises_1.default.readFile(path_1.default.join(dirPath, name)),
 }));
 exports.dirFiles = dirFiles;
 const zipFiles = async (filePath, select) => (await unzipper_1.default.Open.file(filePath)).files
     .filter(file => select(file.path))
     .map(file => ({
+    dirName: path_1.default.dirname(file.path),
     baseName: path_1.default.basename(file.path),
     buffer: file.buffer(),
 }));
@@ -78,10 +81,13 @@ async function writeFiles(dirPath, files) {
     });
 }
 ;
-const copyFile = (src, baseName, dirName) => (src.buffer !== undefined
-    ? { baseName, buffer: src.buffer, dirName }
-    : { baseName, content: src.content || "", dirName });
-exports.copyFile = copyFile;
+function copyFile(src, filePath) {
+    const dirName = path_1.default.dirname(filePath);
+    const baseName = path_1.default.basename(filePath);
+    return src.buffer !== undefined
+        ? { baseName, buffer: src.buffer, dirName }
+        : { baseName, content: src.content || "", dirName };
+}
 async function removeMissingFiles(dirPath, keepFileNames) {
     return (await (0, exports.dirFiles)(dirPath, n => !keepFileNames.includes(n))).map(async (file) => {
         await (0, exports.removeFile)(path_1.default.join(dirPath, file.baseName));

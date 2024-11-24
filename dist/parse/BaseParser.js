@@ -111,12 +111,12 @@ class BaseParser {
         return (0, rewrite_1.rewriteTemplate)(component, props);
     }
     async formatCss(data) {
-        const [css, copyFromTo] = (0, rewrite_1.rewriteCss)(data.buffer !== undefined
+        const [css, copyFromTo] = rewrite_1.CssFix.runWithCopyFiles(data.buffer !== undefined
             ? (await data.buffer).toString()
             : data.content || "", this.config.imageDir, s => this.cssIgnore.every(i => !i.test(s)));
         return [
             { baseName: data.baseName, content: css },
-            ...(await this.docs.copyFiles(copyFromTo)),
+            ...(await this.docs.copyFiles(data.dirName || ".", copyFromTo)),
         ];
     }
 }

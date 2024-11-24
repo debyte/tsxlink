@@ -11,5 +11,5 @@ export declare class DocPool {
         extension?: string;
         names?: string[];
     }): Promise<FileData[]>;
-    copyFiles(copy: CopyFile[], dirName?: string): Promise<FileData[]>;
+    copyFiles(relDir: string, copy: CopyFile[]): Promise<FileData[]>;
 }

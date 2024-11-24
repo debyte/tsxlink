@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocPool = void 0;
 const jsdom_1 = require("jsdom");
+const path_1 = __importDefault(require("path"));
 const files_1 = require("./files");
 class DocPool {
     constructor(source, ignore) {
@@ -57,17 +61,16 @@ class DocPool {
         }
         return [];
     }
-    async copyFiles(copy, dirName) {
-        const files = await this.selectFiles({ names: copy.map(cp => cp.from) });
-        return copy.map(cp => {
-            const from = files.find(f => f.baseName === cp.from);
-            return {
-                baseName: cp.to,
-                buffer: from === null || from === void 0 ? void 0 : from.buffer,
-                content: from === null || from === void 0 ? void 0 : from.content,
-                dirName
-            };
-        });
+    async copyFiles(relDir, copy) {
+        const names = copy.map(({ from }) => from.startsWith("/") ? from.slice(1) : path_1.default.join(relDir, from));
+        const out = [];
+        for (const file of await this.selectFiles({ names })) {
+            const i = names.findIndex(name => name === path_1.default.join(file.dirName || ".", file.baseName));
+            if (i >= 0) {
+                out.push((0, files_1.copyFile)(file, copy[i].to));
+            }
+        }
+        return out;
     }
 }
 exports.DocPool = DocPool;
