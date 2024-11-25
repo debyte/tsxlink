@@ -10,7 +10,7 @@ class BaseParser {
     constructor(docs, config) {
         this.docs = docs;
         this.config = config;
-        this.cssIgnore = config.ignoreStyles.map(i => new RegExp(`^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`, "g"));
+        this.cssIgnore = config.ignoreStyles.map(i => new RegExp(`^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`));
     }
     async getComponents() {
         const components = [];
@@ -113,7 +113,7 @@ class BaseParser {
     async formatCss(data) {
         const [css, copyFromTo] = rewrite_1.CssFix.runWithCopyFiles(data.buffer !== undefined
             ? (await data.buffer).toString()
-            : data.content || "", this.config.imageDir, s => this.cssIgnore.every(i => !i.test(s)));
+            : data.content || "", this.config.imageDir, s => this.cssIgnore.every(i => s.match(i) === null));
         return [
             { baseName: data.baseName, content: css },
             ...(await this.docs.copyFiles(data.dirName || ".", copyFromTo)),

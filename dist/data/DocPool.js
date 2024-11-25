@@ -43,7 +43,8 @@ class DocPool {
             if (opt.extension) {
                 const end = (0, files_1.ext)(opt.extension);
                 const ign = this.ignore;
-                select = n => ((!end || n.toLowerCase().endsWith(end)) && ign.every(i => !i.test(n)));
+                select = n => ((!end || n.toLowerCase().endsWith(end))
+                    && ign.every(i => n.match(i) === null));
             }
             else if (opt.names) {
                 const names = opt.names;
