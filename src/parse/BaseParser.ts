@@ -19,7 +19,7 @@ export class BaseParser {
     this.docs = docs;
     this.config = config;
     this.cssIgnore = config.ignoreStyles.map(i => new RegExp(
-      `^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`, "g"
+      `^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`
     ));
   }
 
@@ -149,7 +149,7 @@ export class BaseParser {
         ? (await data.buffer).toString()
         : data.content || "",
       this.config.imageDir,
-      s => this.cssIgnore.every(i => !i.test(s)),
+      s => this.cssIgnore.every(i => s.match(i) === null),
     );
     return [
       { baseName: data.baseName, content: css },

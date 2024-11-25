@@ -26,13 +26,13 @@ test("Should ignore using wildcard paths", () => {
     "tmp/bar.css",
     "zyx/tmp/foo.html",
   ];
-  expect(paths.filter(p => !ignore[0].test(p))).toEqual([
+  expect(paths.filter(p => p.match(ignore[0]) === null)).toEqual([
     paths[0], paths[3], paths[4]
   ]);
-  expect(paths.filter(p => !ignore[1].test(p))).toEqual([
+  expect(paths.filter(p => p.match(ignore[1]) === null)).toEqual([
     paths[0], paths[1], paths[3], paths[4]
   ]);
-  expect(paths.filter(p => !ignore[2].test(p))).toEqual([
+  expect(paths.filter(p => p.match(ignore[2]) === null)).toEqual([
     paths[0], paths[1]
   ]);
 });

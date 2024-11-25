@@ -56,7 +56,8 @@ export class DocPool {
         const end = ext(opt.extension);
         const ign = this.ignore;
         select = n => (
-          (!end || n.toLowerCase().endsWith(end)) && ign.every(i => !i.test(n))
+          (!end || n.toLowerCase().endsWith(end))
+          && ign.every(i => n.match(i) === null)
         );
       } else if (opt.names) {
         const names = opt.names;
