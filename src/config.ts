@@ -1,3 +1,4 @@
+import path from "path";
 import {
   filePath,
   fileExists,
@@ -11,11 +12,13 @@ export const CONFIG_NAME = "tsxlink.config";
 
 export const readConfig = () => returnFirstConfig([
   [["mjs"], async (filePath: string) => {
-    return eval(`import("${filePath}").then(m => m.default);`) as Config;
+    const p = path.resolve(filePath);
+    return eval(`import("${p}").then(m => m.default);`) as Config;
   }],
   [["cjs", "js"], async (filePath: string) => {
+    const p = path.resolve(filePath);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(filePath) as Config;
+    return require(p) as Config;
   }],
   [["json"], async (filePath: string) => {
     return JSON.parse(await readTextFile(filePath)) as Config;

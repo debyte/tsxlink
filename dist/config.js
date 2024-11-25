@@ -1,17 +1,23 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readConfig = exports.CONFIG_NAME = void 0;
 exports.writeConfig = writeConfig;
 exports.removeConfig = removeConfig;
+const path_1 = __importDefault(require("path"));
 const files_1 = require("./data/files");
 exports.CONFIG_NAME = "tsxlink.config";
 const readConfig = () => returnFirstConfig([
     [["mjs"], async (filePath) => {
-            return eval(`import("${filePath}").then(m => m.default);`);
+            const p = path_1.default.resolve(filePath);
+            return eval(`import("${p}").then(m => m.default);`);
         }],
     [["cjs", "js"], async (filePath) => {
+            const p = path_1.default.resolve(filePath);
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            return require(filePath);
+            return require(p);
         }],
     [["json"], async (filePath) => {
             return JSON.parse(await (0, files_1.readTextFile)(filePath));
