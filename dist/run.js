@@ -60,7 +60,7 @@ async function syncComponents(parser, config) {
         baseName: `${component.name}.tsx`,
         content: (0, render_1.renderFC)(component),
     }))));
-    await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
+    await Promise.all(await removeAndLogFiles(config.componentDir, [...fileNames, config.imageDir]));
     return fileNames;
 }
 async function syncAssets(parser, config) {

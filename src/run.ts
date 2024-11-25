@@ -82,7 +82,9 @@ async function syncComponents(
       })),
     )
   );
-  await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
+  await Promise.all(await removeAndLogFiles(
+    config.componentDir, [...fileNames, config.imageDir]
+  ));
   return fileNames;
 }
 
