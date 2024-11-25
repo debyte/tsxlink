@@ -1,7 +1,7 @@
 import path from "path";
 import {
-  filePath,
   fileExists,
+  filePath,
   readTextFile,
   removeFile,
   writeTextFile,

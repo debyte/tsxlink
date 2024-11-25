@@ -28,27 +28,40 @@ export const writeTextFile = (filePath: string, content: string) =>
 
 export const removeFile = (filePath: string) => fs.unlink(filePath);
 
-export const dirFiles = async (
+export async function dirFiles(
   dirPath: string,
   select: (name: string, path: string) => boolean,
-): Promise<FileData[]> => (await fs.readdir(dirPath, { recursive: true }))
-  .filter(name => select(name, path.join(dirPath, name)))
-  .map(name => ({
-    dirName: path.dirname(name),
-    baseName: path.basename(name),
-    buffer: fs.readFile(path.join(dirPath, name)),
-  }));
+): Promise<FileData[]> {
+  const files: FileData[] = [];
+  for (const filePath of await fs.readdir(dirPath, { recursive: true })) {
+    const p = path.join(dirPath, filePath);
+    if (select(filePath, p) && (await fs.lstat(p)).isFile()) {
+      files.push({
+        dirName: path.dirname(filePath),
+        baseName: path.basename(filePath),
+        buffer: fs.readFile(p),
+      });
+    }
+  }
+  return files;
+}
 
-export const zipFiles = async (
+export async function zipFiles(
   filePath: string,
   select: (name: string, path: string) => boolean,
-): Promise<FileData[]> => (await unzipper.Open.file(filePath)).files
-  .filter(file => select(file.path, file.path))
-  .map(file => ({
-    dirName: path.dirname(file.path),
-    baseName: path.basename(file.path),
-    buffer: file.buffer(),
-  }));
+): Promise<FileData[]> {
+  const files: FileData[] = [];
+  for (const file of (await unzipper.Open.file(filePath)).files) {
+    if (select(file.path, file.path)) {
+      files.push({
+        dirName: path.dirname(file.path),
+        baseName: path.basename(file.path),
+        buffer: file.buffer(),
+      });
+    }
+  }
+  return files;
+}
 
 export const ext = (extension?: string) =>
   extension ? `.${extension.toLowerCase()}` : null;

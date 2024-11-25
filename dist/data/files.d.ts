@@ -5,8 +5,8 @@ export declare const writeFile: (filePath: string, content: Buffer) => Promise<v
 export declare const readTextFile: (filePath: string) => Promise<string>;
 export declare const writeTextFile: (filePath: string, content: string) => Promise<void>;
 export declare const removeFile: (filePath: string) => Promise<void>;
-export declare const dirFiles: (dirPath: string, select: (name: string, path: string) => boolean) => Promise<FileData[]>;
-export declare const zipFiles: (filePath: string, select: (name: string, path: string) => boolean) => Promise<FileData[]>;
+export declare function dirFiles(dirPath: string, select: (name: string, path: string) => boolean): Promise<FileData[]>;
+export declare function zipFiles(filePath: string, select: (name: string, path: string) => boolean): Promise<FileData[]>;
 export declare const ext: (extension?: string) => string | null;
 export declare const hasExtension: (filePath: string, extension: string) => boolean;
 export declare const wildcardRegexp: (ignore: string) => RegExp;
