@@ -47,9 +47,11 @@ export class DocPool {
     });
   }
 
-  async selectFiles(opt: { extension?: string, names?: string[] }) {
+  async selectFiles(
+    opt: { extension?: string, names?: string[] },
+  ) {
     if (this.source !== undefined) {
-      let select: (name: string) => boolean = () => true;
+      let select: (name: string, path: string) => boolean = () => true;
       if (opt.extension) {
         const end = ext(opt.extension);
         const ign = this.ignore;

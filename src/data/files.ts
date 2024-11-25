@@ -30,9 +30,9 @@ export const removeFile = (filePath: string) => fs.unlink(filePath);
 
 export const dirFiles = async (
   dirPath: string,
-  select: (name: string) => boolean,
+  select: (name: string, path: string) => boolean,
 ): Promise<FileData[]> => (await fs.readdir(dirPath, { recursive: true }))
-  .filter(name => select(name))
+  .filter(name => select(name, path.join(dirPath, name)))
   .map(name => ({
     dirName: path.dirname(name),
     baseName: path.basename(name),
@@ -41,9 +41,9 @@ export const dirFiles = async (
 
 export const zipFiles = async (
   filePath: string,
-  select: (name: string) => boolean,
+  select: (name: string, path: string) => boolean,
 ): Promise<FileData[]> => (await unzipper.Open.file(filePath)).files
-  .filter(file => select(file.path))
+  .filter(file => select(file.path, file.path))
   .map(file => ({
     dirName: path.dirname(file.path),
     baseName: path.basename(file.path),
@@ -66,7 +66,7 @@ const wcPattern = (src: string) => src
   .replace("**/", ".*");
 const wcPost = (i: string) => i.endsWith("/") ? "(.*)?" : "(/.*)?";
 
-export function absPath(
+export function filePath(
   pathName: string | undefined,
   baseName: string,
   extension?: string,
@@ -74,25 +74,25 @@ export function absPath(
 ): string {
   const p = pathName || ".";
   const f = extension ? `${baseName}${ext(extension)}` : baseName
-  return path.resolve(dirName ? path.join(p, dirName, f) : path.join(p, f));
+  return path.join(p, dirName || "", f);
 }
 
 export async function writeFiles(
   dirPath: string,
   files: FileData[],
 ): Promise<Promise<string>[]> {
-  await fs.mkdir(dirPath, { recursive: true });
+  const subDirs = new Set(files.map(f => f.dirName || ""));
+  for (const dirName of subDirs) {
+    await fs.mkdir(path.join(dirPath, dirName), { recursive: true });
+  }
   return files.map(async file => {
-    if (file.dirName !== undefined) {
-      await fs.mkdir(path.join(dirPath, file.dirName), { recursive: true });
-    }
-    const filePath = absPath(dirPath, file.baseName, undefined, file.dirName);
+    const p = filePath(dirPath, file.baseName, undefined, file.dirName);
     if (file.buffer !== undefined) {
-      await writeFile(filePath, await file.buffer);
+      await writeFile(p, await file.buffer);
     } else {
-      await writeTextFile(filePath, file.content || "");
+      await writeTextFile(p, file.content || "");
     }
-    return file.baseName;
+    return p;
   });
 };
 
@@ -106,12 +106,13 @@ export function copyFile(src: FileData, filePath: string): FileData {
 
 export async function removeMissingFiles(
   dirPath: string,
-  keepFileNames: string[],
+  keepFilePaths: string[],
 ): Promise<Promise<string>[]> {
-  return (await dirFiles(dirPath, n => !keepFileNames.includes(n))).map(
+  return (await dirFiles(dirPath, (_, p) => !keepFilePaths.includes(p))).map(
     async file => {
-      await removeFile(path.join(dirPath, file.baseName));
-      return file.baseName;
+      const p = filePath(dirPath, file.baseName, undefined, file.dirName);
+      await removeFile(p);
+      return p;
     }
   );
 }

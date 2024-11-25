@@ -1,5 +1,5 @@
 import {
-  absPath,
+  filePath,
   fileExists,
   readTextFile,
   removeFile,
@@ -64,4 +64,4 @@ export async function removeConfig(extension: ConfigExtension) {
   await removeFile(confPath(extension));
 }
 
-const confPath = (extension: string) => absPath(".", CONFIG_NAME, extension);
+const confPath = (extension: string) => filePath(".", CONFIG_NAME, extension);

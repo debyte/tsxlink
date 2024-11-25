@@ -48,4 +48,4 @@ async function writeConfig(extension, config) {
 async function removeConfig(extension) {
     await (0, files_1.removeFile)(confPath(extension));
 }
-const confPath = (extension) => (0, files_1.absPath)(".", exports.CONFIG_NAME, extension);
+const confPath = (extension) => (0, files_1.filePath)(".", exports.CONFIG_NAME, extension);
