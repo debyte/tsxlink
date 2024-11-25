@@ -82,9 +82,7 @@ async function syncComponents(
       })),
     )
   );
-  await Promise.all(await removeAndLogFiles(
-    config.componentDir, [...fileNames, config.imageDir]
-  ));
+  await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
   return fileNames;
 }
 
@@ -111,7 +109,9 @@ async function syncAssets(
     ));
   }
   const fileNames = await Promise.all(fileNamePromises);
-  await Promise.all(await removeAndLogFiles(config.assetsDir, fileNames));
+  await Promise.all(await removeAndLogFiles(
+    config.assetsDir, [...fileNames, config.imageDir]
+  ));
   return fileNames;
 }
 
