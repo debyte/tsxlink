@@ -90,6 +90,10 @@ export function filePath(
   return path.join(p, dirName || "", f);
 }
 
+export function baseName(filePath: string): string {
+  return path.basename(filePath);
+}
+
 export async function writeFiles(
   dirPath: string,
   files: FileData[],

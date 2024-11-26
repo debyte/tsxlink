@@ -2,15 +2,18 @@ export type Config = {
   version?: number;
   sourceType?: SourceType;
   source?: string;
-  exportStyleElements?: boolean;
+  copyMarkedFiles?: boolean;
   copyCssFiles?: boolean;
   copyJsFiles?: boolean;
+  exportStyleElements?: boolean;
+  useClassNameProperty?: boolean;
+  useNextJsImages?: boolean;
   componentDir?: string;
   assetsDir?: string;
   styleFile?: string;
-  imageDir?: string;
   ignoreFiles?: string[];
-  ignoreStyles?: string[];
+  dropStyles?: string[];
+  dropAttributes?: string[];
   configExtension?: ConfigExtension;
 };
 
@@ -18,15 +21,18 @@ export type RuntimeConfig = {
   version: number;
   sourceType: SourceType;
   source?: string;
-  exportStyleElements: boolean;
+  copyMarkedFiles: boolean;
   copyCssFiles: boolean;
   copyJsFiles: boolean;
+  exportStyleElements: boolean;
+  useClassNameProperty: boolean;
+  useNextJsImages: boolean;
   componentDir: string;
   assetsDir: string;
   styleFile: string;
-  imageDir: string;
   ignoreFiles: string[];
-  ignoreStyles: string[];
+  dropStyles: string[];
+  dropAttributes: string[];
 };
 
 export type SourceType = "custom" | "webflow/export";

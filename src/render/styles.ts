@@ -5,19 +5,17 @@ export type StyleObject = { [property: string]: string };
 
 export function styleToObject(
   src: string | null,
-  imageDir: string,
 ): [styles: StyleObject, copy: CopyFile[]] {
   const out: StyleObject = {};
   const copy: CopyFile[] = [];
+  const css = new CssFilterAndFixUrls("", () => true);
   for (const part of (src || "").split(";")) {
     const d = part.trim();
     if (d !== "") {
       const [property, rawValue] = d.split(":", 2);
-      const [value, cp] = CssFilterAndFixUrls.runValue(
-        rawValue.trimStart(), imageDir
-      );
-      out[toCamelCase(property.trimEnd())] = value;
-      copy.push(...cp);
+      css.copy = [];
+      out[toCamelCase(property.trimEnd())] = css.value(rawValue.trimStart())!;
+      copy.push(...css.copy);
     }
   }
   return [out, copy];

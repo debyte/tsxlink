@@ -74,6 +74,7 @@ async function syncComponents(
 ): Promise<string[]> {
   const fileNamePromises: Promise<string>[] = [];
   for (const component of await parser.getComponents()) {
+    // TODO component to config.componentDir
     fileNamePromises.push(...await writeAndLogFiles(
       config.assetsDir, await renderComponent(
         config, parser.docs, component,
@@ -108,9 +109,7 @@ async function syncAssets(
     ));
   }
   const fileNames = await Promise.all(fileNamePromises);
-  await Promise.all(await removeAndLogFiles(
-    config.assetsDir, [...fileNames, config.imageDir]
-  ));
+  await Promise.all(await removeAndLogFiles(config.assetsDir, fileNames));
   return fileNames;
 }
 

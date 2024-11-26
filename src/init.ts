@@ -9,9 +9,8 @@ import {
 } from "./types";
 
 export const DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
-export const DEFAULT_ASSETS_DIR = "./src/app/tsxlink";
+export const DEFAULT_ASSETS_DIR = "./src/assets/tsxlink";
 export const DEFAULT_STYLE_FILE = "export.css";
-export const DEFAULT_IMAGE_DIR = "images";
 
 const INIT_CHOICES: InitChoice[] = [
   {
@@ -27,18 +26,33 @@ const INIT_CHOICES: InitChoice[] = [
     prompt: "Source file, directory, or URL, unless provided on command line",
   },
   {
+    key: "copyMarkedFiles",
+    prompt: "Copy any files marked with data-tsx-asset to assets",
+    default: "yes",
+  },
+  {
+    key: "copyCssFiles",
+    prompt: "Copy any separate CSS files to assets",
+    default: "yes",
+  },
+  {
+    key: "copyJsFiles",
+    prompt: "Copy any separate JS files to assets",
+    default: "no",
+  },
+  {
     key: "exportStyleElements",
     prompt: "Export CSS from possible style elements to assets",
     default: "yes",
   },
   {
-    key: "copyCssFiles",
-    prompt: "Copy separate CSS files to assets",
+    key: "useClassNameProperty",
+    prompt: "Add property to edit component class names",
     default: "yes",
   },
   {
-    key: "copyJsFiles",
-    prompt: "Copy separate JS files to assets",
+    key: "useNextJsImages",
+    prompt: "Replace <img> with Next.js <Image>",
     default: "no",
   },
   {
@@ -67,15 +81,18 @@ export const applyDefaults = (config: Config): RuntimeConfig => ({
   version: config.version || 1,
   sourceType: config.sourceType || "custom",
   source: config.source,
-  exportStyleElements: config.exportStyleElements || true,
+  copyMarkedFiles: config.copyMarkedFiles || true,
   copyCssFiles: config.copyCssFiles || true,
   copyJsFiles: config.copyJsFiles || false,
+  exportStyleElements: config.exportStyleElements || true,
+  useClassNameProperty: config.useClassNameProperty || true,
+  useNextJsImages: config.useNextJsImages || false,
   componentDir: config.componentDir || DEFAULT_COMPONENT_DIR,
   assetsDir: config.assetsDir || DEFAULT_ASSETS_DIR,
   styleFile: config.styleFile || DEFAULT_STYLE_FILE,
-  imageDir: config.imageDir || DEFAULT_IMAGE_DIR,
   ignoreFiles: config.ignoreFiles || [],
-  ignoreStyles: config.ignoreStyles || [],
+  dropStyles: config.dropStyles || [],
+  dropAttributes: config.dropAttributes || [],
 });
 
 export async function runInteractiveInit(
@@ -123,15 +140,18 @@ export async function runInteractiveInit(
   return {
     sourceType: map.get("sourceType") as SourceType,
     source: map.get("source"),
-    exportStyleElements: isTrue(map.get("exportStyleElements")),
+    copyMarkedFiles: isTrue(map.get("copyMarkedFiles")),
     copyCssFiles: isTrue(map.get("copyCssFiles")),
     copyJsFiles: isTrue(map.get("copyJsFiles")),
+    exportStyleElements: isTrue(map.get("exportStyleElements")),
+    useClassNameProperty: isTrue(map.get("useClassNameProperty")),
+    useNextJsImages: isTrue(map.get("useNextJsImages")),
     componentDir: map.get("componentDir"),
     assetsDir: map.get("assetsDir"),
     styleFile: current?.styleFile || DEFAULT_STYLE_FILE,
-    imageDir: current?.imageDir || DEFAULT_IMAGE_DIR,
     ignoreFiles: current?.ignoreFiles || [],
-    ignoreStyles: current?.ignoreStyles || [],
+    dropStyles: current?.dropStyles || [],
+    dropAttributes: current?.dropAttributes || [],
     configExtension: map.get("configExtension") as ConfigExtension,
   };
 }

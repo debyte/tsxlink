@@ -20,8 +20,8 @@ export function rewriteTemplateDom(
   config: RuntimeConfig,
 ): RewriteResult {
   const rootVisibilityProp = rewriteDomProps(component);
-  const [styles, copyFromTo] =
-    rewriteDomStyles(component.template, config.imageDir);
+  //TODO copy img asset and replace with next image (configurable)
+  const [styles, copyFromTo] = rewriteDomStyles(component.template);
   return { rootVisibilityProp, styles, copyFromTo };
 }
 
@@ -60,12 +60,11 @@ function rewriteDomProps(component: Component): string | undefined {
 
 function rewriteDomStyles(
   template: Element,
-  imageDir: string,
 ): [styles: StyleObject[], copy: CopyFile[]] {
   const styles: StyleObject[] = [];
   const copy: CopyFile[] = [];
   for (const e of template.querySelectorAll("[style]")) {
-    const [s, cp] = styleToObject(e.getAttribute("style"), imageDir);
+    const [s, cp] = styleToObject(e.getAttribute("style"));
     e.setAttribute("style", `{tsx:styles[${styles.length}]}`);
     styles.push(s);
     copy.push(...cp);

@@ -1,6 +1,8 @@
 import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
 import { DocPool } from "../data/DocPool";
-import { Component, FileData, RuntimeConfig } from "../types";
+import { baseName } from "../data/files";
+import { urlToFilePath } from "../data/urls";
+import { Component, CopyFile, FileData, RuntimeConfig } from "../types";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
 import { isPropType, NamedProp } from "./NamedProp";
@@ -9,6 +11,7 @@ export const COMPONENT_ATTRIBUTE = "data-tsx";
 export const PROPERTY_ATTRIBUTE = "data-tsx-prop";
 export const SLOT_ATTRIBUTE = "data-tsx-slot";
 export const REPLACE_ATTRIBUTE = "data-tsx-replace";
+export const ASSET_ATTRIBUTE = "data-tsx-asset";
 
 export class BaseParser {
   docs: DocPool;
@@ -18,7 +21,7 @@ export class BaseParser {
   constructor(docs: DocPool, config: RuntimeConfig) {
     this.docs = docs;
     this.config = config;
-    this.cssIgnore = config.ignoreStyles.map(i => new RegExp(
+    this.cssIgnore = config.dropStyles.map(i => new RegExp(
       `^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`
     ));
   }
@@ -50,6 +53,22 @@ export class BaseParser {
     return this.rewriteCss(
       { baseName: this.config.styleFile, content: styles.join("\n\n") }
     );
+  }
+
+  async getAssetFiles(): Promise<FileData[]> {
+    const copyFromTo: CopyFile[] = [];
+    for await (
+      const elements of await this.docs.selectElements(this.getAssetSelector())
+    ) {
+      for (const element of elements) {
+        const aname = ["link", "a"].includes(element.tagName) ? "href" : "src";
+        const oldFile = urlToFilePath(element.getAttribute(aname));
+        if (oldFile) {
+          copyFromTo.push({ from: oldFile, to: baseName(oldFile) });
+        }
+      }
+    }
+    return await this.docs.copyFiles(".", copyFromTo);
   }
 
   async getSeparateCssFiles(): Promise<Promise<FileData[]>[]> {
@@ -140,6 +159,10 @@ export class BaseParser {
     return `[${PROPERTY_ATTRIBUTE}],[${SLOT_ATTRIBUTE}],[${REPLACE_ATTRIBUTE}]`;
   }
 
+  protected getAssetSelector(): string {
+    return `[${ASSET_ATTRIBUTE}]`;
+  }
+
   cleanComponentElement(c: Component): void {
     c.template.removeAttribute(COMPONENT_ATTRIBUTE);
     for (const p of c.props) {
@@ -158,7 +181,6 @@ export class BaseParser {
       data.buffer !== undefined
         ? (await data.buffer).toString()
         : data.content || "",
-      this.config.imageDir,
       s => this.cssIgnore.every(i => s.match(i) === null),
     );
     return [

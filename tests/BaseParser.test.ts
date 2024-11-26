@@ -83,7 +83,7 @@ function sortedPropsValues(props: NamedProp[]): string[][] {
 test("Should ignore named CSS blocks and rewrite urls", async () => {
   const parser = new BaseParser(
     new DocPool(WEBFLOWISH_CODE), applyDefaults({
-      ignoreStyles: ["bo*", "@media \\*", "@font-face"],
+      dropStyles: ["bo*", "@media \\*", "@font-face"],
     })
   );
   const files = await parser.getStyleElements();
@@ -91,7 +91,6 @@ test("Should ignore named CSS blocks and rewrite urls", async () => {
   expect(files[0].content).not.toContain("body {");
   expect(files[0].content).not.toContain("@font-face");
   expect(files[0].content).toContain("@media ");
-  expect(files[0].content).toContain("url('images/helpers.ts')");
+  expect(files[0].content).toContain("url('helpers.ts')");
   expect(files[1].baseName).toEqual("helpers.ts");
-  expect(files[1].dirName).toEqual("images");
 });
