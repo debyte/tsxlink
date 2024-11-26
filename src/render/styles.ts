@@ -1,15 +1,26 @@
+import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
+import { CopyFile } from "../types";
+
 export type StyleObject = { [property: string]: string };
 
-export function styleToObject(src: string | null): StyleObject {
+export function styleToObject(
+  src: string | null,
+  imageDir: string,
+): [styles: StyleObject, copy: CopyFile[]] {
   const out: StyleObject = {};
+  const copy: CopyFile[] = [];
   for (const part of (src || "").split(";")) {
     const d = part.trim();
     if (d !== "") {
-      const [property, value] = d.split(":", 2);
-      out[toCamelCase(property.trimEnd())] = value.trimStart();
+      const [property, rawValue] = d.split(":", 2);
+      const [value, cp] = CssFilterAndFixUrls.runValue(
+        rawValue.trimStart(), imageDir
+      );
+      out[toCamelCase(property.trimEnd())] = value;
+      copy.push(...cp);
     }
   }
-  return out;
+  return [out, copy];
 }
 
 const dashRegexp = /-(\w|$)/g;

@@ -23,3 +23,8 @@ export const ONE_ELEMENT_COMPONENT: DocSource = {
     style="padding:1em;"
   />`,
 };
+
+export const sourceFromString = (src: string): DocSource => ({
+  type: "string",
+  data: src,
+});

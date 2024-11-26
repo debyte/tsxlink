@@ -1,29 +1,47 @@
-import { Component, Prop } from "../types";
+import { DocPool } from "../data/DocPool";
+import { Component, FileData, Prop, RuntimeConfig } from "../types";
 import { safeId } from "./ids";
 import { indentRows } from "./indent";
 import { rewriteTemplateDom, rewriteTemplateHtml } from "./rewrite";
 import { StyleObject } from "./styles";
 
-export function renderFC(component: Component): string {
+export async function renderComponent(
+  config: RuntimeConfig,
+  docs: DocPool,
+  component: Component,
+): Promise<FileData[]> {
   component.name = safeId(component.name);
   for (const prop of component.props) {
     prop.name = safeId(prop.name);
   }
-  const { rootVisibilityProp, styles } = rewriteTemplateDom(component);
-  return r(
-    "import React from \"react\";",
-    renderProps(component),
-    `export const ${component.name}: ${renderFCType(component)} = (`,
-    `  { ${component.props.map(prop => prop.name).join(", ")} }`,
-    `) => ${renderVisibility(rootVisibilityProp)}(`,
-    indentRows(
-      rewriteTemplateHtml(component.template.outerHTML)
-    ),
-    ");",
-    renderStyles(styles),
-    `export default ${component.name};`,
-  );
+  const { rootVisibilityProp, styles, copyFromTo } =
+    rewriteTemplateDom(component, config);
+  return [
+    {
+      baseName: `${component.name}.tsx`,
+      content: renderFC(component, rootVisibilityProp, styles),
+    },
+    ...(await docs.copyFiles(".", copyFromTo))
+  ];
 }
+
+const renderFC = (
+  component: Component,
+  rootVisibilityProp: string | undefined,
+  styles: StyleObject[],
+): string => r(
+  "import React from \"react\";",
+  renderProps(component),
+  `export const ${component.name}: ${renderFCType(component)} = (`,
+  `  { ${component.props.map(prop => prop.name).join(", ")} }`,
+  `) => ${renderVisibility(rootVisibilityProp)}(`,
+  indentRows(
+    rewriteTemplateHtml(component.template.outerHTML)
+  ),
+  ");",
+  renderStyles(styles),
+  `export default ${component.name};`,
+);
 
 const renderProps = (component: Component) =>
   component.props.length > 0 ? r(

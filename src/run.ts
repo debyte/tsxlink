@@ -4,7 +4,7 @@ import { removeMissingFiles, writeFiles } from "./data/files";
 import { applyDefaults, runInteractiveInit } from "./init";
 import { selectParser } from "./parse";
 import { BaseParser } from "./parse/BaseParser";
-import { renderFC } from "./render";
+import { renderComponent } from "./render";
 import { Config, FileData, RuntimeConfig } from "./types";
 
 export async function run() {
@@ -72,16 +72,15 @@ async function syncComponents(
   parser: BaseParser,
   config: RuntimeConfig,
 ): Promise<string[]> {
-  const components = await parser.getComponents();
-  const fileNames = await Promise.all(
-    await writeAndLogFiles(
-      config.componentDir,
-      components.map(component => {
-        const content = renderFC(component);
-        return { baseName: `${component.name}.tsx`, content };
-      }),
-    )
-  );
+  const fileNamePromises: Promise<string>[] = [];
+  for (const component of await parser.getComponents()) {
+    fileNamePromises.push(...await writeAndLogFiles(
+      config.assetsDir, await renderComponent(
+        config, parser.docs, component,
+      )
+    ));
+  }
+  const fileNames = await Promise.all(fileNamePromises);
   await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
   return fileNames;
 }

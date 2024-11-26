@@ -1,4 +1,4 @@
-import { Component } from "../types";
+import { Component, CopyFile, RuntimeConfig } from "../types";
 import {
   CAMEL_ATTRIBUTES,
   FULLSTOP_ATTRIBUTES,
@@ -9,16 +9,23 @@ import { StyleObject, styleToObject, toCamelCase } from "./styles";
 const INTERNAL_MAP_ATTRIBUTE = "data-tsx-map";
 const INTERNAL_COND_ATTRIBUTE = "data-tsx-cond";
 
+type RewriteResult = {
+  rootVisibilityProp?: string;
+  styles: StyleObject[];
+  copyFromTo: CopyFile[];
+};
+
 export function rewriteTemplateDom(
-  component: Component
-): { rootVisibilityProp?: string, styles: StyleObject[] } {
-  return {
-    rootVisibilityProp: rewriteDomForProps(component),
-    styles: rewriteDomForStyleAttributes(component.template),
-  };
+  component: Component,
+  config: RuntimeConfig,
+): RewriteResult {
+  const rootVisibilityProp = rewriteDomProps(component);
+  const [styles, copyFromTo] =
+    rewriteDomStyles(component.template, config.imageDir);
+  return { rootVisibilityProp, styles, copyFromTo };
 }
 
-function rewriteDomForProps(component: Component): string | undefined {
+function rewriteDomProps(component: Component): string | undefined {
   let rootVisibilityProp: string | undefined;
   for (const p of component.props) {
     if (p.target === "text" || p.target === "slot") {
@@ -51,14 +58,19 @@ function rewriteDomForProps(component: Component): string | undefined {
   return rootVisibilityProp;
 }
 
-function rewriteDomForStyleAttributes(template: Element): StyleObject[] {
+function rewriteDomStyles(
+  template: Element,
+  imageDir: string,
+): [styles: StyleObject[], copy: CopyFile[]] {
   const styles: StyleObject[] = [];
+  const copy: CopyFile[] = [];
   for (const e of template.querySelectorAll("[style]")) {
-    const s = styleToObject(e.getAttribute("style"));
+    const [s, cp] = styleToObject(e.getAttribute("style"), imageDir);
     e.setAttribute("style", `{tsx:styles[${styles.length}]}`);
     styles.push(s);
+    copy.push(...cp);
   }
-  return styles;
+  return [styles, copy];
 }
 
 export function rewriteTemplateHtml(template: string): string {

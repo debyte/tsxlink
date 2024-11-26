@@ -17,6 +17,15 @@ export class CssFilterAndFixUrls extends CssTransform {
     return [tr.stringify(out), tr.copy];
   }
 
+  static runValue(
+    value: string,
+    imageDir: string,
+  ): [value: string, copyFromTo: CopyFile[]] {
+    const tr = new CssFilterAndFixUrls("", imageDir, () => true);
+    const out = tr.value(value);
+    return [out || "", tr.copy];
+  }
+
   constructor(
     src: string,
     imageDir: string,
