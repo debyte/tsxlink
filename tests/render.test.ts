@@ -45,7 +45,6 @@ test("Should format class names and singleton tags for tsx", async () => {
       expect(out).toMatch(/<img [^>]+\/>/);
       expect(out).toContain("style={styles[0]}");
       expect(out).toContain("\"textTransform\": \"uppercase\"");
-      console.log(out);
     }
   }
 });
@@ -58,4 +57,22 @@ test("Should render one element component correctly", async () => {
   const out = renderFC(components[0]);
   expect(out).toContain("=> visibility && (");
   expect(out).toMatch(/<div [^>]+>{children}<\/div>/);
+});
+
+test("Should render replace property correctly", async () => {
+  const parser = selectParser(
+    new DocPool({
+      type: "string",
+      data: `
+        <div data-tsx="Test">
+          Hello <span data-tsx-replace="world">world</span>
+        </div>
+      `,
+    }), applyDefaults({})
+  );
+  const components = await parser.getComponents();
+  expect(components).toHaveLength(1);
+  const out = renderFC(components[0]);
+  expect(out).toContain("world: React.ReactNode");
+  expect(out).toContain("Hello {world}");
 });

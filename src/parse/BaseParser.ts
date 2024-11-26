@@ -1,14 +1,14 @@
 import { DocPool } from "../data/DocPool";
 import { Component, FileData, RuntimeConfig } from "../types";
-import {
-  COMPONENT_ATTRIBUTE,
-  PROPERTY_ATTRIBUTE,
-  SLOT_ATTRIBUTE,
-} from "./attributes";
 import { CssFilterAndFixUrls } from "./CssFilterAndFixUrls";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
 import { isPropType, NamedProp } from "./NamedProp";
+
+export const COMPONENT_ATTRIBUTE = "data-tsx";
+export const PROPERTY_ATTRIBUTE = "data-tsx-prop";
+export const SLOT_ATTRIBUTE = "data-tsx-slot";
+export const REPLACE_ATTRIBUTE = "data-tsx-replace";
 
 export class BaseParser {
   docs: DocPool;
@@ -125,6 +125,10 @@ export class BaseParser {
     if (slotAttr !== null) {
       props.push(new NamedProp(slotAttr, element, "slot"));
     }
+    const replaceAttr = element.getAttribute(REPLACE_ATTRIBUTE);
+    if (replaceAttr !== null) {
+      props.push(new NamedProp(replaceAttr, element, "replace"));
+    }
     return props;
   }
 
@@ -133,7 +137,7 @@ export class BaseParser {
   }
 
   protected getPropertySelector(): string {
-    return `[${PROPERTY_ATTRIBUTE}],[${SLOT_ATTRIBUTE}]`;
+    return `[${PROPERTY_ATTRIBUTE}],[${SLOT_ATTRIBUTE}],[${REPLACE_ATTRIBUTE}]`;
   }
 
   cleanComponentElement(c: Component): void {
@@ -141,6 +145,8 @@ export class BaseParser {
     for (const p of c.props) {
       if (p.target === "slot") {
         p.element.removeAttribute(SLOT_ATTRIBUTE);
+      } else if (p.target === "replace") {
+        p.element.removeAttribute(REPLACE_ATTRIBUTE);
       } else {
         p.element.removeAttribute(PROPERTY_ATTRIBUTE);
       }

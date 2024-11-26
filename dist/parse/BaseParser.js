@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseParser = void 0;
-const attributes_1 = require("./attributes");
+exports.BaseParser = exports.REPLACE_ATTRIBUTE = exports.SLOT_ATTRIBUTE = exports.PROPERTY_ATTRIBUTE = exports.COMPONENT_ATTRIBUTE = void 0;
 const CssFilterAndFixUrls_1 = require("./CssFilterAndFixUrls");
 const NamedComponent_1 = require("./NamedComponent");
 const NamedObject_1 = require("./NamedObject");
 const NamedProp_1 = require("./NamedProp");
+exports.COMPONENT_ATTRIBUTE = "data-tsx";
+exports.PROPERTY_ATTRIBUTE = "data-tsx-prop";
+exports.SLOT_ATTRIBUTE = "data-tsx-slot";
+exports.REPLACE_ATTRIBUTE = "data-tsx-replace";
 class BaseParser {
     constructor(docs, config) {
         this.docs = docs;
@@ -48,7 +51,7 @@ class BaseParser {
         const desings = new NamedObject_1.NamedObjectSet();
         for await (const elements of await this.docs.selectElements(this.getComponentSelector())) {
             for (const element of elements) {
-                const name = element.getAttribute(attributes_1.COMPONENT_ATTRIBUTE);
+                const name = element.getAttribute(exports.COMPONENT_ATTRIBUTE);
                 if (name !== null) {
                     desings.merge(new NamedComponent_1.NamedComponent(name, element.cloneNode(true)));
                 }
@@ -71,7 +74,7 @@ class BaseParser {
     }
     parseProp(element) {
         const props = [];
-        const propAttr = element.getAttribute(attributes_1.PROPERTY_ATTRIBUTE);
+        const propAttr = element.getAttribute(exports.PROPERTY_ATTRIBUTE);
         if (propAttr !== null) {
             for (const prop of propAttr.split(",")) {
                 const [name, ...tags] = prop.split(":").map(t => t.trim());
@@ -95,26 +98,33 @@ class BaseParser {
                 props.push(p);
             }
         }
-        const slotAttr = element.getAttribute(attributes_1.SLOT_ATTRIBUTE);
+        const slotAttr = element.getAttribute(exports.SLOT_ATTRIBUTE);
         if (slotAttr !== null) {
             props.push(new NamedProp_1.NamedProp(slotAttr, element, "slot"));
+        }
+        const replaceAttr = element.getAttribute(exports.REPLACE_ATTRIBUTE);
+        if (replaceAttr !== null) {
+            props.push(new NamedProp_1.NamedProp(replaceAttr, element, "replace"));
         }
         return props;
     }
     getComponentSelector() {
-        return `[${attributes_1.COMPONENT_ATTRIBUTE}]`;
+        return `[${exports.COMPONENT_ATTRIBUTE}]`;
     }
     getPropertySelector() {
-        return `[${attributes_1.PROPERTY_ATTRIBUTE}],[${attributes_1.SLOT_ATTRIBUTE}]`;
+        return `[${exports.PROPERTY_ATTRIBUTE}],[${exports.SLOT_ATTRIBUTE}],[${exports.REPLACE_ATTRIBUTE}]`;
     }
     cleanComponentElement(c) {
-        c.template.removeAttribute(attributes_1.COMPONENT_ATTRIBUTE);
+        c.template.removeAttribute(exports.COMPONENT_ATTRIBUTE);
         for (const p of c.props) {
             if (p.target === "slot") {
-                p.element.removeAttribute(attributes_1.SLOT_ATTRIBUTE);
+                p.element.removeAttribute(exports.SLOT_ATTRIBUTE);
+            }
+            else if (p.target === "replace") {
+                p.element.removeAttribute(exports.REPLACE_ATTRIBUTE);
             }
             else {
-                p.element.removeAttribute(attributes_1.PROPERTY_ATTRIBUTE);
+                p.element.removeAttribute(exports.PROPERTY_ATTRIBUTE);
             }
         }
     }

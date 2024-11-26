@@ -109,8 +109,12 @@ export const INPUT_PROP_TYPES: PropType[] = ["string", "number", "boolean"];
 export const isPropType = (s: string): s is PropType =>
   (INPUT_PROP_TYPES as string[]).includes(s);
 
-export const PROP_TARGET_WITH_FIXED_TYPE = ["visibility", "map", "slot"];
-export const TARGET_PRIORITY = ["text", "visibility", "map", "slot"];
+export const PROP_TARGET_WITH_FIXED_TYPE = [
+  "visibility", "map", "slot", "replace"
+];
+export const TARGET_PRIORITY = [
+  "text", "visibility", "map", "slot", "replace"
+];
 
 class NamedTarget extends NamedObject {
   content: string[];

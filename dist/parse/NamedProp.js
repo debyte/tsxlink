@@ -98,8 +98,12 @@ exports.NamedProp = NamedProp;
 exports.INPUT_PROP_TYPES = ["string", "number", "boolean"];
 const isPropType = (s) => exports.INPUT_PROP_TYPES.includes(s);
 exports.isPropType = isPropType;
-exports.PROP_TARGET_WITH_FIXED_TYPE = ["visibility", "map", "slot"];
-exports.TARGET_PRIORITY = ["text", "visibility", "map", "slot"];
+exports.PROP_TARGET_WITH_FIXED_TYPE = [
+    "visibility", "map", "slot", "replace"
+];
+exports.TARGET_PRIORITY = [
+    "text", "visibility", "map", "slot", "replace"
+];
 class NamedTarget extends NamedObject_1.NamedObject {
     constructor(name, content) {
         super(name);

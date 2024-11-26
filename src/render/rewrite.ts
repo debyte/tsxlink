@@ -21,10 +21,16 @@ export function rewriteTemplateDom(
 function rewriteDomForProps(component: Component): string | undefined {
   let rootVisibilityProp: string | undefined;
   for (const p of component.props) {
-    if (p.target === "text") {
+    if (p.target === "text" || p.target === "slot") {
       p.element.textContent = `{${p.name}}`;
-    } else if (p.target === "slot") {
-      p.element.textContent = `{${p.name}}`;
+    } else if (p.target === "replace") {
+      if (p.element === component.template) {
+        p.element.textContent = `{${p.name}}`;
+      } else {
+        const ph = p.element.ownerDocument.createTextNode(`{${p.name}}`);
+        p.element.before(ph);
+        p.element.remove();
+      }
     } else if (p.target === "visibility") {
       if (p.element === component.template) {
         rootVisibilityProp = p.name;

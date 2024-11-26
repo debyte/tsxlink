@@ -2,6 +2,10 @@ import { DocPool } from "../data/DocPool";
 import { Component, FileData, RuntimeConfig } from "../types";
 import { NamedComponent } from "./NamedComponent";
 import { NamedProp } from "./NamedProp";
+export declare const COMPONENT_ATTRIBUTE = "data-tsx";
+export declare const PROPERTY_ATTRIBUTE = "data-tsx-prop";
+export declare const SLOT_ATTRIBUTE = "data-tsx-slot";
+export declare const REPLACE_ATTRIBUTE = "data-tsx-replace";
 export declare class BaseParser {
     docs: DocPool;
     config: RuntimeConfig;

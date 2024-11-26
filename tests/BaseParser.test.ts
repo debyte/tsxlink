@@ -67,7 +67,6 @@ test("Should parse properties and slots from component element", async () => {
   expect(designs).toHaveLength(1);
   expect(designs[0].name).toEqual("StrangerThings");
   const props = sortedPropsValues(await parser.parsePropDesigns(designs[0]));
-  props.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
   expect(props).toEqual([
     ["children", "fixed", "slot", "HTMLDivElement"],
     ["visibility", "fixed", "visibility", "HTMLDivElement"],
@@ -81,7 +80,7 @@ function sortedPropsValues(props: NamedProp[]): string[][] {
   }).sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
 }
 
-test("Should ignore named CSS blocks and rewrite all images", async () => {
+test("Should ignore named CSS blocks and rewrite urls", async () => {
   const parser = new BaseParser(
     new DocPool(WEBFLOWISH_CODE), applyDefaults({
       ignoreStyles: ["bo*", "@media \\*", "@font-face"],

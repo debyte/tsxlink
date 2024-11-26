@@ -45,7 +45,7 @@ function renderPropType(p: Prop) {
     if (p.target === "visibility") {
       return "boolean";
     }
-    if (p.target === "slot") {
+    if (p.target === "slot" || p.target === "replace") {
       return "React.ReactNode";
     }
     if (p.target === "map") {
