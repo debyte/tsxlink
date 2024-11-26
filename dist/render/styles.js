@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.styleToObject = styleToObject;
+exports.toCamelCase = toCamelCase;
 function styleToObject(src) {
     const out = {};
     for (const part of (src || "").split(";")) {

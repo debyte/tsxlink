@@ -14,7 +14,7 @@ export function styleToObject(src: string | null): StyleObject {
 
 const dashRegexp = /-(\w|$)/g;
 
-function toCamelCase(property: string): string {
+export function toCamelCase(property: string): string {
   const p = property.toLowerCase();
   if (p === "float") {
     return "cssFloat";
