@@ -62,7 +62,7 @@ function rewriteTemplateHtml(template) {
     for (const [a, b] of REWRITE_ATTRIBUTES) {
         out = out.replace(a, b);
     }
-    return kebabAttributesToCamelCase(out);
+    return out;
 }
 const mapRegExp = new RegExp(`${INTERNAL_MAP_ATTRIBUTE}="(\\w+)"`, "gi");
 const condStartRegExp = new RegExp(`<div ${INTERNAL_COND_ATTRIBUTE}="(\\w+)"></div>`, "gi");
@@ -71,21 +71,20 @@ const SINGLETON_TAGS = [
     "area", "base", "br", "col", "command", "embed", "hr", "img", "input",
     "keygen", "link", "meta", "param", "source", "track", "wbr",
 ];
-const closeTagsRegexp = new RegExp(`<(${SINGLETON_TAGS.join("|")})( ([^>]*[^/])?)?>`, "gi");
+const closeTagsRegexp = new RegExp(`<(${SINGLETON_TAGS.join("|")})(\\s([^>]*[^/])?)?>`, "gi");
 const REWRITE_ATTRIBUTE_NAMES = [
     ["class", "className"],
     ["for", "htmlFor"],
     ["value", "defaultValue"],
     ...htmlAttributes_1.CAMEL_ATTRIBUTES.map(a => [a.toLowerCase(), a]),
+    ...htmlAttributes_1.KEBAB_ATTRIBUTES.map(a => [a, (0, styles_1.toCamelCase)(a)]),
+    ...htmlAttributes_1.FULLSTOP_ATTRIBUTES.map(a => [a, (0, styles_1.toCamelCase)(a.replace(":", "-"))]),
 ].map(([a, b]) => ([
-    new RegExp(` ${a}="([^"]*)"`, "g"),
-    ` ${b}="$1"`,
+    new RegExp(`(\\s)${a}(="[^"]*")`, "g"),
+    `$1${b}$2`,
 ]));
-const DROP_ON_EVENT_ATTRIBUTES = [/ on\w+="[^"]*"/g, ""];
+const DROP_ON_EVENT_ATTRIBUTES = [/\son\w+="[^"]*"/g, ""];
 const REWRITE_ATTRIBUTES = [
     ...REWRITE_ATTRIBUTE_NAMES,
     DROP_ON_EVENT_ATTRIBUTES,
 ];
-function kebabAttributesToCamelCase(src) {
-    return src.replace(/(\w+(-\w+)+)(="[^"]*")/g, (_, p, _p, v) => ` ${(0, styles_1.toCamelCase)(p)}${v}`);
-}
