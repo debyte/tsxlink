@@ -76,10 +76,10 @@ async function syncComponents(
   const fileNames = await Promise.all(
     await writeAndLogFiles(
       config.componentDir,
-      components.map(component => ({
-        baseName: `${component.name}.tsx`,
-        content: renderFC(component),
-      })),
+      components.map(component => {
+        const content = renderFC(component);
+        return { baseName: `${component.name}.tsx`, content };
+      }),
     )
   );
   await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));

@@ -63,8 +63,7 @@ export class NamedProp extends NamedObject {
         }
       }
     }
-    const elementClass = this.templates[0].constructor.name;
-    this.prop = { name: this.name, type, target, elementClass };
+    this.prop = { name: this.name, type, target, element: this.templates[0] };
     return this.prop;
   }
 

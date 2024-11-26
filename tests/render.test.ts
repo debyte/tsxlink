@@ -43,6 +43,8 @@ test("Should format class names and singleton tags for tsx", async () => {
       expect(out).toContain("<h3 className=\"testimonial-main-heading\">");
       expect(out).toContain("<hr/>");
       expect(out).toMatch(/<img [^>]+\/>/);
+      expect(out).toContain("style={styles[0]}");
+      expect(out).toContain("\"textTransform\": \"uppercase\"");
     }
   }
 });

@@ -77,7 +77,7 @@ test("Should parse properties and slots from component element", async () => {
 function sortedPropsValues(props: NamedProp[]): string[][] {
   return props.map(prop => {
     const p = prop.resolveTypeAndTarget();
-    return [p.name, p.type, p.target, p.elementClass];
+    return [p.name, p.type, p.target, p.element.constructor.name];
   }).sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
 }
 

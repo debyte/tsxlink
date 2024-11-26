@@ -48,15 +48,14 @@ export type InitChoiceOption = [
 export type Component = {
   name: string;
   props: Prop[];
-  template: string;
-  rootVisibility?: string;
+  template: Element;
 };
 
 export type Prop = {
   name: string;
   type: PropType;
   target: string;
-  elementClass: string;
+  element: Element;
 };
 
 export type PropType = "string" | "number" | "boolean" | "fixed";

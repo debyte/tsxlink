@@ -5,10 +5,10 @@ import {
   PROPERTY_ATTRIBUTE,
   SLOT_ATTRIBUTE,
 } from "./attributes";
+import { CssFilterAndFixUrls } from "./CssFilterAndFixUrls";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
 import { isPropType, NamedProp } from "./NamedProp";
-import { CssFix, rewriteTemplate } from "./rewrite";
 
 export class BaseParser {
   docs: DocPool;
@@ -24,18 +24,18 @@ export class BaseParser {
   }
 
   async getComponents(): Promise<Component[]> {
-    const components: Component[] = [];
-    for (const c of await this.parseComponentDesigns()) {
-      const props = await this.parsePropDesigns(c);
-      const [template, rootVisibility] = await this.formatTemplate(c, props);
-      components.push({
-        name: c.name,
+    const out: Component[] = [];
+    for (const design of await this.parseComponentDesigns()) {
+      const props = await this.parsePropDesigns(design);
+      const component = {
+        name: design.name,
         props: props.map(p => p.resolveTypeAndTarget()),
-        template,
-        rootVisibility,
-      });
+        template: design.templates[0],
+      };
+      this.cleanComponentElement(component);
+      out.push(component);
     }
-    return components;
+    return out;
   };
 
   async getStyleElements(): Promise<FileData[]> {
@@ -47,14 +47,14 @@ export class BaseParser {
         }
       }
     }
-    return this.formatCss(
+    return this.rewriteCss(
       { baseName: this.config.styleFile, content: styles.join("\n\n") }
     );
   }
 
   async getSeparateCssFiles(): Promise<Promise<FileData[]>[]> {
     return (await this.docs.selectFiles({ extension: "css" })).map(
-      f => this.formatCss(f)
+      f => this.rewriteCss(f)
     );
   }
 
@@ -80,10 +80,6 @@ export class BaseParser {
     return desings.all();
   }
 
-  protected getComponentSelector() {
-    return `[${COMPONENT_ATTRIBUTE}]`;
-  }
-
   async parsePropDesigns(design: NamedComponent): Promise<NamedProp[]> {
     const designs = new NamedObjectSet<NamedProp>();
     for (const template of design.templates) {
@@ -98,10 +94,6 @@ export class BaseParser {
       }
     }
     return designs.all();
-  }
-
-  protected getPropertySelector() {
-    return `[${PROPERTY_ATTRIBUTE}],[${SLOT_ATTRIBUTE}]`;
   }
 
   protected parseProp(element: Element): NamedProp[] {
@@ -136,15 +128,27 @@ export class BaseParser {
     return props;
   }
 
-  protected async formatTemplate(
-    component: NamedComponent,
-    props: NamedProp[],
-  ): Promise<[template: string, rootVisibilityProp: string | undefined]> {
-    return rewriteTemplate(component, props);
+  protected getComponentSelector(): string {
+    return `[${COMPONENT_ATTRIBUTE}]`;
   }
 
-  protected async formatCss(data: FileData): Promise<FileData[]> {
-    const [css, copyFromTo] = CssFix.runWithCopyFiles(
+  protected getPropertySelector(): string {
+    return `[${PROPERTY_ATTRIBUTE}],[${SLOT_ATTRIBUTE}]`;
+  }
+
+  cleanComponentElement(c: Component): void {
+    c.template.removeAttribute(COMPONENT_ATTRIBUTE);
+    for (const p of c.props) {
+      if (p.target === "slot") {
+        p.element.removeAttribute(SLOT_ATTRIBUTE);
+      } else {
+        p.element.removeAttribute(PROPERTY_ATTRIBUTE);
+      }
+    }
+  }
+
+  protected async rewriteCss(data: FileData): Promise<FileData[]> {
+    const [css, copyFromTo] = CssFilterAndFixUrls.runWithCopyFiles(
       data.buffer !== undefined
         ? (await data.buffer).toString()
         : data.content || "",
