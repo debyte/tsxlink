@@ -56,10 +56,10 @@ async function run() {
 }
 async function syncComponents(parser, config) {
     const components = await parser.getComponents();
-    const fileNames = await Promise.all(await writeAndLogFiles(config.componentDir, components.map(component => ({
-        baseName: `${component.name}.tsx`,
-        content: (0, render_1.renderFC)(component),
-    }))));
+    const fileNames = await Promise.all(await writeAndLogFiles(config.componentDir, components.map(component => {
+        const content = (0, render_1.renderFC)(component);
+        return { baseName: `${component.name}.tsx`, content };
+    })));
     await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
     return fileNames;
 }

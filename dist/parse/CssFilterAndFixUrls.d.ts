@@ -1,9 +1,6 @@
 import { CopyFile } from "../types";
 import { CssTransform } from "./CssTransform";
-import { NamedComponent } from "./NamedComponent";
-import { NamedProp } from "./NamedProp";
-export declare function rewriteTemplate(component: NamedComponent, props: NamedProp[]): [template: string, rootVisibilityProp: string | undefined];
-export declare class CssFix extends CssTransform {
+export declare class CssFilterAndFixUrls extends CssTransform {
     imageDir: string;
     select: (selector: string) => boolean;
     copy: CopyFile[];

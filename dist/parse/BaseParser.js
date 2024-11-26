@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseParser = void 0;
 const attributes_1 = require("./attributes");
+const CssFilterAndFixUrls_1 = require("./CssFilterAndFixUrls");
 const NamedComponent_1 = require("./NamedComponent");
 const NamedObject_1 = require("./NamedObject");
 const NamedProp_1 = require("./NamedProp");
-const rewrite_1 = require("./rewrite");
 class BaseParser {
     constructor(docs, config) {
         this.docs = docs;
@@ -13,18 +13,18 @@ class BaseParser {
         this.cssIgnore = config.ignoreStyles.map(i => new RegExp(`^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`));
     }
     async getComponents() {
-        const components = [];
-        for (const c of await this.parseComponentDesigns()) {
-            const props = await this.parsePropDesigns(c);
-            const [template, rootVisibility] = await this.formatTemplate(c, props);
-            components.push({
-                name: c.name,
+        const out = [];
+        for (const design of await this.parseComponentDesigns()) {
+            const props = await this.parsePropDesigns(design);
+            const component = {
+                name: design.name,
                 props: props.map(p => p.resolveTypeAndTarget()),
-                template,
-                rootVisibility,
-            });
+                template: design.templates[0],
+            };
+            this.cleanComponentElement(component);
+            out.push(component);
         }
-        return components;
+        return out;
     }
     ;
     async getStyleElements() {
@@ -36,10 +36,10 @@ class BaseParser {
                 }
             }
         }
-        return this.formatCss({ baseName: this.config.styleFile, content: styles.join("\n\n") });
+        return this.rewriteCss({ baseName: this.config.styleFile, content: styles.join("\n\n") });
     }
     async getSeparateCssFiles() {
-        return (await this.docs.selectFiles({ extension: "css" })).map(f => this.formatCss(f));
+        return (await this.docs.selectFiles({ extension: "css" })).map(f => this.rewriteCss(f));
     }
     async getSeparateJsFiles() {
         return this.docs.selectFiles({ extension: "js" });
@@ -56,9 +56,6 @@ class BaseParser {
         }
         return desings.all();
     }
-    getComponentSelector() {
-        return `[${attributes_1.COMPONENT_ATTRIBUTE}]`;
-    }
     async parsePropDesigns(design) {
         const designs = new NamedObject_1.NamedObjectSet();
         for (const template of design.templates) {
@@ -71,9 +68,6 @@ class BaseParser {
             }
         }
         return designs.all();
-    }
-    getPropertySelector() {
-        return `[${attributes_1.PROPERTY_ATTRIBUTE}],[${attributes_1.SLOT_ATTRIBUTE}]`;
     }
     parseProp(element) {
         const props = [];
@@ -107,11 +101,25 @@ class BaseParser {
         }
         return props;
     }
-    async formatTemplate(component, props) {
-        return (0, rewrite_1.rewriteTemplate)(component, props);
+    getComponentSelector() {
+        return `[${attributes_1.COMPONENT_ATTRIBUTE}]`;
     }
-    async formatCss(data) {
-        const [css, copyFromTo] = rewrite_1.CssFix.runWithCopyFiles(data.buffer !== undefined
+    getPropertySelector() {
+        return `[${attributes_1.PROPERTY_ATTRIBUTE}],[${attributes_1.SLOT_ATTRIBUTE}]`;
+    }
+    cleanComponentElement(c) {
+        c.template.removeAttribute(attributes_1.COMPONENT_ATTRIBUTE);
+        for (const p of c.props) {
+            if (p.target === "slot") {
+                p.element.removeAttribute(attributes_1.SLOT_ATTRIBUTE);
+            }
+            else {
+                p.element.removeAttribute(attributes_1.PROPERTY_ATTRIBUTE);
+            }
+        }
+    }
+    async rewriteCss(data) {
+        const [css, copyFromTo] = CssFilterAndFixUrls_1.CssFilterAndFixUrls.runWithCopyFiles(data.buffer !== undefined
             ? (await data.buffer).toString()
             : data.content || "", this.config.imageDir, s => this.cssIgnore.every(i => s.match(i) === null));
         return [

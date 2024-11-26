@@ -12,10 +12,10 @@ export declare class BaseParser {
     getSeparateCssFiles(): Promise<Promise<FileData[]>[]>;
     getSeparateJsFiles(): Promise<FileData[]>;
     parseComponentDesigns(): Promise<NamedComponent[]>;
-    protected getComponentSelector(): string;
     parsePropDesigns(design: NamedComponent): Promise<NamedProp[]>;
-    protected getPropertySelector(): string;
     protected parseProp(element: Element): NamedProp[];
-    protected formatTemplate(component: NamedComponent, props: NamedProp[]): Promise<[template: string, rootVisibilityProp: string | undefined]>;
-    protected formatCss(data: FileData): Promise<FileData[]>;
+    protected getComponentSelector(): string;
+    protected getPropertySelector(): string;
+    cleanComponentElement(c: Component): void;
+    protected rewriteCss(data: FileData): Promise<FileData[]>;
 }

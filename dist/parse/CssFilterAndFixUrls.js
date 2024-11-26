@@ -3,51 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CssFix = void 0;
-exports.rewriteTemplate = rewriteTemplate;
+exports.CssFilterAndFixUrls = void 0;
 const path_1 = __importDefault(require("path"));
-const attributes_1 = require("./attributes");
 const CssTransform_1 = require("./CssTransform");
-function rewriteTemplate(component, props) {
-    const template = component.templates[0];
-    let rootVisibilityProp;
-    template.removeAttribute(attributes_1.COMPONENT_ATTRIBUTE);
-    for (const p of props) {
-        const { name, target } = p.resolveTypeAndTarget();
-        const el = p.templates[0];
-        el.removeAttribute(attributes_1.PROPERTY_ATTRIBUTE);
-        if (target === "text") {
-            el.textContent = `{${name}}`;
-        }
-        else if (target === "slot") {
-            el.removeAttribute(attributes_1.SLOT_ATTRIBUTE);
-            el.textContent = `{${name}}`;
-        }
-        else if (target === "visibility") {
-            if (el === template) {
-                rootVisibilityProp = name;
-            }
-            else {
-                const pre = el.ownerDocument.createElement("div");
-                pre.setAttribute(attributes_1.INTERNAL_COND_ATTRIBUTE, name);
-                el.before(pre);
-                const post = el.ownerDocument.createElement("div");
-                post.setAttribute(attributes_1.INTERNAL_COND_ATTRIBUTE, "");
-                el.after(post);
-            }
-        }
-        else if (target === "map") {
-            el.setAttribute(attributes_1.INTERNAL_MAP_ATTRIBUTE, name);
-        }
-        else {
-            el.setAttribute(target, `{tsx:${name}}`);
-        }
-    }
-    return [template.outerHTML, rootVisibilityProp];
-}
-class CssFix extends CssTransform_1.CssTransform {
+class CssFilterAndFixUrls extends CssTransform_1.CssTransform {
     static runWithCopyFiles(src, imageDir, select) {
-        const tr = new CssFix(src, imageDir, select);
+        const tr = new CssFilterAndFixUrls(src, imageDir, select);
         const out = tr.tree(tr.root);
         return [tr.stringify(out), tr.copy];
     }
@@ -90,4 +51,4 @@ class CssFix extends CssTransform_1.CssTransform {
         return val;
     }
 }
-exports.CssFix = CssFix;
+exports.CssFilterAndFixUrls = CssFilterAndFixUrls;
