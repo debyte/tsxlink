@@ -2,31 +2,35 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rewriteTemplateDom = rewriteTemplateDom;
 exports.rewriteTemplateHtml = rewriteTemplateHtml;
+const paths_1 = require("../data/paths");
 const htmlAttributes_1 = require("./htmlAttributes");
 const styles_1 = require("./styles");
 const INTERNAL_MAP_ATTRIBUTE = "data-tsx-map";
 const INTERNAL_COND_ATTRIBUTE = "data-tsx-cond";
-function rewriteTemplateDom(component) {
-    return {
-        rootVisibilityProp: rewriteDomForProps(component),
-        styles: rewriteDomForStyleAttributes(component.template),
-    };
+const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
+const HREF_ELEMENTS = ["LINK"];
+const URL_SELECTOR = URL_ELEMENTS.join(", ").toLowerCase();
+function rewriteTemplateDom(component, config, dropStyles) {
+    const [rootVisibility, hasClasses] = rewriteDomProps(component);
+    const [hasImages, copyRefs] = rewriteDomUrls(component.template, config);
+    const [styles, copyUrls] = dropStyles
+        ? [[], []] : rewriteDomStyles(component.template, config);
+    const copyFromTo = [...copyRefs, ...copyUrls];
+    return { rootVisibility, hasClasses, hasImages, styles, copyFromTo };
 }
-function rewriteDomForProps(component) {
+function rewriteDomProps(component) {
     let rootVisibilityProp;
+    let hasClasses = false;
     for (const p of component.props) {
-        if (p.target === "text" || p.target === "slot") {
+        if (p.target === "text" || p.target === "slot"
+            || (p.target === "replace" && p.element === component.template)) {
+            p.data = sanitizeValue(p.element.textContent);
             p.element.textContent = `{${p.name}}`;
         }
         else if (p.target === "replace") {
-            if (p.element === component.template) {
-                p.element.textContent = `{${p.name}}`;
-            }
-            else {
-                const ph = p.element.ownerDocument.createTextNode(`{${p.name}}`);
-                p.element.before(ph);
-                p.element.remove();
-            }
+            p.data = sanitizeValue(p.element.textContent);
+            const ph = p.element.ownerDocument.createTextNode(`{${p.name}}`);
+            p.element.replaceWith(ph);
         }
         else if (p.target === "visibility") {
             if (p.element === component.template) {
@@ -44,30 +48,73 @@ function rewriteDomForProps(component) {
         else if (p.target === "map") {
             p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, p.name);
         }
+        else if (p.target === "class") {
+            p.data = sanitizeValue(p.element.getAttribute(p.target), false);
+            p.element.setAttribute(p.target, `#tsx{classResolve(${p.name}${p.data ? `, ${p.name}Defaults` : ""})}`);
+            hasClasses = true;
+        }
         else {
-            p.element.setAttribute(p.target, `{tsx:${p.name}}`);
+            p.data = sanitizeValue(p.element.getAttribute(p.target));
+            p.element.setAttribute(p.target, `#tsx{${p.name}}`);
         }
     }
-    return rootVisibilityProp;
+    return [rootVisibilityProp, hasClasses];
 }
-function rewriteDomForStyleAttributes(template) {
-    const styles = [];
-    for (const e of template.querySelectorAll("[style]")) {
-        const s = (0, styles_1.styleToObject)(e.getAttribute("style"));
-        e.setAttribute("style", `{tsx:styles[${styles.length}]}`);
-        styles.push(s);
+function sanitizeValue(value, cut) {
+    let v = (value ? value.replace(/\s+/g, " ") : "").trim();
+    if (v === "") {
+        return undefined;
     }
-    return styles;
+    if (v.length > 30 && cut !== false) {
+        v = v.substring(0, 27) + "...";
+    }
+    return v;
 }
-function rewriteTemplateHtml(template) {
+function rewriteDomUrls(template, config) {
+    const copyFromTo = [];
+    let hasImages = false;
+    const elements = URL_ELEMENTS.includes(template.tagName) ? [template] : [];
+    elements.push(...template.querySelectorAll(URL_SELECTOR));
+    for (const element of elements) {
+        hasImages = hasImages || element.tagName === "IMG";
+        const attr = HREF_ELEMENTS.includes(element.tagName) ? "href" : "src";
+        const oldFile = (0, paths_1.urlToFilePath)(element.getAttribute(attr));
+        if (oldFile) {
+            const newFile = (0, paths_1.baseName)(oldFile);
+            copyFromTo.push({ from: oldFile, to: newFile });
+            element.setAttribute(attr, (0, paths_1.filePath)(config.assetsPath, newFile));
+        }
+    }
+    return [hasImages, copyFromTo];
+}
+function rewriteDomStyles(template, config) {
+    const styles = [];
+    const copyFromTo = [];
+    const elements = template.hasAttribute("style") ? [template] : [];
+    elements.push(...template.querySelectorAll("[style]"));
+    for (const element of elements) {
+        const [style, copy] = (0, styles_1.styleToObject)(element.getAttribute("style"), config.assetsDir);
+        element.setAttribute("style", `#tsx{inlineStyles[${styles.length}]}`);
+        styles.push(style);
+        copyFromTo.push(...copy);
+    }
+    return [styles, copyFromTo];
+}
+function rewriteTemplateHtml(template, nextImages, dropAttrs) {
     let out = template
-        .replace(/"{tsx:([\w[\]]+)}"/gi, "{$1}")
+        .replace(/"#tsx{([^}"]+)}"/gi, "{$1}")
         .replace(mapRegExp, "{...$1}")
         .replace(condStartRegExp, "{$1 && (")
         .replace(condEndRegExp, ")}")
         .replace(closeTagsRegexp, "<$1$2/>");
     for (const [a, b] of REWRITE_ATTRIBUTES) {
         out = out.replace(a, b);
+    }
+    for (const re of dropAttrs) {
+        out = out.replace(re, "");
+    }
+    if (nextImages) {
+        out = out.replace(/<img\s([^>]*)\/>/g, "<Image $1/>");
     }
     return out;
 }

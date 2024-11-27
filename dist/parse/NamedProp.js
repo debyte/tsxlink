@@ -99,7 +99,7 @@ exports.INPUT_PROP_TYPES = ["string", "number", "boolean"];
 const isPropType = (s) => exports.INPUT_PROP_TYPES.includes(s);
 exports.isPropType = isPropType;
 exports.PROP_TARGET_WITH_FIXED_TYPE = [
-    "visibility", "map", "slot", "replace"
+    "visibility", "map", "slot", "replace", "class"
 ];
 exports.TARGET_PRIORITY = [
     "text", "visibility", "map", "slot", "replace"

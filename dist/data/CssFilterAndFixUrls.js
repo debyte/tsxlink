@@ -1,21 +1,18 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CssFilterAndFixUrls = void 0;
-const path_1 = __importDefault(require("path"));
 const CssTransform_1 = require("./CssTransform");
+const paths_1 = require("./paths");
 class CssFilterAndFixUrls extends CssTransform_1.CssTransform {
-    static runWithCopyFiles(src, imageDir, select) {
-        const tr = new CssFilterAndFixUrls(src, imageDir, select);
+    static runWithCopyFiles(src, select, urlPath) {
+        const tr = new CssFilterAndFixUrls(src, select, urlPath);
         const out = tr.tree(tr.root);
         return [tr.stringify(out), tr.copy];
     }
-    constructor(src, imageDir, select) {
+    constructor(src, select, urlPath) {
         super(src);
-        this.imageDir = imageDir;
         this.select = select;
+        this.urlPath = urlPath || (name => name);
         this.copy = [];
     }
     value(value) {
@@ -30,15 +27,11 @@ class CssFilterAndFixUrls extends CssTransform_1.CssTransform {
     fixUrl(value) {
         let out = value;
         for (const match of value.matchAll(/url\(([^)]*)\)/gi)) {
-            const url = this.stripPossibleQuotes(match[1]);
-            if (!url.startsWith("#") && !url.match(/^\w+:.*/)) {
-                const parts = url.match(/^([^?#]+)(.*)$/);
-                const oldFile = parts && parts[1];
-                if (oldFile) {
-                    const newFile = path_1.default.join(this.imageDir, path_1.default.basename(oldFile));
-                    out = out.replace(oldFile, newFile);
-                    this.copy.push({ from: oldFile, to: newFile });
-                }
+            const oldFile = (0, paths_1.urlToFilePath)(this.stripPossibleQuotes(match[1]));
+            if (oldFile) {
+                const newFile = (0, paths_1.baseName)(oldFile);
+                out = out.replace(oldFile, this.urlPath(newFile));
+                this.copy.push({ from: oldFile, to: newFile });
             }
         }
         return out;

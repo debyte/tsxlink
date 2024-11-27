@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseParser = exports.REPLACE_ATTRIBUTE = exports.SLOT_ATTRIBUTE = exports.PROPERTY_ATTRIBUTE = exports.COMPONENT_ATTRIBUTE = void 0;
-const CssFilterAndFixUrls_1 = require("./CssFilterAndFixUrls");
+exports.BaseParser = exports.ASSET_ATTRIBUTE = exports.REPLACE_ATTRIBUTE = exports.SLOT_ATTRIBUTE = exports.PROPERTY_ATTRIBUTE = exports.COMPONENT_ATTRIBUTE = void 0;
+const CssFilterAndFixUrls_1 = require("../data/CssFilterAndFixUrls");
+const paths_1 = require("../data/paths");
 const NamedComponent_1 = require("./NamedComponent");
 const NamedObject_1 = require("./NamedObject");
 const NamedProp_1 = require("./NamedProp");
@@ -9,11 +10,12 @@ exports.COMPONENT_ATTRIBUTE = "data-tsx";
 exports.PROPERTY_ATTRIBUTE = "data-tsx-prop";
 exports.SLOT_ATTRIBUTE = "data-tsx-slot";
 exports.REPLACE_ATTRIBUTE = "data-tsx-replace";
+exports.ASSET_ATTRIBUTE = "data-tsx-asset";
 class BaseParser {
     constructor(docs, config) {
         this.docs = docs;
         this.config = config;
-        this.cssIgnore = config.ignoreStyles.map(i => new RegExp(`^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`));
+        this.dropCss = config.dropStyles.map(m => (0, paths_1.wildcardRegexp)(m));
     }
     async getComponents() {
         const out = [];
@@ -40,6 +42,19 @@ class BaseParser {
             }
         }
         return this.rewriteCss({ baseName: this.config.styleFile, content: styles.join("\n\n") });
+    }
+    async getAssetFiles() {
+        const copyFromTo = [];
+        for await (const elements of await this.docs.selectElements(this.getAssetSelector())) {
+            for (const element of elements) {
+                const attr = ["LINK", "A"].includes(element.tagName) ? "href" : "src";
+                const oldFile = (0, paths_1.urlToFilePath)(element.getAttribute(attr));
+                if (oldFile) {
+                    copyFromTo.push({ from: oldFile, to: (0, paths_1.baseName)(oldFile) });
+                }
+            }
+        }
+        return await this.docs.copyFiles(".", copyFromTo);
     }
     async getSeparateCssFiles() {
         return (await this.docs.selectFiles({ extension: "css" })).map(f => this.rewriteCss(f));
@@ -114,6 +129,9 @@ class BaseParser {
     getPropertySelector() {
         return `[${exports.PROPERTY_ATTRIBUTE}],[${exports.SLOT_ATTRIBUTE}],[${exports.REPLACE_ATTRIBUTE}]`;
     }
+    getAssetSelector() {
+        return `[${exports.ASSET_ATTRIBUTE}]`;
+    }
     cleanComponentElement(c) {
         c.template.removeAttribute(exports.COMPONENT_ATTRIBUTE);
         for (const p of c.props) {
@@ -127,11 +145,14 @@ class BaseParser {
                 p.element.removeAttribute(exports.PROPERTY_ATTRIBUTE);
             }
         }
+        for (const el of c.template.querySelectorAll(this.getAssetSelector())) {
+            el.removeAttribute(exports.ASSET_ATTRIBUTE);
+        }
     }
     async rewriteCss(data) {
         const [css, copyFromTo] = CssFilterAndFixUrls_1.CssFilterAndFixUrls.runWithCopyFiles(data.buffer !== undefined
             ? (await data.buffer).toString()
-            : data.content || "", this.config.imageDir, s => this.cssIgnore.every(i => s.match(i) === null));
+            : data.content || "", s => this.dropCss.every(re => s.match(re) === null));
         return [
             { baseName: data.baseName, content: css },
             ...(await this.docs.copyFiles(data.dirName || ".", copyFromTo)),

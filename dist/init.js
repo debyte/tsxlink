@@ -3,13 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.applyDefaults = exports.DEFAULT_IMAGE_DIR = exports.DEFAULT_STYLE_FILE = exports.DEFAULT_ASSETS_DIR = exports.DEFAULT_COMPONENT_DIR = void 0;
+exports.DEFAULT_STYLE_FILE = exports.DEFAULT_ASSETS_PATH = exports.DEFAULT_ASSETS_DIR = exports.DEFAULT_COMPONENT_DIR = void 0;
+exports.applyDefaults = applyDefaults;
 exports.runInteractiveInit = runInteractiveInit;
 const promises_1 = __importDefault(require("readline/promises"));
+const paths_1 = require("./data/paths");
 exports.DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
-exports.DEFAULT_ASSETS_DIR = "./src/app/tsxlink";
+exports.DEFAULT_ASSETS_DIR = "./public/tsxlink";
+exports.DEFAULT_ASSETS_PATH = "/tsxlink";
 exports.DEFAULT_STYLE_FILE = "export.css";
-exports.DEFAULT_IMAGE_DIR = "images";
 const INIT_CHOICES = [
     {
         key: "sourceType",
@@ -24,18 +26,28 @@ const INIT_CHOICES = [
         prompt: "Source file, directory, or URL, unless provided on command line",
     },
     {
+        key: "copyMarkedFiles",
+        prompt: "Copy any files marked with data-tsx-asset to assets",
+        default: "yes",
+    },
+    {
+        key: "copyCssFiles",
+        prompt: "Copy any separate CSS files to assets",
+        default: "yes",
+    },
+    {
+        key: "copyJsFiles",
+        prompt: "Copy any separate JS files to assets",
+        default: "no",
+    },
+    {
         key: "exportStyleElements",
         prompt: "Export CSS from possible style elements to assets",
         default: "yes",
     },
     {
-        key: "copyCssFiles",
-        prompt: "Copy separate CSS files to assets",
-        default: "yes",
-    },
-    {
-        key: "copyJsFiles",
-        prompt: "Copy separate JS files to assets",
+        key: "useNextJsImages",
+        prompt: "Replace <img> with Next.js <Image> to optimize image files",
         default: "no",
     },
     {
@@ -49,6 +61,15 @@ const INIT_CHOICES = [
         default: exports.DEFAULT_ASSETS_DIR,
     },
     {
+        key: "assetsPath",
+        prompt: [
+            "Either an URL path to assets directory as served over network or a",
+            "relative path for use with Next.js <Image> components and style",
+            "imports. (\"@\" can be used to construct a relative path automatically)",
+        ].join("\n"),
+        default: exports.DEFAULT_ASSETS_PATH,
+    },
+    {
         key: "configExtension",
         prompt: "A type of config file `tsxlink.config.*` to create",
         options: [
@@ -59,21 +80,29 @@ const INIT_CHOICES = [
         ],
     },
 ];
-const applyDefaults = (config) => ({
-    version: config.version || 1,
-    sourceType: config.sourceType || "custom",
-    source: config.source,
-    exportStyleElements: config.exportStyleElements || true,
-    copyCssFiles: config.copyCssFiles || true,
-    copyJsFiles: config.copyJsFiles || false,
-    componentDir: config.componentDir || exports.DEFAULT_COMPONENT_DIR,
-    assetsDir: config.assetsDir || exports.DEFAULT_ASSETS_DIR,
-    styleFile: config.styleFile || exports.DEFAULT_STYLE_FILE,
-    imageDir: config.imageDir || exports.DEFAULT_IMAGE_DIR,
-    ignoreFiles: config.ignoreFiles || [],
-    ignoreStyles: config.ignoreStyles || [],
-});
-exports.applyDefaults = applyDefaults;
+function applyDefaults(config) {
+    const rt = {
+        version: config.version || 1,
+        sourceType: config.sourceType || "custom",
+        source: config.source,
+        copyMarkedFiles: config.copyMarkedFiles || true,
+        copyCssFiles: config.copyCssFiles || true,
+        copyJsFiles: config.copyJsFiles || false,
+        exportStyleElements: config.exportStyleElements || true,
+        useNextJsImages: config.useNextJsImages || false,
+        componentDir: config.componentDir || exports.DEFAULT_COMPONENT_DIR,
+        assetsDir: config.assetsDir || exports.DEFAULT_ASSETS_DIR,
+        assetsPath: config.assetsPath || exports.DEFAULT_ASSETS_PATH,
+        styleFile: config.styleFile || exports.DEFAULT_STYLE_FILE,
+        ignoreFiles: config.ignoreFiles || [],
+        dropStyles: config.dropStyles || [],
+        dropAttributes: config.dropAttributes || [],
+    };
+    if (rt.assetsPath === "@") {
+        rt.assetsPath = (0, paths_1.relativePath)(rt.componentDir, rt.assetsDir);
+    }
+    return rt;
+}
 async function runInteractiveInit(current) {
     const rl = promises_1.default.createInterface({
         input: process.stdin,
@@ -114,15 +143,18 @@ async function runInteractiveInit(current) {
     return {
         sourceType: map.get("sourceType"),
         source: map.get("source"),
-        exportStyleElements: isTrue(map.get("exportStyleElements")),
+        copyMarkedFiles: isTrue(map.get("copyMarkedFiles")),
         copyCssFiles: isTrue(map.get("copyCssFiles")),
         copyJsFiles: isTrue(map.get("copyJsFiles")),
+        exportStyleElements: isTrue(map.get("exportStyleElements")),
+        useNextJsImages: isTrue(map.get("useNextJsImages")),
         componentDir: map.get("componentDir"),
         assetsDir: map.get("assetsDir"),
+        assetsPath: map.get("assetsPath"),
         styleFile: (current === null || current === void 0 ? void 0 : current.styleFile) || exports.DEFAULT_STYLE_FILE,
-        imageDir: (current === null || current === void 0 ? void 0 : current.imageDir) || exports.DEFAULT_IMAGE_DIR,
         ignoreFiles: (current === null || current === void 0 ? void 0 : current.ignoreFiles) || [],
-        ignoreStyles: (current === null || current === void 0 ? void 0 : current.ignoreStyles) || [],
+        dropStyles: (current === null || current === void 0 ? void 0 : current.dropStyles) || [],
+        dropAttributes: (current === null || current === void 0 ? void 0 : current.dropAttributes) || [],
         configExtension: map.get("configExtension"),
     };
 }

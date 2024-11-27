@@ -3,17 +3,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.wildcardRegexp = exports.hasExtension = exports.ext = exports.removeFile = exports.writeTextFile = exports.readTextFile = exports.writeFile = exports.readFile = void 0;
+exports.removeFile = exports.writeTextFile = exports.readTextFile = exports.writeFile = exports.readFile = void 0;
 exports.fileExists = fileExists;
 exports.dirFiles = dirFiles;
 exports.zipFiles = zipFiles;
-exports.filePath = filePath;
+exports.emptyFiles = emptyFiles;
 exports.writeFiles = writeFiles;
 exports.copyFile = copyFile;
 exports.removeMissingFiles = removeMissingFiles;
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const unzipper_1 = __importDefault(require("unzipper"));
+const paths_1 = require("./paths");
 async function fileExists(filePath) {
     try {
         const stats = await promises_1.default.stat(filePath);
@@ -60,22 +61,12 @@ async function zipFiles(filePath, select) {
     }
     return files;
 }
-const ext = (extension) => extension ? `.${extension.toLowerCase()}` : null;
-exports.ext = ext;
-const hasExtension = (filePath, extension) => path_1.default.extname(filePath).toLowerCase() === (0, exports.ext)(extension);
-exports.hasExtension = hasExtension;
-const wildcardRegexp = (ignore) => new RegExp(`^${wcPre(ignore)}${wcPattern(ignore)}${wcPost(ignore)}$`);
-exports.wildcardRegexp = wildcardRegexp;
-const wcPre = (i) => i.includes("/") ? "" : "(.*/)?";
-const wcPattern = (src) => src
-    .replace("?", "[^/]?")
-    .replace(/(?<!\*)\*(?!\*)/g, "[^/]*")
-    .replace("**/", ".*");
-const wcPost = (i) => i.endsWith("/") ? "(.*)?" : "(/.*)?";
-function filePath(pathName, baseName, extension, dirName) {
-    const p = pathName || ".";
-    const f = extension ? `${baseName}${(0, exports.ext)(extension)}` : baseName;
-    return path_1.default.join(p, dirName || "", f);
+function emptyFiles(names) {
+    return names.map(p => ({
+        dirName: path_1.default.dirname(p),
+        baseName: path_1.default.basename(p),
+        content: "",
+    }));
 }
 async function writeFiles(dirPath, files) {
     const subDirs = new Set(files.map(f => f.dirName || ""));
@@ -83,7 +74,7 @@ async function writeFiles(dirPath, files) {
         await promises_1.default.mkdir(path_1.default.join(dirPath, dirName), { recursive: true });
     }
     return files.map(async (file) => {
-        const p = filePath(dirPath, file.baseName, undefined, file.dirName);
+        const p = (0, paths_1.filePath)(dirPath, file.baseName, undefined, file.dirName);
         if (file.buffer !== undefined) {
             await (0, exports.writeFile)(p, await file.buffer);
         }
@@ -103,7 +94,7 @@ function copyFile(src, filePath) {
 }
 async function removeMissingFiles(dirPath, keepFilePaths) {
     return (await dirFiles(dirPath, (_, p) => !keepFilePaths.includes(p))).map(async (file) => {
-        const p = filePath(dirPath, file.baseName, undefined, file.dirName);
+        const p = (0, paths_1.filePath)(dirPath, file.baseName, undefined, file.dirName);
         await (0, exports.removeFile)(p);
         return p;
     });

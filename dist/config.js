@@ -8,6 +8,7 @@ exports.writeConfig = writeConfig;
 exports.removeConfig = removeConfig;
 const path_1 = __importDefault(require("path"));
 const files_1 = require("./data/files");
+const paths_1 = require("./data/paths");
 exports.CONFIG_NAME = "tsxlink.config";
 const readConfig = () => returnFirstConfig([
     [["mjs"], async (filePath) => {
@@ -54,4 +55,4 @@ async function writeConfig(extension, config) {
 async function removeConfig(extension) {
     await (0, files_1.removeFile)(confPath(extension));
 }
-const confPath = (extension) => (0, files_1.filePath)(".", exports.CONFIG_NAME, extension);
+const confPath = (extension) => (0, paths_1.filePath)(".", exports.CONFIG_NAME, extension);

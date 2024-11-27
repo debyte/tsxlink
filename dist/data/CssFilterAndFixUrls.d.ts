@@ -1,11 +1,11 @@
 import { CopyFile } from "../types";
 import { CssTransform } from "./CssTransform";
 export declare class CssFilterAndFixUrls extends CssTransform {
-    imageDir: string;
     select: (selector: string) => boolean;
+    urlPath: (name: string) => string;
     copy: CopyFile[];
-    static runWithCopyFiles(src: string, imageDir: string, select: (selector: string) => boolean): [css: string, copyFromTo: CopyFile[]];
-    constructor(src: string, imageDir: string, select: (selector: string) => boolean);
+    static runWithCopyFiles(src: string, select: (selector: string) => boolean, urlPath?: (name: string) => string): [css: string, copyFromTo: CopyFile[]];
+    constructor(src: string, select: (selector: string) => boolean, urlPath?: (name: string) => string);
     value(value: string | undefined): string | undefined;
     filterSelectors(selector: string): boolean;
     filterAtRule(atRule: string): boolean;

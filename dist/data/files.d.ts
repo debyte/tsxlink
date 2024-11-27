@@ -7,10 +7,7 @@ export declare const writeTextFile: (filePath: string, content: string) => Promi
 export declare const removeFile: (filePath: string) => Promise<void>;
 export declare function dirFiles(dirPath: string, select: (name: string, path: string) => boolean): Promise<FileData[]>;
 export declare function zipFiles(filePath: string, select: (name: string, path: string) => boolean): Promise<FileData[]>;
-export declare const ext: (extension?: string) => string | null;
-export declare const hasExtension: (filePath: string, extension: string) => boolean;
-export declare const wildcardRegexp: (ignore: string) => RegExp;
-export declare function filePath(pathName: string | undefined, baseName: string, extension?: string, dirName?: string): string;
+export declare function emptyFiles(names: string[]): FileData[];
 export declare function writeFiles(dirPath: string, files: FileData[]): Promise<Promise<string>[]>;
 export declare function copyFile(src: FileData, filePath: string): FileData;
 export declare function removeMissingFiles(dirPath: string, keepFilePaths: string[]): Promise<Promise<string>[]>;

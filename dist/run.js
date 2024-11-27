@@ -4,6 +4,7 @@ exports.run = run;
 const config_1 = require("./config");
 const data_1 = require("./data");
 const files_1 = require("./data/files");
+const paths_1 = require("./data/paths");
 const init_1 = require("./init");
 const parse_1 = require("./parse");
 const render_1 = require("./render");
@@ -50,23 +51,43 @@ async function run() {
     // Process
     pr("Parsing and synchronizing.");
     const parser = (0, parse_1.selectParser)(docs, config);
-    const tsxFiles = await syncComponents(parser, config);
-    const assetsFiles = await syncAssets(parser, config);
-    pr(`Synchronized ${tsxFiles.length + assetsFiles.length} linked files.`);
+    const [componentFiles, assetFiles] = await updateComponents(parser, config);
+    assetFiles.push(...await updateAssets(parser, config));
+    await Promise.all([
+        ...await removeAndLogFiles(config.componentDir, componentFiles),
+        ...await removeAndLogFiles(config.assetsDir, assetFiles),
+    ]);
+    const n = componentFiles.length + assetFiles.length;
+    pr(`Synchronized ${n} linked files.`);
 }
-async function syncComponents(parser, config) {
-    const components = await parser.getComponents();
-    const fileNames = await Promise.all(await writeAndLogFiles(config.componentDir, components.map(component => {
-        const content = (0, render_1.renderFC)(component);
-        return { baseName: `${component.name}.tsx`, content };
-    })));
-    await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
-    return fileNames;
+async function updateComponents(parser, config) {
+    const componentFileNamePromises = [];
+    const assetFileNamePromises = [];
+    let writeLib = false;
+    for (const component of await parser.getComponents()) {
+        const [componentFile, assetFiles, usesLib] = await (0, render_1.renderComponent)(config, parser.docs, component);
+        componentFileNamePromises.push(...await writeAndLogFiles(config.componentDir, [componentFile]));
+        assetFileNamePromises.push(...await writeAndLogFiles(config.assetsDir, assetFiles));
+        writeLib = writeLib || usesLib;
+    }
+    if (writeLib) {
+        componentFileNamePromises.push(...await writeAndLogFiles(config.componentDir, [{
+                baseName: "tsxlinkLib.ts",
+                buffer: (0, files_1.readFile)((0, paths_1.filePath)(__dirname, "tsxlinkLib.ts")),
+            }]));
+    }
+    return [
+        await Promise.all(componentFileNamePromises),
+        await Promise.all(assetFileNamePromises),
+    ];
 }
-async function syncAssets(parser, config) {
+async function updateAssets(parser, config) {
     const fileNamePromises = [];
     if (config.exportStyleElements) {
         fileNamePromises.push(...await writeAndLogFiles(config.assetsDir, await parser.getStyleElements()));
+    }
+    if (config.copyMarkedFiles) {
+        fileNamePromises.push(...await writeAndLogFiles(config.assetsDir, await parser.getAssetFiles()));
     }
     if (config.copyCssFiles) {
         for (const writeAndCopy of await parser.getSeparateCssFiles()) {
@@ -76,9 +97,7 @@ async function syncAssets(parser, config) {
     if (config.copyJsFiles) {
         fileNamePromises.push(...await writeAndLogFiles(config.assetsDir, await parser.getSeparateJsFiles()));
     }
-    const fileNames = await Promise.all(fileNamePromises);
-    await Promise.all(await removeAndLogFiles(config.assetsDir, [...fileNames, config.imageDir]));
-    return fileNames;
+    return await Promise.all(fileNamePromises);
 }
 async function writeAndLogFiles(dirPath, files) {
     return prNamePromises(await (0, files_1.writeFiles)(dirPath, files), name => ` + ${name}`);

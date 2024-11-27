@@ -6,13 +6,15 @@ export declare const COMPONENT_ATTRIBUTE = "data-tsx";
 export declare const PROPERTY_ATTRIBUTE = "data-tsx-prop";
 export declare const SLOT_ATTRIBUTE = "data-tsx-slot";
 export declare const REPLACE_ATTRIBUTE = "data-tsx-replace";
+export declare const ASSET_ATTRIBUTE = "data-tsx-asset";
 export declare class BaseParser {
     docs: DocPool;
     config: RuntimeConfig;
-    cssIgnore: RegExp[];
+    dropCss: RegExp[];
     constructor(docs: DocPool, config: RuntimeConfig);
     getComponents(): Promise<Component[]>;
     getStyleElements(): Promise<FileData[]>;
+    getAssetFiles(): Promise<FileData[]>;
     getSeparateCssFiles(): Promise<Promise<FileData[]>[]>;
     getSeparateJsFiles(): Promise<FileData[]>;
     parseComponentDesigns(): Promise<NamedComponent[]>;
@@ -20,6 +22,7 @@ export declare class BaseParser {
     protected parseProp(element: Element): NamedProp[];
     protected getComponentSelector(): string;
     protected getPropertySelector(): string;
+    protected getAssetSelector(): string;
     cleanComponentElement(c: Component): void;
     protected rewriteCss(data: FileData): Promise<FileData[]>;
 }

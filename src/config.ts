@@ -1,11 +1,11 @@
 import path from "path";
 import {
   fileExists,
-  filePath,
   readTextFile,
   removeFile,
   writeTextFile,
 } from "./data/files";
+import { filePath } from "./data/paths";
 import { Config, ConfigExtension } from "./types";
 
 export const CONFIG_NAME = "tsxlink.config";

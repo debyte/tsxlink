@@ -1,5 +1,6 @@
 import { DocPool } from "./DocPool";
-import { fileExists, hasExtension } from "./files";
+import { fileExists } from "./files";
+import { hasExtension } from "./paths";
 
 export async function createDocPool(
   source: string,

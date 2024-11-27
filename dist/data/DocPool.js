@@ -7,11 +7,12 @@ exports.DocPool = void 0;
 const jsdom_1 = require("jsdom");
 const path_1 = __importDefault(require("path"));
 const files_1 = require("./files");
+const paths_1 = require("./paths");
 class DocPool {
     constructor(source, ignore) {
         this.source = source;
         this.ignore = ignore !== undefined
-            ? ignore.map(i => (0, files_1.wildcardRegexp)(i))
+            ? ignore.map(i => (0, paths_1.wildcardFileRegexp)(i))
             : [];
     }
     async parseDocs() {
@@ -41,7 +42,7 @@ class DocPool {
         if (this.source !== undefined) {
             let select = () => true;
             if (opt.extension) {
-                const end = (0, files_1.ext)(opt.extension);
+                const end = (0, paths_1.ext)(opt.extension);
                 const ign = this.ignore;
                 select = n => ((!end || n.toLowerCase().endsWith(end))
                     && ign.every(i => n.match(i) === null));
@@ -58,6 +59,9 @@ class DocPool {
             }
             if (this.source.type === "dir") {
                 return await (0, files_1.dirFiles)(this.source.data, select);
+            }
+            if (this.source.type === "string" && opt.names) { // Tests
+                return (0, files_1.emptyFiles)(opt.names);
             }
         }
         return [];
