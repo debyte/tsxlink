@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import unzipper from "unzipper";
 import { FileData, FileExistsResult } from "../types";
+import { filePath } from "./paths";
 
 export async function fileExists(
   filePath: string,
@@ -63,35 +64,12 @@ export async function zipFiles(
   return files;
 }
 
-export const ext = (extension?: string) =>
-  extension ? `.${extension.toLowerCase()}` : null;
-
-export const hasExtension = (filePath: string, extension: string): boolean =>
-  path.extname(filePath).toLowerCase() === ext(extension);
-
-export const wildcardRegexp = (ignore: string) => new RegExp(
-  `^${wcPre(ignore)}${wcPattern(ignore)}${wcPost(ignore)}$`
-);
-const wcPre = (i: string) => i.includes("/") ? "" : "(.*/)?";
-const wcPattern = (src: string) => src
-  .replace("?", "[^/]?")
-  .replace(/(?<!\*)\*(?!\*)/g, "[^/]*")
-  .replace("**/", ".*");
-const wcPost = (i: string) => i.endsWith("/") ? "(.*)?" : "(/.*)?";
-
-export function filePath(
-  pathName: string | undefined,
-  baseName: string,
-  extension?: string,
-  dirName?: string,
-): string {
-  const p = pathName || ".";
-  const f = extension ? `${baseName}${ext(extension)}` : baseName
-  return path.join(p, dirName || "", f);
-}
-
-export function baseName(filePath: string): string {
-  return path.basename(filePath);
+export function emptyFiles(names: string[]): FileData[] {
+  return names.map(p => ({
+    dirName: path.dirname(p),
+    baseName: path.basename(p),
+    content: "",
+  }));
 }
 
 export async function writeFiles(

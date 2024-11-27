@@ -63,30 +63,40 @@ export async function run() {
   // Process
   pr("Parsing and synchronizing.")
   const parser = selectParser(docs, config);
-  const tsxFiles = await syncComponents(parser, config);
-  const assetsFiles = await syncAssets(parser, config);
-  pr(`Synchronized ${tsxFiles.length + assetsFiles.length} linked files.`);
+  const [componentFiles, assetFiles] = await updateComponents(parser, config);
+  assetFiles.push(...await updateAssets(parser, config));
+  await Promise.all([
+    ...await removeAndLogFiles(config.componentDir, componentFiles),
+    ...await removeAndLogFiles(config.assetsDir, assetFiles),
+  ]);
+  const n = componentFiles.length + assetFiles.length;
+  pr(`Synchronized ${n} linked files.`);
 }
 
-async function syncComponents(
+async function updateComponents(
   parser: BaseParser,
   config: RuntimeConfig,
-): Promise<string[]> {
-  const fileNamePromises: Promise<string>[] = [];
+): Promise<[componentFileNames: string[], assetFileNames: string[]]> {
+  const componentFileNamePromises: Promise<string>[] = [];
+  const assetFileNamePromises: Promise<string>[] = [];
   for (const component of await parser.getComponents()) {
-    // TODO component to config.componentDir
-    fileNamePromises.push(...await writeAndLogFiles(
-      config.assetsDir, await renderComponent(
-        config, parser.docs, component,
-      )
+    const [componentFile, assetFiles] = await renderComponent(
+      config, parser.docs, component,
+    )
+    componentFileNamePromises.push(...await writeAndLogFiles(
+      config.componentDir, [componentFile]
+    ));
+    assetFileNamePromises.push(...await writeAndLogFiles(
+      config.assetsDir, assetFiles
     ));
   }
-  const fileNames = await Promise.all(fileNamePromises);
-  await Promise.all(await removeAndLogFiles(config.componentDir, fileNames));
-  return fileNames;
+  return [
+    await Promise.all(componentFileNamePromises),
+    await Promise.all(assetFileNamePromises),
+  ];
 }
 
-async function syncAssets(
+async function updateAssets(
   parser: BaseParser,
   config: RuntimeConfig,
 ): Promise<string[]> {
@@ -94,6 +104,11 @@ async function syncAssets(
   if (config.exportStyleElements) {
     fileNamePromises.push(...await writeAndLogFiles(
       config.assetsDir, await parser.getStyleElements(),
+    ));
+  }
+  if (config.copyMarkedFiles) {
+    fileNamePromises.push(...await writeAndLogFiles(
+      config.assetsDir, await parser.getAssetFiles(),
     ));
   }
   if (config.copyCssFiles) {
@@ -108,9 +123,7 @@ async function syncAssets(
       config.assetsDir, await parser.getSeparateJsFiles(),
     ));
   }
-  const fileNames = await Promise.all(fileNamePromises);
-  await Promise.all(await removeAndLogFiles(config.assetsDir, fileNames));
-  return fileNames;
+  return await Promise.all(fileNamePromises);
 }
 
 async function writeAndLogFiles(dirPath: string, files: FileData[]) {

@@ -1,4 +1,5 @@
 import readline from "readline/promises";
+import { relativePath } from "./data/paths";
 import {
   Config,
   ConfigExtension,
@@ -9,7 +10,8 @@ import {
 } from "./types";
 
 export const DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
-export const DEFAULT_ASSETS_DIR = "./src/assets/tsxlink";
+export const DEFAULT_ASSETS_DIR = "./public/tsxlink";
+export const DEFAULT_ASSETS_PATH = "/tsxlink";
 export const DEFAULT_STYLE_FILE = "export.css";
 
 const INIT_CHOICES: InitChoice[] = [
@@ -52,7 +54,7 @@ const INIT_CHOICES: InitChoice[] = [
   },
   {
     key: "useNextJsImages",
-    prompt: "Replace <img> with Next.js <Image>",
+    prompt: "Replace <img> with Next.js <Image> to optimize image files",
     default: "no",
   },
   {
@@ -66,6 +68,15 @@ const INIT_CHOICES: InitChoice[] = [
     default: DEFAULT_ASSETS_DIR,
   },
   {
+    key: "assetsPath",
+    prompt: [
+      "Either an URL path to assets directory as served over network or a",
+      "relative path for use with Next.js <Image> components and style",
+      "imports. (\"@\" can be used to construct a relative path automatically)",
+    ].join("\n"),
+    default: DEFAULT_ASSETS_PATH,
+  },
+  {
     key: "configExtension",
     prompt: "A type of config file `tsxlink.config.*` to create",
     options: [
@@ -77,23 +88,30 @@ const INIT_CHOICES: InitChoice[] = [
   },
 ];
 
-export const applyDefaults = (config: Config): RuntimeConfig => ({
-  version: config.version || 1,
-  sourceType: config.sourceType || "custom",
-  source: config.source,
-  copyMarkedFiles: config.copyMarkedFiles || true,
-  copyCssFiles: config.copyCssFiles || true,
-  copyJsFiles: config.copyJsFiles || false,
-  exportStyleElements: config.exportStyleElements || true,
-  useClassNameProperty: config.useClassNameProperty || true,
-  useNextJsImages: config.useNextJsImages || false,
-  componentDir: config.componentDir || DEFAULT_COMPONENT_DIR,
-  assetsDir: config.assetsDir || DEFAULT_ASSETS_DIR,
-  styleFile: config.styleFile || DEFAULT_STYLE_FILE,
-  ignoreFiles: config.ignoreFiles || [],
-  dropStyles: config.dropStyles || [],
-  dropAttributes: config.dropAttributes || [],
-});
+export function applyDefaults(config: Config): RuntimeConfig {
+  const rt = {
+    version: config.version || 1,
+    sourceType: config.sourceType || "custom",
+    source: config.source,
+    copyMarkedFiles: config.copyMarkedFiles || true,
+    copyCssFiles: config.copyCssFiles || true,
+    copyJsFiles: config.copyJsFiles || false,
+    exportStyleElements: config.exportStyleElements || true,
+    useClassNameProperty: config.useClassNameProperty || true,
+    useNextJsImages: config.useNextJsImages || false,
+    componentDir: config.componentDir || DEFAULT_COMPONENT_DIR,
+    assetsDir: config.assetsDir || DEFAULT_ASSETS_DIR,
+    assetsPath: config.assetsPath || DEFAULT_ASSETS_PATH,
+    styleFile: config.styleFile || DEFAULT_STYLE_FILE,
+    ignoreFiles: config.ignoreFiles || [],
+    dropStyles: config.dropStyles || [],
+    dropAttributes: config.dropAttributes || [],
+  };
+  if (rt.assetsPath === "@") {
+    rt.assetsPath = relativePath(rt.componentDir, rt.assetsDir);
+  }
+  return rt;
+}
 
 export async function runInteractiveInit(
   current?: Config
@@ -148,6 +166,7 @@ export async function runInteractiveInit(
     useNextJsImages: isTrue(map.get("useNextJsImages")),
     componentDir: map.get("componentDir"),
     assetsDir: map.get("assetsDir"),
+    assetsPath: map.get("assetsPath"),
     styleFile: current?.styleFile || DEFAULT_STYLE_FILE,
     ignoreFiles: current?.ignoreFiles || [],
     dropStyles: current?.dropStyles || [],

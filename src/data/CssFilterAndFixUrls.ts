@@ -1,24 +1,30 @@
 import { CopyFile } from "../types";
 import { CssTransform } from "./CssTransform";
-import { baseName } from "./files";
-import { urlToFilePath } from "./urls";
+import { baseName, urlToFilePath } from "./paths";
 
 export class CssFilterAndFixUrls extends CssTransform {
   select: (selector: string) => boolean;
+  urlPath: (name: string) => string;
   copy: CopyFile[];
 
   static runWithCopyFiles(
     src: string,
     select: (selector: string) => boolean,
+    urlPath?: (name: string) => string,
   ): [css: string, copyFromTo: CopyFile[]] {
-    const tr = new CssFilterAndFixUrls(src, select);
+    const tr = new CssFilterAndFixUrls(src, select, urlPath);
     const out = tr.tree(tr.root);
     return [tr.stringify(out), tr.copy];
   }
 
-  constructor(src: string, select: (selector: string) => boolean) {
+  constructor(
+    src: string,
+    select: (selector: string) => boolean,
+    urlPath?: (name: string) => string,
+  ) {
     super(src);
     this.select = select;
+    this.urlPath = urlPath || (name => name);
     this.copy = [];
   }
 
@@ -40,7 +46,7 @@ export class CssFilterAndFixUrls extends CssTransform {
       const oldFile = urlToFilePath(this.stripPossibleQuotes(match[1]));
       if (oldFile) {
         const newFile = baseName(oldFile);
-        out = out.replace(oldFile, newFile);
+        out = out.replace(oldFile, this.urlPath(newFile));
         this.copy.push({ from: oldFile, to: newFile });
       }
     }

@@ -1,14 +1,8 @@
 import { JSDOM } from "jsdom";
 import path from "path";
 import { CopyFile, DocSource, FileData } from "../types";
-import {
-  copyFile,
-  dirFiles,
-  ext,
-  readFile,
-  wildcardRegexp,
-  zipFiles,
-} from "./files";
+import { copyFile, dirFiles, emptyFiles, readFile, zipFiles } from "./files";
+import { ext, wildcardFileRegexp } from "./paths";
 
 export class DocPool {
   source?: DocSource;
@@ -17,7 +11,7 @@ export class DocPool {
   constructor(source?: DocSource, ignore?: string[]) {
     this.source = source;
     this.ignore = ignore !== undefined
-      ? ignore.map(i => wildcardRegexp(i))
+      ? ignore.map(i => wildcardFileRegexp(i))
       : [];
   }
 
@@ -49,7 +43,7 @@ export class DocPool {
 
   async selectFiles(
     opt: { extension?: string, names?: string[] },
-  ) {
+  ): Promise<FileData[]> {
     if (this.source !== undefined) {
       let select: (name: string, path: string) => boolean = () => true;
       if (opt.extension) {
@@ -71,6 +65,9 @@ export class DocPool {
       }
       if (this.source.type === "dir") {
         return await dirFiles(this.source.data, select);
+      }
+      if (this.source.type === "string" && opt.names) { // Tests
+        return emptyFiles(opt.names);
       }
     }
     return [];

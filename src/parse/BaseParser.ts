@@ -1,7 +1,6 @@
 import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
 import { DocPool } from "../data/DocPool";
-import { baseName } from "../data/files";
-import { urlToFilePath } from "../data/urls";
+import { baseName, urlToFilePath, wildcardRegexp } from "../data/paths";
 import { Component, CopyFile, FileData, RuntimeConfig } from "../types";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
@@ -16,14 +15,12 @@ export const ASSET_ATTRIBUTE = "data-tsx-asset";
 export class BaseParser {
   docs: DocPool;
   config: RuntimeConfig;
-  cssIgnore: RegExp[];
+  dropCss: RegExp[];
 
   constructor(docs: DocPool, config: RuntimeConfig) {
     this.docs = docs;
     this.config = config;
-    this.cssIgnore = config.dropStyles.map(i => new RegExp(
-      `^${i.replace(/(?<!\\)\?/g, ".?").replace(/(?<!\\)\*/g, ".*")}$`
-    ));
+    this.dropCss = config.dropStyles.map(m => wildcardRegexp(m));
   }
 
   async getComponents(): Promise<Component[]> {
@@ -61,8 +58,8 @@ export class BaseParser {
       const elements of await this.docs.selectElements(this.getAssetSelector())
     ) {
       for (const element of elements) {
-        const aname = ["link", "a"].includes(element.tagName) ? "href" : "src";
-        const oldFile = urlToFilePath(element.getAttribute(aname));
+        const attr = ["LINK", "A"].includes(element.tagName) ? "href" : "src";
+        const oldFile = urlToFilePath(element.getAttribute(attr));
         if (oldFile) {
           copyFromTo.push({ from: oldFile, to: baseName(oldFile) });
         }
@@ -174,6 +171,9 @@ export class BaseParser {
         p.element.removeAttribute(PROPERTY_ATTRIBUTE);
       }
     }
+    for (const el of c.template.querySelectorAll(this.getAssetSelector())) {
+      el.removeAttribute(ASSET_ATTRIBUTE);
+    }
   }
 
   protected async rewriteCss(data: FileData): Promise<FileData[]> {
@@ -181,7 +181,7 @@ export class BaseParser {
       data.buffer !== undefined
         ? (await data.buffer).toString()
         : data.content || "",
-      s => this.cssIgnore.every(i => s.match(i) === null),
+      s => this.dropCss.every(re => s.match(re) === null),
     );
     return [
       { baseName: data.baseName, content: css },

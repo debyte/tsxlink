@@ -1,14 +1,20 @@
 import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
+import { filePath } from "../data/paths";
 import { CopyFile } from "../types";
 
 export type StyleObject = { [property: string]: string };
 
 export function styleToObject(
   src: string | null,
+  assetsPath: string,
 ): [styles: StyleObject, copy: CopyFile[]] {
   const out: StyleObject = {};
   const copy: CopyFile[] = [];
-  const css = new CssFilterAndFixUrls("", () => true);
+  const css = new CssFilterAndFixUrls(
+    "",
+    () => true,
+    name => filePath(assetsPath, name),
+  );
   for (const part of (src || "").split(";")) {
     const d = part.trim();
     if (d !== "") {

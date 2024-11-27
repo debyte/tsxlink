@@ -3,21 +3,18 @@ import { DocPool } from "../src/data/DocPool";
 import { applyDefaults } from "../src/init";
 import { selectParser } from "../src/parse";
 import { renderComponent } from "../src/render";
-import {
-  getReadmeHtmlExample,
-  ONE_ELEMENT_COMPONENT,
-  sourceFromString,
-  WEBFLOWISH_CODE,
-} from "./helpers";
+import { Config, FileData } from "../src/types";
+import { getReadmeHtmlExample, WEBFLOWISH_CODE } from "./helpers";
 
 test("Should render React.FC from detected components", async () => {
   const docs = new DocPool(await getReadmeHtmlExample());
   const parser = selectParser(docs, applyDefaults({}));
   for (const component of await parser.getComponents()) {
-    const fd = await renderComponent(parser.config, docs, component);
-    expect(fd).toHaveLength(1);
-    const out = fd[0].content;
+    const [fd] = await renderComponent(parser.config, docs, component);
+    const out = fd.content;
     if (component.name === "Search") {
+      expect(out).toContain("Search: React.FC<SearchProps>");
+      expect(out).toContain("export default Search;");
       expect(out).toContain(
         "query?: React.InputHTMLAttributes<HTMLInputElement>"
       );
@@ -34,50 +31,102 @@ test("Should render React.FC from detected components", async () => {
   }
 });
 
-test("Should format class names and singleton tags for tsx", async () => {
+test("Should rewrite class names and singleton tags for tsx", async () => {
   const docs = new DocPool(WEBFLOWISH_CODE);
-  const parser = selectParser(
-    docs,
-    applyDefaults({ sourceType: "webflow/export" }),
-  );
+  const parser = selectParser(docs, applyDefaults({
+    sourceType: "webflow/export",
+  }));
   for (const component of await parser.getComponents()) {
-    const fd = await renderComponent(parser.config, docs, component);
-    expect(fd).toHaveLength(1);
-    const out = fd[0].content;
+    const [fd] = await renderComponent(parser.config, docs, component);
+    const out = fd.content;
     if (component.name === "Testimonial") {
       expect(out).toContain("<h3 className=\"testimonial-main-heading\">");
       expect(out).toContain("<hr/>");
       expect(out).toMatch(/<img [^>]+\/>/);
-      expect(out).toContain("style={styles[0]}");
-      expect(out).toContain("\"textTransform\": \"uppercase\"");
     }
   }
 });
 
-test("Should render one element component correctly", async () => {
-  const docs = new DocPool(ONE_ELEMENT_COMPONENT);
-  const parser = selectParser(docs, applyDefaults({}));
-  const components = await parser.getComponents();
-  expect(components).toHaveLength(1);
-  const fd = await renderComponent(parser.config, docs, components[0]);
-  expect(fd).toHaveLength(1);
-  const out = fd[0].content;
-  expect(out).toContain("=> visibility && (");
-  expect(out).toMatch(/<div [^>]+>{children}<\/div>/);
+test("Should render root element visibility", async () => {
+  const [fd] = await renderSingleComponent(`
+    <div class="strange" data-tsx="StrangerThings"
+      data-tsx-prop="visibility" data-tsx-slot="children"
+    />
+  `);
+  expect(fd.content).toContain("=> visibility && (");
+  expect(fd.content).toMatch(/<div [^>]+>{children}<\/div>/);
 });
 
 test("Should render replace property correctly", async () => {
-  const docs = new DocPool(sourceFromString(`
+  const [fd] = await renderSingleComponent(`
     <div data-tsx="Test">
       Hello <span data-tsx-replace="world">world</span>
     </div>
-  `));
-  const parser = selectParser(docs, applyDefaults({}));
+  `);
+  expect(fd.content).toContain("world: React.ReactNode");
+  expect(fd.content).toContain("Hello {world}");
+});
+
+test("Should rewrite style attribute for tsx", async () => {
+  const [fd, assets] = await renderSingleComponent(`
+    <p data-tsx="Test" style="text-transform: uppercase; foo: url(README.md);">
+      Test
+    </p>
+  `);
+  expect(fd.content).toContain("style={styles[0]}");
+  expect(fd.content).toContain("\"textTransform\": \"uppercase\"");
+  expect(assets).toHaveLength(1);
+  expect(assets[0].baseName).toEqual("README.md");
+});
+
+test("Should rewrite img attribute for tsx", async () => {
+  const [fd, assets] = await renderSingleComponent(`
+    <div data-tsx="Test">
+      <img src="images/foo.png" width="300" height="200">
+    </div>
+  `);
+  expect(fd.content).toContain("src=\"/tsxlink/foo.png\"");
+  expect(assets).toHaveLength(1);
+  expect(assets[0].baseName).toEqual("foo.png");
+});
+
+test("Should rewrite img to next/image", async () => {
+  const [fd, assets] = await renderSingleComponent(`
+    <div data-tsx="Test">
+      <img src="images/foo.png" width="300" height="200">
+    </div>
+  `, {
+    useNextJsImages: true,
+    assetsDir: "./src/assets/tsxlink",
+    assetsPath: "@",
+  });
+  expect(fd.content).toContain("import { Image } from \"next/image\"");
+  expect(fd.content).toContain(
+    "<Image src=\"../../assets/tsxlink/foo.png\" width=\"300\" height=\"200\"/>"
+  );
+  expect(assets).toHaveLength(1);
+  expect(assets[0].baseName).toEqual("foo.png");
+});
+
+test("Should drop configured attributes", async () => {
+  const [fd, assets] = await renderSingleComponent(`
+    <div data-tsx="Test" fs-cc-foo="1">
+      <p class="great" style="background: url('foo.png');">fs-cc-foo</p>
+    </div>
+  `, { dropAttributes: ["style", "fs-*"] });
+  expect(fd.content).not.toContain(" style=");
+  expect(fd.content).not.toContain(" fs-cc-foo=");
+  expect(assets).toHaveLength(0);
+});
+
+async function renderSingleComponent(
+  src: string,
+  opt?: Config,
+): Promise<[component: FileData, assets: FileData[]]> {
+  const config = applyDefaults(opt || {});
+  const docs = new DocPool({ type: "string", data: src });
+  const parser = selectParser(docs, config);
   const components = await parser.getComponents();
   expect(components).toHaveLength(1);
-  const fd = await renderComponent(parser.config, docs, components[0]);
-  expect(fd).toHaveLength(1);
-  const out = fd[0].content;
-  expect(out).toContain("world: React.ReactNode");
-  expect(out).toContain("Hello {world}");
-});
+  return await renderComponent(config, docs, components[0]);
+}

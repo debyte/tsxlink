@@ -1,3 +1,4 @@
+import { baseName, filePath, urlToFilePath } from "../data/paths";
 import { Component, CopyFile, RuntimeConfig } from "../types";
 import {
   CAMEL_ATTRIBUTES,
@@ -9,8 +10,13 @@ import { StyleObject, styleToObject, toCamelCase } from "./styles";
 const INTERNAL_MAP_ATTRIBUTE = "data-tsx-map";
 const INTERNAL_COND_ATTRIBUTE = "data-tsx-cond";
 
-type RewriteResult = {
-  rootVisibilityProp?: string;
+const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
+const HREF_ELEMENTS = ["LINK"];
+const URL_SELECTOR = URL_ELEMENTS.join(", ").toLowerCase();
+
+export type RewriteResult = {
+  rootVisibility?: string;
+  hasImages: boolean,
   styles: StyleObject[];
   copyFromTo: CopyFile[];
 };
@@ -18,11 +24,14 @@ type RewriteResult = {
 export function rewriteTemplateDom(
   component: Component,
   config: RuntimeConfig,
+  dropStyles: boolean,
 ): RewriteResult {
-  const rootVisibilityProp = rewriteDomProps(component);
-  //TODO copy img asset and replace with next image (configurable)
-  const [styles, copyFromTo] = rewriteDomStyles(component.template);
-  return { rootVisibilityProp, styles, copyFromTo };
+  const rootVisibility = rewriteDomProps(component);
+  const [hasImages, copyRefs] = rewriteDomUrls(component.template, config);
+  const [styles, copyUrls] = dropStyles
+    ? [[], []] : rewriteDomStyles(component.template, config);
+  const copyFromTo = [...copyRefs, ...copyUrls];
+  return { rootVisibility, hasImages, styles, copyFromTo };
 }
 
 function rewriteDomProps(component: Component): string | undefined {
@@ -52,35 +61,72 @@ function rewriteDomProps(component: Component): string | undefined {
     } else if (p.target === "map") {
       p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, p.name);
     } else {
-      p.element.setAttribute(p.target, `{tsx:${p.name}}`);
+      p.element.setAttribute(p.target, `#tsx{${p.name}}`);
     }
   }
   return rootVisibilityProp;
 }
 
-function rewriteDomStyles(
+function rewriteDomUrls(
   template: Element,
-): [styles: StyleObject[], copy: CopyFile[]] {
-  const styles: StyleObject[] = [];
-  const copy: CopyFile[] = [];
-  for (const e of template.querySelectorAll("[style]")) {
-    const [s, cp] = styleToObject(e.getAttribute("style"));
-    e.setAttribute("style", `{tsx:styles[${styles.length}]}`);
-    styles.push(s);
-    copy.push(...cp);
+  config: RuntimeConfig,
+): [hasImages: boolean, copyFromTo: CopyFile[]] {
+  const copyFromTo: CopyFile[] = [];
+  let hasImages = false;
+  const elements = URL_ELEMENTS.includes(template.tagName) ? [template] : [];
+  elements.push(...template.querySelectorAll(URL_SELECTOR));
+  for (const element of elements) {
+    hasImages = hasImages || element.tagName === "IMG";
+    const attr = HREF_ELEMENTS.includes(element.tagName) ? "href" : "src";
+    const oldFile = urlToFilePath(element.getAttribute(attr));
+    if (oldFile) {
+      const newFile = baseName(oldFile);
+      copyFromTo.push({ from: oldFile, to: newFile });
+      element.setAttribute(attr, filePath(config.assetsPath, newFile));
+    }
   }
-  return [styles, copy];
+  return [hasImages, copyFromTo];
 }
 
-export function rewriteTemplateHtml(template: string): string {
+function rewriteDomStyles(
+  template: Element,
+  config: RuntimeConfig,
+): [styles: StyleObject[], copyFromTo: CopyFile[]] {
+  const styles: StyleObject[] = [];
+  const copyFromTo: CopyFile[] = [];
+  const elements = template.hasAttribute("style") ? [template] : [];
+  elements.push(...template.querySelectorAll("[style]"));
+  for (const element of elements) {
+    const [style, copy] = styleToObject(
+      element.getAttribute("style"),
+      config.assetsDir,
+    );
+    element.setAttribute("style", `#tsx{styles[${styles.length}]}`);
+    styles.push(style);
+    copyFromTo.push(...copy);
+  }
+  return [styles, copyFromTo];
+}
+
+export function rewriteTemplateHtml(
+  template: string,
+  nextImages: boolean,
+  dropAttrs: RegExp[],
+): string {
   let out = template
-    .replace(/"{tsx:([\w[\]]+)}"/gi, "{$1}")
+    .replace(/"#tsx{([\w[\]]+)}"/gi, "{$1}")
     .replace(mapRegExp, "{...$1}")
     .replace(condStartRegExp, "{$1 && (")
     .replace(condEndRegExp, ")}")
     .replace(closeTagsRegexp, "<$1$2/>");
   for (const [a, b] of REWRITE_ATTRIBUTES) {
     out = out.replace(a, b);
+  }
+  for (const re of dropAttrs) {
+    out = out.replace(re, "");
+  }
+  if (nextImages) {
+    out = out.replace(/<img\s([^>]*)\/>/g, "<Image $1/>");
   }
   return out;
 }

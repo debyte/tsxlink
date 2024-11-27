@@ -13,18 +13,3 @@ export const WEBFLOWISH_CODE: DocSource = {
   type: "dir",
   data: "tests/",
 };
-
-export const ONE_ELEMENT_COMPONENT: DocSource = {
-  type: "string",
-  data: `<div
-    data-tsx="StrangerThings"
-    data-tsx-prop="visibility"
-    data-tsx-slot="children"
-    style="padding:1em;"
-  />`,
-};
-
-export const sourceFromString = (src: string): DocSource => ({
-  type: "string",
-  data: src,
-});

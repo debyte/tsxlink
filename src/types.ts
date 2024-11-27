@@ -10,6 +10,7 @@ export type Config = {
   useNextJsImages?: boolean;
   componentDir?: string;
   assetsDir?: string;
+  assetsPath?: string;
   styleFile?: string;
   ignoreFiles?: string[];
   dropStyles?: string[];
@@ -29,6 +30,7 @@ export type RuntimeConfig = {
   useNextJsImages: boolean;
   componentDir: string;
   assetsDir: string;
+  assetsPath: string;
   styleFile: string;
   ignoreFiles: string[];
   dropStyles: string[];

@@ -5,7 +5,6 @@ import { BaseParser } from "../src/parse/BaseParser";
 import { NamedProp } from "../src/parse/NamedProp";
 import {
   getReadmeHtmlExample,
-  ONE_ELEMENT_COMPONENT,
   WEBFLOWISH_CODE,
 } from "./helpers";
 
@@ -59,9 +58,16 @@ test("Sould detect property targets and types from HTML template", async () => {
   }
 });
 
-test("Should parse properties and slots from component element", async () => {
+test("Should parse properties and slots at the component element", async () => {
   const parser = new BaseParser(
-    new DocPool(ONE_ELEMENT_COMPONENT), applyDefaults({})
+    new DocPool({
+      type: "string",
+      data: `
+        <div class="strange" data-tsx="StrangerThings"
+          data-tsx-prop="visibility" data-tsx-slot="children"
+        />
+      `,
+    }), applyDefaults({})
   );
   const designs = await parser.parseComponentDesigns();
   expect(designs).toHaveLength(1);
