@@ -54,7 +54,7 @@ const renderFC = (
 
 const renderImports = (useImages: boolean, useClassmap: boolean): string => r(
   "import React from \"react\";",
-  useImages && "import { Image } from \"next/image\";",
+  useImages && "import Image from \"next/image\";",
   useClassmap && "import { tsxlinkClass } from \"./tsxlinkLib\";",
 );
 
@@ -77,7 +77,7 @@ function renderPropType(p: Prop): string {
       return "boolean,";
     }
     if (p.target === "slot" || p.target === "replace") {
-      return `React.ReactNode,${p.data && ` // ${p.data}`}`;
+      return `React.ReactNode,${p.data ? ` // ${p.data}` : ""}`;
     }
     if (p.target === "class") {
       return "{ [cls: string]: boolean },";
@@ -88,7 +88,7 @@ function renderPropType(p: Prop): string {
       return `React.${reactClass}<${cls}>,`;
     }
   }
-  return `${p.type},${p.data && ` // ${p.data}`}`;
+  return `${p.type},${p.data ? ` // ${p.data}` : ""}`;
 }
 
 const ATTR_TYPES = new Map<string, string>([
@@ -126,14 +126,14 @@ const renderFCProps = (component: Component): string =>
 const renderSwitch = (name?: string): string =>
   name !== undefined ? `${name} && ` : "";
 
-const renderClassNames = (props: Prop[]): string => r(props.map(
+const renderClassNames = (props: Prop[]): (string | false)[] => props.map(
   p => p.target === "class" && p.data !== undefined && r(
     "",
     `const ${p.name}Defaults = {`,
     r(p.data.split(" ").map(n => `  "${n}": true,`)),
     "};"
   )
-));
+);
 
 const renderStyles = (styles: StyleObject[]): string | false =>
   styles.length > 0 && r(
@@ -141,5 +141,5 @@ const renderStyles = (styles: StyleObject[]): string | false =>
     `const inlineStyles = ${JSON.stringify(styles, null, 2)};`,
   );
 
-const r = (...rows: (string | false)[] | (string | false)[][]) =>
+const r = (...rows: (string | false | (string | false)[])[]) =>
   rows.flatMap(r => r).filter(r => r !== false).join("\n");

@@ -21,7 +21,7 @@ async function renderComponent(config, docs, component) {
     ];
 }
 const renderFC = (component, state, nextImages, dropAttrs) => r(renderImports(state.hasImages && nextImages, state.hasClasses), renderProps(component), renderClassNames(component.props), renderStyles(state.styles), "", `${renderSignature(component)} => ${renderSwitch(state.rootVisibility)}(`, (0, indent_1.indentRows)((0, rewrite_1.rewriteTemplateHtml)(component.template.outerHTML, nextImages, dropAttrs)), ");", "", `export default ${component.name};`);
-const renderImports = (useImages, useClassmap) => r("import React from \"react\";", useImages && "import { Image } from \"next/image\";", useClassmap && "import { tsxlinkClass } from \"./tsxlinkLib\";");
+const renderImports = (useImages, useClassmap) => r("import React from \"react\";", useImages && "import Image from \"next/image\";", useClassmap && "import { tsxlinkClass } from \"./tsxlinkLib\";");
 const renderProps = (component) => component.props.length > 0 && r("", `export interface ${component.name}Props {`, r(component.props.map(p => `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)}`)), "}");
 const isOptionalProp = (p) => ["map", "visibility", "class"].includes(p.target);
 function renderPropType(p) {
@@ -30,7 +30,7 @@ function renderPropType(p) {
             return "boolean,";
         }
         if (p.target === "slot" || p.target === "replace") {
-            return `React.ReactNode,${p.data && ` // ${p.data}`}`;
+            return `React.ReactNode,${p.data ? ` // ${p.data}` : ""}`;
         }
         if (p.target === "class") {
             return "{ [cls: string]: boolean },";
@@ -41,7 +41,7 @@ function renderPropType(p) {
             return `React.${reactClass}<${cls}>,`;
         }
     }
-    return `${p.type},${p.data && ` // ${p.data}`}`;
+    return `${p.type},${p.data ? ` // ${p.data}` : ""}`;
 }
 const ATTR_TYPES = new Map([
     ["HTMLAnchorElement", "AnchorHTMLAttributes"],
@@ -67,6 +67,6 @@ const renderSignature = (component) => `export const ${component.name}: React.FC
 const renderFCProps = (component) => component.props.length > 0
     ? r(`<${component.name}Props> = (`, `  { ${component.props.map(p => p.name).join(", ")} }`, ")") : " = ()";
 const renderSwitch = (name) => name !== undefined ? `${name} && ` : "";
-const renderClassNames = (props) => r(props.map(p => p.target === "class" && p.data !== undefined && r("", `const ${p.name}Defaults = {`, r(p.data.split(" ").map(n => `  "${n}": true,`)), "};")));
+const renderClassNames = (props) => props.map(p => p.target === "class" && p.data !== undefined && r("", `const ${p.name}Defaults = {`, r(p.data.split(" ").map(n => `  "${n}": true,`)), "};"));
 const renderStyles = (styles) => styles.length > 0 && r("", `const inlineStyles = ${JSON.stringify(styles, null, 2)};`);
 const r = (...rows) => rows.flatMap(r => r).filter(r => r !== false).join("\n");
