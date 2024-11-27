@@ -45,13 +45,12 @@ function rewriteDomProps(
       p.target === "text" || p.target === "slot"
       || (p.target === "replace" && p.element === component.template)
     ) {
-      p.data = sanitizeValue(p.element.innerHTML);
+      p.data = sanitizeValue(p.element.textContent);
       p.element.textContent = `{${p.name}}`;
     } else if (p.target === "replace") {
-      p.data = sanitizeValue(p.element.outerHTML);
+      p.data = sanitizeValue(p.element.textContent);
       const ph = p.element.ownerDocument.createTextNode(`{${p.name}}`);
-      p.element.before(ph);
-      p.element.remove();
+      p.element.replaceWith(ph);
     } else if (p.target === "visibility") {
       if (p.element === component.template) {
         rootVisibilityProp = p.name;
@@ -73,7 +72,7 @@ function rewriteDomProps(
       );
       hasClasses = true;
     } else {
-      p.data = sanitizeValue(p.element.getAttribute(p.target), false);
+      p.data = sanitizeValue(p.element.getAttribute(p.target));
       p.element.setAttribute(p.target, `#tsx{${p.name}}`);
     }
   }
@@ -84,12 +83,12 @@ function sanitizeValue(
   value: string | null,
   cut?: boolean,
 ): string | undefined {
-  let v = (value ? value.replace(/\s/g, " ") : "").trim();
+  let v = (value ? value.replace(/\s+/g, " ") : "").trim();
   if (v === "") {
     return undefined;
   }
-  if (v.length > 40 && cut !== false) {
-    v = v.substring(0, 37) + "...";
+  if (v.length > 30 && cut !== false) {
+    v = v.substring(0, 27) + "...";
   }
   return v;
 }

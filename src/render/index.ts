@@ -63,7 +63,7 @@ const renderProps = (component: Component): string | false =>
     "",
     `export interface ${component.name}Props {`,
     r(component.props.map(p =>
-      `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)},`
+      `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)}`
     )),
     "}",
   );
@@ -74,21 +74,21 @@ const isOptionalProp = (p: Prop): boolean =>
 function renderPropType(p: Prop): string {
   if (p.type === "fixed") {
     if (p.target === "visibility") {
-      return "boolean";
+      return "boolean,";
     }
     if (p.target === "slot" || p.target === "replace") {
-      return "React.ReactNode";
+      return `React.ReactNode,${p.data && ` // ${p.data}`}`;
     }
     if (p.target === "class") {
-      return "{ [cls: string]: boolean }";
+      return "{ [cls: string]: boolean },";
     }
     if (p.target === "map") {
       const cls = p.element.constructor.name;
       const reactClass = ATTR_TYPES.get(cls) || "AllHTMLAttributes"
-      return `React.${reactClass}<${cls}>`;
+      return `React.${reactClass}<${cls}>,`;
     }
   }
-  return p.type;
+  return `${p.type},${p.data && ` // ${p.data}`}`;
 }
 
 const ATTR_TYPES = new Map<string, string>([
