@@ -1,6 +1,7 @@
 import { readConfig, removeConfig, writeConfig } from "./config";
 import { createDocPool } from "./data";
-import { removeMissingFiles, writeFiles } from "./data/files";
+import { readFile, removeMissingFiles, writeFiles } from "./data/files";
+import { filePath } from "./data/paths";
 import { applyDefaults, runInteractiveInit } from "./init";
 import { selectParser } from "./parse";
 import { BaseParser } from "./parse/BaseParser";
@@ -79,8 +80,9 @@ async function updateComponents(
 ): Promise<[componentFileNames: string[], assetFileNames: string[]]> {
   const componentFileNamePromises: Promise<string>[] = [];
   const assetFileNamePromises: Promise<string>[] = [];
+  let writeLib = false;
   for (const component of await parser.getComponents()) {
-    const [componentFile, assetFiles] = await renderComponent(
+    const [componentFile, assetFiles, usesLib] = await renderComponent(
       config, parser.docs, component,
     )
     componentFileNamePromises.push(...await writeAndLogFiles(
@@ -88,6 +90,15 @@ async function updateComponents(
     ));
     assetFileNamePromises.push(...await writeAndLogFiles(
       config.assetsDir, assetFiles
+    ));
+    writeLib = writeLib || usesLib;
+  }
+  if (writeLib) {
+    componentFileNamePromises.push(...await writeAndLogFiles(
+      config.componentDir, [{
+        baseName: "tsxlinkLib.ts",
+        buffer: readFile(filePath(__dirname, "tsxlinkLib.ts")),
+      }]
     ));
   }
   return [

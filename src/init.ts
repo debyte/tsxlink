@@ -48,11 +48,6 @@ const INIT_CHOICES: InitChoice[] = [
     default: "yes",
   },
   {
-    key: "useClassNameProperty",
-    prompt: "Add property to edit component class names",
-    default: "yes",
-  },
-  {
     key: "useNextJsImages",
     prompt: "Replace <img> with Next.js <Image> to optimize image files",
     default: "no",
@@ -97,7 +92,6 @@ export function applyDefaults(config: Config): RuntimeConfig {
     copyCssFiles: config.copyCssFiles || true,
     copyJsFiles: config.copyJsFiles || false,
     exportStyleElements: config.exportStyleElements || true,
-    useClassNameProperty: config.useClassNameProperty || true,
     useNextJsImages: config.useNextJsImages || false,
     componentDir: config.componentDir || DEFAULT_COMPONENT_DIR,
     assetsDir: config.assetsDir || DEFAULT_ASSETS_DIR,
@@ -162,7 +156,6 @@ export async function runInteractiveInit(
     copyCssFiles: isTrue(map.get("copyCssFiles")),
     copyJsFiles: isTrue(map.get("copyJsFiles")),
     exportStyleElements: isTrue(map.get("exportStyleElements")),
-    useClassNameProperty: isTrue(map.get("useClassNameProperty")),
     useNextJsImages: isTrue(map.get("useNextJsImages")),
     componentDir: map.get("componentDir"),
     assetsDir: map.get("assetsDir"),

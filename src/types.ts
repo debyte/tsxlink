@@ -6,7 +6,6 @@ export type Config = {
   copyCssFiles?: boolean;
   copyJsFiles?: boolean;
   exportStyleElements?: boolean;
-  useClassNameProperty?: boolean;
   useNextJsImages?: boolean;
   componentDir?: string;
   assetsDir?: string;
@@ -26,7 +25,6 @@ export type RuntimeConfig = {
   copyCssFiles: boolean;
   copyJsFiles: boolean;
   exportStyleElements: boolean;
-  useClassNameProperty: boolean;
   useNextJsImages: boolean;
   componentDir: string;
   assetsDir: string;
@@ -64,6 +62,7 @@ export type Prop = {
   type: PropType;
   target: string;
   element: Element;
+  data?: string;
 };
 
 export type PropType = "string" | "number" | "boolean" | "fixed";

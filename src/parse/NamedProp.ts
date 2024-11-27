@@ -110,7 +110,7 @@ export const isPropType = (s: string): s is PropType =>
   (INPUT_PROP_TYPES as string[]).includes(s);
 
 export const PROP_TARGET_WITH_FIXED_TYPE = [
-  "visibility", "map", "slot", "replace"
+  "visibility", "map", "slot", "replace", "class"
 ];
 export const TARGET_PRIORITY = [
   "text", "visibility", "map", "slot", "replace"

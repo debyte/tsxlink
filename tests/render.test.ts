@@ -73,7 +73,7 @@ test("Should rewrite style attribute for tsx", async () => {
       Test
     </p>
   `);
-  expect(fd.content).toContain("style={styles[0]}");
+  expect(fd.content).toContain("style={inlineStyles[0]}");
   expect(fd.content).toContain("\"textTransform\": \"uppercase\"");
   expect(assets).toHaveLength(1);
   expect(assets[0].baseName).toEqual("README.md");
@@ -119,10 +119,25 @@ test("Should drop configured attributes", async () => {
   expect(assets).toHaveLength(0);
 });
 
+test("Should render control for class(name) property", async () => {
+  const [fd, assets, usesLib] = await renderSingleComponent(`
+    <a class="my-class c2" data-tsx="Test" data-tsx-prop="className:class">
+      foo
+    </a>
+  `);
+  expect(fd.content).toContain("import { tsxlinkClass }");
+  expect(fd.content).toMatch(/"my-class": true,\s+"c2": true/);
+  expect(fd.content).toContain(
+    "class={classResolve(className, classNameDefaults)}"
+  );
+  expect(assets).toHaveLength(0);
+  expect(usesLib).toBeTruthy();
+});
+
 async function renderSingleComponent(
   src: string,
   opt?: Config,
-): Promise<[component: FileData, assets: FileData[]]> {
+): Promise<[component: FileData, assets: FileData[], usesLib: boolean]> {
   const config = applyDefaults(opt || {});
   const docs = new DocPool({ type: "string", data: src });
   const parser = selectParser(docs, config);

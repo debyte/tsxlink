@@ -22,6 +22,10 @@ for the concept of components. When necessary, additional custom tags are
 inserted to the design elements in order to convey the necessary information
 to the HTML output of the design system.
 
+## Configuration
+
+TODO
+
 ## Custom tags
 
 * **`data-tsx="ComponentName"`**
@@ -50,23 +54,29 @@ to the HTML output of the design system.
     include:
 
     * `text` targets text content inside the element.
-    * `value`, `src`, and *other attribute names* target the value of the named
-    attribute.
+
+    * `value`, `class`, and *other attribute names* target the value of the
+      named attribute. The `class` attribute always has an object type where
+      keys are the class names and true values are active. The classes from the
+      template are active by default.
+
     * `visibility` controls whether the element appears in the DOM or not. The
-    type is always boolean. As a property name it targets visibility rather
-    than text on default, i.e., `visibility` has the effect of
-    `visibility:visibility`.
+      type is always boolean. Property name `visibility` targets visibility
+      rather than text on default, i.e., `visibility` has the effect of
+      `visibility:visibility`.
+
     * `map` is typically used to attach *event listeners*, such as `onClick`
-    and `onSubmit`. The type is an attribute map for the target element, for
-    example `React.ButtonHTMLAttributes<HTMLButtonElement>`, and it may be
-    used to add necessary element attributes that do not exist in the design.
-    Property name `map` targets map on default, i.e., `map` has the effect of
-    `map:map`.
+      and `onSubmit`. The type is an attribute map for the target element, for
+      example `React.ButtonHTMLAttributes<HTMLButtonElement>`, and it may be
+      used to add necessary element attributes that do not exist in the design.
+      Property name `map` targets map on default, i.e., `map` has the effect of
+      `map:map`.
 
-* **`data-tsx-slot="name"`**
+* **`data-tsx-slot="name"`** and **`data-tsx-replace="name"`**
 
-    This element is inside a component and renders content specified as a
-    property. The content has a type `React.ReactNode` which accepts string,
+    This element renders content specified as a property. A *slot* uses the
+    given content as its children while *replace* is switched to the new
+    content. The content has a type `React.ReactNode` which accepts string,
     number, React element, undefined/null/false, or arrays of those.
 
     * **`children`** has a specific significance as a name. It indicates that

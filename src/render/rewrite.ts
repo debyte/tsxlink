@@ -16,6 +16,7 @@ const URL_SELECTOR = URL_ELEMENTS.join(", ").toLowerCase();
 
 export type RewriteResult = {
   rootVisibility?: string;
+  hasClasses: boolean,
   hasImages: boolean,
   styles: StyleObject[];
   copyFromTo: CopyFile[];
@@ -26,27 +27,31 @@ export function rewriteTemplateDom(
   config: RuntimeConfig,
   dropStyles: boolean,
 ): RewriteResult {
-  const rootVisibility = rewriteDomProps(component);
+  const [rootVisibility, hasClasses] = rewriteDomProps(component);
   const [hasImages, copyRefs] = rewriteDomUrls(component.template, config);
   const [styles, copyUrls] = dropStyles
     ? [[], []] : rewriteDomStyles(component.template, config);
   const copyFromTo = [...copyRefs, ...copyUrls];
-  return { rootVisibility, hasImages, styles, copyFromTo };
+  return { rootVisibility, hasClasses, hasImages, styles, copyFromTo };
 }
 
-function rewriteDomProps(component: Component): string | undefined {
+function rewriteDomProps(
+  component: Component
+): [rootVisibility: string | undefined, hasClasses: boolean] {
   let rootVisibilityProp: string | undefined;
+  let hasClasses = false;
   for (const p of component.props) {
-    if (p.target === "text" || p.target === "slot") {
+    if (
+      p.target === "text" || p.target === "slot"
+      || (p.target === "replace" && p.element === component.template)
+    ) {
+      p.data = sanitizeValue(p.element.innerHTML);
       p.element.textContent = `{${p.name}}`;
     } else if (p.target === "replace") {
-      if (p.element === component.template) {
-        p.element.textContent = `{${p.name}}`;
-      } else {
-        const ph = p.element.ownerDocument.createTextNode(`{${p.name}}`);
-        p.element.before(ph);
-        p.element.remove();
-      }
+      p.data = sanitizeValue(p.element.outerHTML);
+      const ph = p.element.ownerDocument.createTextNode(`{${p.name}}`);
+      p.element.before(ph);
+      p.element.remove();
     } else if (p.target === "visibility") {
       if (p.element === component.template) {
         rootVisibilityProp = p.name;
@@ -60,11 +65,33 @@ function rewriteDomProps(component: Component): string | undefined {
       }
     } else if (p.target === "map") {
       p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, p.name);
+    } else if (p.target === "class") {
+      p.data = sanitizeValue(p.element.getAttribute(p.target), false);
+      p.element.setAttribute(
+        p.target,
+        `#tsx{classResolve(${p.name}${p.data ? `, ${p.name}Defaults` : ""})}`
+      );
+      hasClasses = true;
     } else {
+      p.data = sanitizeValue(p.element.getAttribute(p.target), false);
       p.element.setAttribute(p.target, `#tsx{${p.name}}`);
     }
   }
-  return rootVisibilityProp;
+  return [rootVisibilityProp, hasClasses];
+}
+
+function sanitizeValue(
+  value: string | null,
+  cut?: boolean,
+): string | undefined {
+  let v = (value ? value.replace(/\s/g, " ") : "").trim();
+  if (v === "") {
+    return undefined;
+  }
+  if (v.length > 40 && cut !== false) {
+    v = v.substring(0, 37) + "...";
+  }
+  return v;
 }
 
 function rewriteDomUrls(
@@ -101,7 +128,7 @@ function rewriteDomStyles(
       element.getAttribute("style"),
       config.assetsDir,
     );
-    element.setAttribute("style", `#tsx{styles[${styles.length}]}`);
+    element.setAttribute("style", `#tsx{inlineStyles[${styles.length}]}`);
     styles.push(style);
     copyFromTo.push(...copy);
   }
@@ -114,7 +141,7 @@ export function rewriteTemplateHtml(
   dropAttrs: RegExp[],
 ): string {
   let out = template
-    .replace(/"#tsx{([\w[\]]+)}"/gi, "{$1}")
+    .replace(/"#tsx{([^}"]+)}"/gi, "{$1}")
     .replace(mapRegExp, "{...$1}")
     .replace(condStartRegExp, "{$1 && (")
     .replace(condEndRegExp, ")}")
