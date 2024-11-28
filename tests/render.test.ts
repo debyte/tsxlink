@@ -101,7 +101,9 @@ test("Should rewrite img to next/image", async () => {
     assetsPath: "@",
   });
   expect(fd.content).toContain("import Image from \"next/image\"");
-  expect(fd.content).toContain("import foo_png from \"foo.png\"");
+  expect(fd.content).toContain(
+    "import foo_png from \"../../assets/tsxlink/foo.png\""
+  );
   expect(fd.content).toContain(
     "<Image src={foo_png} width=\"300\" height=\"200\"/>"
   );

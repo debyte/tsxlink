@@ -86,7 +86,7 @@ function rewriteDomUrls(component, config) {
                     copyFromTo.push({ from: oldFile, to: newFile });
                     if (config.useNextJsImages) {
                         const id = (0, paths_1.fileToId)(newFile);
-                        images[id] = newFile;
+                        images[id] = (0, paths_1.filePath)(config.assetsPath, newFile);
                         element.setAttribute(attr, `#tsx{${id}}`);
                     }
                     else {
@@ -105,7 +105,7 @@ function rewriteDomUrls(component, config) {
                     if (oldFile) {
                         const newFile = (0, paths_1.baseName)(oldFile);
                         copyFromTo.push({ from: oldFile, to: newFile });
-                        value.replace(oldFile, newFile);
+                        value.replace(oldFile, (0, paths_1.filePath)(config.assetsPath, newFile));
                     }
                 }
                 element.setAttribute("srcset", value);
