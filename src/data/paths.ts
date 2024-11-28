@@ -40,6 +40,17 @@ export function urlToFilePath(url: string | null): string | null {
   return null;
 }
 
+export function srcSetToFilePaths(srcset: string | null): (string | null)[] {
+  const paths: (string | null)[] = [];
+  if (srcset) {
+    for (const entry of srcset.split(",")) {
+      const [src] = entry.trim().split(" ", 2);
+      paths.push(urlToFilePath(src));
+    }
+  }
+  return paths;
+}
+
 export function wildcardRegexp(
   match: string,
   preRegExp?: string,

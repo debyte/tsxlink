@@ -1,6 +1,11 @@
 import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
 import { DocPool } from "../data/DocPool";
-import { baseName, urlToFilePath, wildcardRegexp } from "../data/paths";
+import {
+  baseName,
+  srcSetToFilePaths,
+  urlToFilePath,
+  wildcardRegexp,
+} from "../data/paths";
 import { Component, CopyFile, FileData, RuntimeConfig } from "../types";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
@@ -11,6 +16,7 @@ export const PROPERTY_ATTRIBUTE = "data-tsx-prop";
 export const SLOT_ATTRIBUTE = "data-tsx-slot";
 export const REPLACE_ATTRIBUTE = "data-tsx-replace";
 export const ASSET_ATTRIBUTE = "data-tsx-asset";
+export const DROP_ATTRIBUTE = "data-tsx-drop";
 
 export class BaseParser {
   docs: DocPool;
@@ -38,34 +44,42 @@ export class BaseParser {
     return out;
   };
 
-  async getStyleElements(): Promise<FileData[]> {
-    const styles: string[] = [];
-    for await (const elements of await this.docs.selectElements("style")) {
-      for (const element of elements) {
-        if (element.textContent !== null) {
-          styles.push(element.textContent);
-        }
-      }
-    }
-    return this.rewriteCss(
-      { baseName: this.config.styleFile, content: styles.join("\n\n") }
-    );
-  }
-
   async getAssetFiles(): Promise<FileData[]> {
     const copyFromTo: CopyFile[] = [];
-    for await (
-      const elements of await this.docs.selectElements(this.getAssetSelector())
-    ) {
-      for (const element of elements) {
-        const attr = ["LINK", "A"].includes(element.tagName) ? "href" : "src";
-        const oldFile = urlToFilePath(element.getAttribute(attr));
+    for (const element of await this.docs.selectElements(
+      this.getAssetSelector()
+    )) {
+      for (const oldFile of [
+        urlToFilePath(element.getAttribute("src")),
+        urlToFilePath(element.getAttribute("href")),
+        ...srcSetToFilePaths(element.getAttribute("srcset")),
+      ]) {
         if (oldFile) {
           copyFromTo.push({ from: oldFile, to: baseName(oldFile) });
         }
       }
     }
     return await this.docs.copyFiles(".", copyFromTo);
+  }
+
+  async dropElements(): Promise<void> {
+    for (const element of await this.docs.selectElements(
+      this.getDropSelector()
+    )) {
+      element.remove();
+    }
+  }
+
+  async getStyleElements(): Promise<FileData[]> {
+    const styles: string[] = [];
+    for (const element of await this.docs.selectElements("style")) {
+      if (element.textContent !== null) {
+        styles.push(element.textContent);
+      }
+    }
+    return this.rewriteCss(
+      { baseName: this.config.styleFile, content: styles.join("\n\n") }
+    );
   }
 
   async getSeparateCssFiles(): Promise<Promise<FileData[]>[]> {
@@ -80,17 +94,14 @@ export class BaseParser {
 
   async parseComponentDesigns(): Promise<NamedComponent[]> {
     const desings = new NamedObjectSet<NamedComponent>();
-    for await (
-      const elements of
-      await this.docs.selectElements(this.getComponentSelector())
-    ) {
-      for (const element of elements) {
-        const name = element.getAttribute(COMPONENT_ATTRIBUTE);
-        if (name !== null) {
-          desings.merge(
-            new NamedComponent(name, element.cloneNode(true) as Element)
-          );
-        }
+    for (const element of await this.docs.selectElements(
+      this.getComponentSelector()
+    )) {
+      const name = element.getAttribute(COMPONENT_ATTRIBUTE);
+      if (name !== null) {
+        desings.merge(
+          new NamedComponent(name, element.cloneNode(true) as Element)
+        );
       }
     }
     return desings.all();
@@ -158,6 +169,10 @@ export class BaseParser {
 
   protected getAssetSelector(): string {
     return `[${ASSET_ATTRIBUTE}]`;
+  }
+
+  protected getDropSelector(): string {
+    return `[${DROP_ATTRIBUTE}]`;
   }
 
   cleanComponentElement(c: Component): void {

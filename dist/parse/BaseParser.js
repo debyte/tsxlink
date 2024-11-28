@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseParser = exports.ASSET_ATTRIBUTE = exports.REPLACE_ATTRIBUTE = exports.SLOT_ATTRIBUTE = exports.PROPERTY_ATTRIBUTE = exports.COMPONENT_ATTRIBUTE = void 0;
+exports.BaseParser = exports.DROP_ATTRIBUTE = exports.ASSET_ATTRIBUTE = exports.REPLACE_ATTRIBUTE = exports.SLOT_ATTRIBUTE = exports.PROPERTY_ATTRIBUTE = exports.COMPONENT_ATTRIBUTE = void 0;
 const CssFilterAndFixUrls_1 = require("../data/CssFilterAndFixUrls");
 const paths_1 = require("../data/paths");
 const NamedComponent_1 = require("./NamedComponent");
@@ -11,6 +11,7 @@ exports.PROPERTY_ATTRIBUTE = "data-tsx-prop";
 exports.SLOT_ATTRIBUTE = "data-tsx-slot";
 exports.REPLACE_ATTRIBUTE = "data-tsx-replace";
 exports.ASSET_ATTRIBUTE = "data-tsx-asset";
+exports.DROP_ATTRIBUTE = "data-tsx-drop";
 class BaseParser {
     constructor(docs, config) {
         this.docs = docs;
@@ -32,29 +33,34 @@ class BaseParser {
         return out;
     }
     ;
-    async getStyleElements() {
-        const styles = [];
-        for await (const elements of await this.docs.selectElements("style")) {
-            for (const element of elements) {
-                if (element.textContent !== null) {
-                    styles.push(element.textContent);
-                }
-            }
-        }
-        return this.rewriteCss({ baseName: this.config.styleFile, content: styles.join("\n\n") });
-    }
     async getAssetFiles() {
         const copyFromTo = [];
-        for await (const elements of await this.docs.selectElements(this.getAssetSelector())) {
-            for (const element of elements) {
-                const attr = ["LINK", "A"].includes(element.tagName) ? "href" : "src";
-                const oldFile = (0, paths_1.urlToFilePath)(element.getAttribute(attr));
+        for (const element of await this.docs.selectElements(this.getAssetSelector())) {
+            for (const oldFile of [
+                (0, paths_1.urlToFilePath)(element.getAttribute("src")),
+                (0, paths_1.urlToFilePath)(element.getAttribute("href")),
+                ...(0, paths_1.srcSetToFilePaths)(element.getAttribute("srcset")),
+            ]) {
                 if (oldFile) {
                     copyFromTo.push({ from: oldFile, to: (0, paths_1.baseName)(oldFile) });
                 }
             }
         }
         return await this.docs.copyFiles(".", copyFromTo);
+    }
+    async dropElements() {
+        for (const element of await this.docs.selectElements(this.getDropSelector())) {
+            element.remove();
+        }
+    }
+    async getStyleElements() {
+        const styles = [];
+        for (const element of await this.docs.selectElements("style")) {
+            if (element.textContent !== null) {
+                styles.push(element.textContent);
+            }
+        }
+        return this.rewriteCss({ baseName: this.config.styleFile, content: styles.join("\n\n") });
     }
     async getSeparateCssFiles() {
         return (await this.docs.selectFiles({ extension: "css" })).map(f => this.rewriteCss(f));
@@ -64,12 +70,10 @@ class BaseParser {
     }
     async parseComponentDesigns() {
         const desings = new NamedObject_1.NamedObjectSet();
-        for await (const elements of await this.docs.selectElements(this.getComponentSelector())) {
-            for (const element of elements) {
-                const name = element.getAttribute(exports.COMPONENT_ATTRIBUTE);
-                if (name !== null) {
-                    desings.merge(new NamedComponent_1.NamedComponent(name, element.cloneNode(true)));
-                }
+        for (const element of await this.docs.selectElements(this.getComponentSelector())) {
+            const name = element.getAttribute(exports.COMPONENT_ATTRIBUTE);
+            if (name !== null) {
+                desings.merge(new NamedComponent_1.NamedComponent(name, element.cloneNode(true)));
             }
         }
         return desings.all();
@@ -131,6 +135,9 @@ class BaseParser {
     }
     getAssetSelector() {
         return `[${exports.ASSET_ATTRIBUTE}]`;
+    }
+    getDropSelector() {
+        return `[${exports.DROP_ATTRIBUTE}]`;
     }
     cleanComponentElement(c) {
         c.template.removeAttribute(exports.COMPONENT_ATTRIBUTE);

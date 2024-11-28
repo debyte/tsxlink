@@ -64,14 +64,26 @@ export async function run() {
   // Process
   pr("Parsing and synchronizing.")
   const parser = selectParser(docs, config);
-  const [componentFiles, assetFiles] = await updateComponents(parser, config);
-  assetFiles.push(...await updateAssets(parser, config));
+  const assetFiles = await prepareForComponents(parser, config);
+  const [componentFiles, assets] = await updateComponents(parser, config);
+  assetFiles.push(...assets, ...await updateAssets(parser, config));
   await Promise.all([
     ...await removeAndLogFiles(config.componentDir, componentFiles),
     ...await removeAndLogFiles(config.assetsDir, assetFiles),
   ]);
   const n = componentFiles.length + assetFiles.length;
   pr(`Synchronized ${n} linked files.`);
+}
+
+async function prepareForComponents(
+  parser: BaseParser,
+  config: RuntimeConfig,
+): Promise<string[]> {
+  const fileNamePromises = await writeAndLogFiles(
+    config.assetsDir, await parser.getAssetFiles(),
+  );
+  await parser.dropElements();
+  return await Promise.all(fileNamePromises);
 }
 
 async function updateComponents(
@@ -115,11 +127,6 @@ async function updateAssets(
   if (config.exportStyleElements) {
     fileNamePromises.push(...await writeAndLogFiles(
       config.assetsDir, await parser.getStyleElements(),
-    ));
-  }
-  if (config.copyMarkedFiles) {
-    fileNamePromises.push(...await writeAndLogFiles(
-      config.assetsDir, await parser.getAssetFiles(),
     ));
   }
   if (config.copyCssFiles) {

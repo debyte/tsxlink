@@ -1,4 +1,9 @@
-import { baseName, filePath, urlToFilePath } from "../data/paths";
+import {
+  baseName,
+  filePath,
+  srcSetToFilePaths,
+  urlToFilePath,
+} from "../data/paths";
 import { Component, CopyFile, RuntimeConfig } from "../types";
 import {
   CAMEL_ATTRIBUTES,
@@ -11,7 +16,6 @@ const INTERNAL_MAP_ATTRIBUTE = "data-tsx-map";
 const INTERNAL_COND_ATTRIBUTE = "data-tsx-cond";
 
 const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
-const HREF_ELEMENTS = ["LINK"];
 const URL_SELECTOR = URL_ELEMENTS.join(", ").toLowerCase();
 
 export type RewriteResult = {
@@ -103,12 +107,26 @@ function rewriteDomUrls(
   elements.push(...template.querySelectorAll(URL_SELECTOR));
   for (const element of elements) {
     hasImages = hasImages || element.tagName === "IMG";
-    const attr = HREF_ELEMENTS.includes(element.tagName) ? "href" : "src";
-    const oldFile = urlToFilePath(element.getAttribute(attr));
-    if (oldFile) {
-      const newFile = baseName(oldFile);
-      copyFromTo.push({ from: oldFile, to: newFile });
-      element.setAttribute(attr, filePath(config.assetsPath, newFile));
+    for (const attr of ["src", "href"]) {
+      if (element.hasAttribute(attr)) {
+        const oldFile = urlToFilePath(element.getAttribute(attr));
+        if (oldFile) {
+          const newFile = baseName(oldFile);
+          copyFromTo.push({ from: oldFile, to: newFile });
+          element.setAttribute(attr, filePath(config.assetsPath, newFile));
+        }
+      }
+    }
+    if (element.hasAttribute("srcset")) {
+      const value = element.getAttribute("srcset")!;
+      for (const oldFile of srcSetToFilePaths(value)) {
+        if (oldFile) {
+          const newFile = baseName(oldFile);
+          copyFromTo.push({ from: oldFile, to: newFile });
+          value.replace(oldFile, newFile);
+        }
+      }
+      element.setAttribute("srcset", value);
     }
   }
   return [hasImages, copyFromTo];

@@ -6,6 +6,7 @@ import { ext, wildcardFileRegexp } from "./paths";
 
 export class DocPool {
   source?: DocSource;
+  cache?: JSDOM[];
   ignore: RegExp[];
 
   constructor(source?: DocSource, ignore?: string[]) {
@@ -15,30 +16,40 @@ export class DocPool {
       : [];
   }
 
-  async parseDocs() {
+  async parseDocs(): Promise<JSDOM[]> {
     if (this.source === undefined) {
       return [];
     }
     if (["url", "zip", "dir"].includes(this.source.type)) {
-      return this.parseDoms(await this.selectFiles({ extension: "html" }));
+      return await this.parseDoms(
+        await this.selectFiles({ extension: "html" })
+      );
     }
     if (this.source.type === "file") {
-      return this.parseDoms([
+      return await this.parseDoms([
         { baseName: "", buffer: readFile(this.source.data) },
       ]);
     }
-    return [Promise.resolve(new JSDOM(this.source.data))];
+    return [new JSDOM(this.source.data)];
   }
 
-  private parseDoms(data: FileData[]) {
-    return data.map(async ({ buffer }) => new JSDOM(await buffer));
+  private async parseDoms(data: FileData[]): Promise<JSDOM[]> {
+    const doms: JSDOM[] = [];
+    for (const { buffer } of data) {
+      doms.push(new JSDOM(await buffer));
+    }
+    return doms;
   }
 
-  async selectElements(selectors: string) {
-    const docs = await this.parseDocs();
-    return docs.map(async dom => {
-      return (await dom).window.document.querySelectorAll(selectors);
-    });
+  async selectElements(selectors: string): Promise<Element[]> {
+    if (this.cache === undefined) {
+      this.cache = await this.parseDocs();
+    }
+    const elements: Element[] = [];
+    for (const dom of this.cache) {
+      elements.push(...dom.window.document.querySelectorAll(selectors));
+    }
+    return elements;
   }
 
   async selectFiles(
@@ -66,8 +77,8 @@ export class DocPool {
       if (this.source.type === "dir") {
         return await dirFiles(this.source.data, select);
       }
-      if (this.source.type === "string" && opt.names) { // Tests
-        return emptyFiles(opt.names);
+      if (this.source.type === "string" && opt.names) {
+        return emptyFiles(opt.names); // For tests
       }
     }
     return [];

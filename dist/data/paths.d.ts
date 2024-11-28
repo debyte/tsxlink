@@ -4,5 +4,6 @@ export declare const baseName: (filePath: string) => string;
 export declare function filePath(pathName: string | undefined, baseName: string, extension?: string, dirName?: string): string;
 export declare function relativePath(from: string, to: string): string;
 export declare function urlToFilePath(url: string | null): string | null;
+export declare function srcSetToFilePaths(srcset: string | null): (string | null)[];
 export declare function wildcardRegexp(match: string, preRegExp?: string, postRegExp?: string, flags?: string): RegExp;
 export declare function wildcardFileRegexp(match: string): RegExp;

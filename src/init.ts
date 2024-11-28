@@ -28,11 +28,6 @@ const INIT_CHOICES: InitChoice[] = [
     prompt: "Source file, directory, or URL, unless provided on command line",
   },
   {
-    key: "copyMarkedFiles",
-    prompt: "Copy any files marked with data-tsx-asset to assets",
-    default: "yes",
-  },
-  {
     key: "copyCssFiles",
     prompt: "Copy any separate CSS files to assets",
     default: "yes",
@@ -88,7 +83,6 @@ export function applyDefaults(config: Config): RuntimeConfig {
     version: config.version || 1,
     sourceType: config.sourceType || "custom",
     source: config.source,
-    copyMarkedFiles: config.copyMarkedFiles || true,
     copyCssFiles: config.copyCssFiles || true,
     copyJsFiles: config.copyJsFiles || false,
     exportStyleElements: config.exportStyleElements || true,
@@ -152,7 +146,6 @@ export async function runInteractiveInit(
   return {
     sourceType: map.get("sourceType") as SourceType,
     source: map.get("source"),
-    copyMarkedFiles: isTrue(map.get("copyMarkedFiles")),
     copyCssFiles: isTrue(map.get("copyCssFiles")),
     copyJsFiles: isTrue(map.get("copyJsFiles")),
     exportStyleElements: isTrue(map.get("exportStyleElements")),

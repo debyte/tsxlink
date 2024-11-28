@@ -20,23 +20,31 @@ class DocPool {
             return [];
         }
         if (["url", "zip", "dir"].includes(this.source.type)) {
-            return this.parseDoms(await this.selectFiles({ extension: "html" }));
+            return await this.parseDoms(await this.selectFiles({ extension: "html" }));
         }
         if (this.source.type === "file") {
-            return this.parseDoms([
+            return await this.parseDoms([
                 { baseName: "", buffer: (0, files_1.readFile)(this.source.data) },
             ]);
         }
-        return [Promise.resolve(new jsdom_1.JSDOM(this.source.data))];
+        return [new jsdom_1.JSDOM(this.source.data)];
     }
-    parseDoms(data) {
-        return data.map(async ({ buffer }) => new jsdom_1.JSDOM(await buffer));
+    async parseDoms(data) {
+        const doms = [];
+        for (const { buffer } of data) {
+            doms.push(new jsdom_1.JSDOM(await buffer));
+        }
+        return doms;
     }
     async selectElements(selectors) {
-        const docs = await this.parseDocs();
-        return docs.map(async (dom) => {
-            return (await dom).window.document.querySelectorAll(selectors);
-        });
+        if (this.cache === undefined) {
+            this.cache = await this.parseDocs();
+        }
+        const elements = [];
+        for (const dom of this.cache) {
+            elements.push(...dom.window.document.querySelectorAll(selectors));
+        }
+        return elements;
     }
     async selectFiles(opt) {
         if (this.source !== undefined) {
@@ -60,8 +68,8 @@ class DocPool {
             if (this.source.type === "dir") {
                 return await (0, files_1.dirFiles)(this.source.data, select);
             }
-            if (this.source.type === "string" && opt.names) { // Tests
-                return (0, files_1.emptyFiles)(opt.names);
+            if (this.source.type === "string" && opt.names) {
+                return (0, files_1.emptyFiles)(opt.names); // For tests
             }
         }
         return [];

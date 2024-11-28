@@ -8,7 +8,6 @@ const styles_1 = require("./styles");
 const INTERNAL_MAP_ATTRIBUTE = "data-tsx-map";
 const INTERNAL_COND_ATTRIBUTE = "data-tsx-cond";
 const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
-const HREF_ELEMENTS = ["LINK"];
 const URL_SELECTOR = URL_ELEMENTS.join(", ").toLowerCase();
 function rewriteTemplateDom(component, config, dropStyles) {
     const [rootVisibility, hasClasses] = rewriteDomProps(component);
@@ -77,12 +76,26 @@ function rewriteDomUrls(template, config) {
     elements.push(...template.querySelectorAll(URL_SELECTOR));
     for (const element of elements) {
         hasImages = hasImages || element.tagName === "IMG";
-        const attr = HREF_ELEMENTS.includes(element.tagName) ? "href" : "src";
-        const oldFile = (0, paths_1.urlToFilePath)(element.getAttribute(attr));
-        if (oldFile) {
-            const newFile = (0, paths_1.baseName)(oldFile);
-            copyFromTo.push({ from: oldFile, to: newFile });
-            element.setAttribute(attr, (0, paths_1.filePath)(config.assetsPath, newFile));
+        for (const attr of ["src", "href"]) {
+            if (element.hasAttribute(attr)) {
+                const oldFile = (0, paths_1.urlToFilePath)(element.getAttribute(attr));
+                if (oldFile) {
+                    const newFile = (0, paths_1.baseName)(oldFile);
+                    copyFromTo.push({ from: oldFile, to: newFile });
+                    element.setAttribute(attr, (0, paths_1.filePath)(config.assetsPath, newFile));
+                }
+            }
+        }
+        if (element.hasAttribute("srcset")) {
+            const value = element.getAttribute("srcset");
+            for (const oldFile of (0, paths_1.srcSetToFilePaths)(value)) {
+                if (oldFile) {
+                    const newFile = (0, paths_1.baseName)(oldFile);
+                    copyFromTo.push({ from: oldFile, to: newFile });
+                    value.replace(oldFile, newFile);
+                }
+            }
+            element.setAttribute("srcset", value);
         }
     }
     return [hasImages, copyFromTo];

@@ -2,7 +2,6 @@ export type Config = {
     version?: number;
     sourceType?: SourceType;
     source?: string;
-    copyMarkedFiles?: boolean;
     copyCssFiles?: boolean;
     copyJsFiles?: boolean;
     exportStyleElements?: boolean;
@@ -20,7 +19,6 @@ export type RuntimeConfig = {
     version: number;
     sourceType: SourceType;
     source?: string;
-    copyMarkedFiles: boolean;
     copyCssFiles: boolean;
     copyJsFiles: boolean;
     exportStyleElements: boolean;

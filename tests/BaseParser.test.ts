@@ -59,16 +59,14 @@ test("Sould detect property targets and types from HTML template", async () => {
 });
 
 test("Should parse properties and slots at the component element", async () => {
-  const parser = new BaseParser(
-    new DocPool({
-      type: "string",
-      data: `
+  const parser = new BaseParser(new DocPool({
+    type: "string",
+    data: `
         <div class="strange" data-tsx="StrangerThings"
           data-tsx-prop="visibility" data-tsx-slot="children"
         />
       `,
-    }), applyDefaults({})
-  );
+  }), applyDefaults({}));
   const designs = await parser.parseComponentDesigns();
   expect(designs).toHaveLength(1);
   expect(designs[0].name).toEqual("StrangerThings");
@@ -99,4 +97,37 @@ test("Should ignore named CSS blocks and rewrite urls", async () => {
   expect(files[0].content).toContain("@media ");
   expect(files[0].content).toContain("url('helpers.ts')");
   expect(files[1].baseName).toEqual("helpers.ts");
+});
+
+test("Should detect marked assets", async () => {
+  const parser = new BaseParser(new DocPool({
+    type: "string",
+    data: `
+        <link href="what.css" data-tsx-asset="">
+        <div data-tsx="Test">
+          <img src="foo.png" srcset="bar.png 2x, 3.png 3x" data-tsx-asset="">
+        </div>
+      `,
+  }), applyDefaults({}));
+  const assets = await parser.getAssetFiles();
+  expect(assets).toHaveLength(4);
+  expect(assets[3].baseName).toEqual("3.png");
+});
+
+test("Should drop marked assets", async () => {
+  const parser = new BaseParser(new DocPool({
+    type: "string",
+    data: `
+        <div data-tsx="Test">
+          <p data-tsx-drop="">the <span data-tsx="Ignored">foo</span></p>
+        </div>
+        <style data-tsx-drop="">body { color: red; }</style>
+      `,
+  }), applyDefaults({}));
+  await parser.dropElements();
+  const components = await parser.getComponents();
+  expect(components).toHaveLength(1);
+  const styles = await parser.getStyleElements();
+  expect(styles).toHaveLength(1);
+  expect(styles[0].content).toEqual("");
 });

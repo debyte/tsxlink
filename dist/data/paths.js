@@ -7,6 +7,7 @@ exports.baseName = exports.hasExtension = exports.ext = void 0;
 exports.filePath = filePath;
 exports.relativePath = relativePath;
 exports.urlToFilePath = urlToFilePath;
+exports.srcSetToFilePaths = srcSetToFilePaths;
 exports.wildcardRegexp = wildcardRegexp;
 exports.wildcardFileRegexp = wildcardFileRegexp;
 const path_1 = __importDefault(require("path"));
@@ -39,6 +40,16 @@ function urlToFilePath(url) {
         }
     }
     return null;
+}
+function srcSetToFilePaths(srcset) {
+    const paths = [];
+    if (srcset) {
+        for (const entry of srcset.split(",")) {
+            const [src] = entry.trim().split(" ", 2);
+            paths.push(urlToFilePath(src));
+        }
+    }
+    return paths;
 }
 function wildcardRegexp(match, preRegExp, postRegExp, flags) {
     const b = preRegExp || "^";

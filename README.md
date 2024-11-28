@@ -14,7 +14,7 @@ they can be instantiated with actual data and events in the React environment.
 The design components are replicated as TSX files, which each define a
 corresponding React.FunctionComponent (FC). The React components are dumb, or
 in other words, presentation components. Programmers should not edit the
-automatically built TSX files but wrap them in to other components that take
+automatically built TSX files but wrap them into other components that take
 care of the necessary logic and state.
 
 The design systems may not enforce a compatible and openly available support
@@ -22,9 +22,111 @@ for the concept of components. When necessary, additional custom tags are
 inserted to the design elements in order to convey the necessary information
 to the HTML output of the design system.
 
+## Usage
+
+```
+npm install --save-dev tsxlink
+npx tsxlink
+```
+
 ## Configuration
 
-TODO
+An interactive configuration is available via `npx tsxlink init`, which writes
+configuration into a `tsxlink.config.(mjs|cjs|js|json)` file to the project
+root. Few configuration options exists that are not covered in the interactive
+`init` prompts. All of the options are reviewed next.
+
+* `sourceType` (default: custom)
+  
+  The type of source HTML affects how the documents are analyzed.
+  * `custom` - Custom HTML relying on `data-tsx*` attributes.
+  * `webflow/export` - HTML exported from a Webflow.com site.
+
+* `source`
+
+  Source file, directory, or URL can be configured for the project.
+  Alternatively, the source can be provided on the command line.
+
+* `copyCssFiles` (default: Yes)
+
+  Selects to copy any separate CSS files to assets. Yes by default, as the CSS
+  files are likely to affect the design whether they are included in any
+  component code or not. The developer needs to take the responsibility to
+  import any styles linked outside the defined components.
+
+* `copyJsFiles` (default: No)
+
+  Selects to copy any separate JS files to assets. No by default, as the
+  application state and logic is likely to be handled in the code base.
+
+* `exportStyleElements` (default: Yes)
+
+  Selects to export CSS from possible `<style>` elements in any HTML files.
+  Yes by default, and the considerations for the `copyCssFiles` apply.
+
+* `useNextJsImages` (default: No)
+
+  Replaces `<img>` elements with Next.js `<Image>` components. Next.js helps
+  to automate image optimization for web delivery.
+
+* `componentDir` (default: ./src/components/tsxlink)
+
+  A directory to write TSX presentation components.
+
+* `assetsDir` (default: ./public/tsxlink)
+
+  A directory to write and copy asset files, such as images, CSS, and JS. By
+  default, the directory resides in `public`, which is a signal towards
+  serving these static files directly in the server (Next.js serves public
+  directory by default). See `assetsPath` for other considerations.
+
+* `assetsPath` (default: /tsxlink)
+
+  In a simple case, an URL path to assets directory as served by the server.
+  The asset URLs in the components are rewritten to this path. Alternatively,
+  a path relative to the component directory can be used, e.g.,
+  `../assets/tsxlink`. This is mostly useful if Next.js <Image> components are
+  used and the developer imports CSS files into the code base. In that case,
+  Next.js would optimize, package and deliver the static files in the project.
+  A value `@` can be used to construct a relative path from `componentDir` to
+  `assetsDir` automatically.
+
+* `configExtension` (default: mjs)
+
+  The best type of config file `tsxlink.config.*` depends on how the project
+  is configured, i.e., what other configurations are used and are they linted.
+  * `mjs` - ES module, i.e., export default {...}
+  * `cjs` - CommonJS module, i.e., module.exports = {...}
+  * `js` - CommonJS module (using .js file extension)
+  * `json` - JSON file
+
+Additional options that are not covered in the interactive prompts:
+
+* `version`
+
+  The tsxlink version used.
+
+* `styleFile` (deafult: export.css)
+
+  A file name for writing the styles from `<style>` elements as directed by
+  the `exportStyleElements` option.
+
+* `ignoreFiles`
+
+  An array of path/file name patterns to ignore at the source. Wildcards, `?`,
+  `*`, and `**/` can be used.
+
+* `dropStyles`
+
+  An array of style selector patterns that are dropped in the CSS files and
+  `<style>` export. If all of the selectors for a CSS rule are dropped, the
+  whole rule is dropped. Also @rules can be included. Wildcards `?` and `*`
+  can be used.
+
+* `dropAttributes`
+
+  An array of attribute name patterns that are dropped from the DOM and do not
+  appear in the components. Wildcards `?` and `*` can be used.
 
 ## Custom tags
 
@@ -82,6 +184,20 @@ TODO
     * **`children`** has a specific significance as a name. It indicates that
     the content is received as children in the React element tree rather than
     as an attribute of the React element.
+
+* **`data-tsx-asset=""`**
+
+    Elements marked with this attribute are searched for assets to copy,
+    regardless if they are included in any detected components or not. Any
+    `img`, `link`, or `script` elements inside component templates are always
+    searched for assets. The assets are searched from references in `src`,
+    `href`, and `srcset` attributes.
+
+* **`data-tsx-drop=""`**
+
+    Elements marked with this attribute are dropped from the DOM before any
+    other operations. Their assets are not copied and they do not appear in
+    any components or have any properties.
 
 ### An example HTML output including custom tags maps to following TSX
 

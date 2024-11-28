@@ -2,11 +2,12 @@ import { JSDOM } from "jsdom";
 import { CopyFile, DocSource, FileData } from "../types";
 export declare class DocPool {
     source?: DocSource;
+    cache?: JSDOM[];
     ignore: RegExp[];
     constructor(source?: DocSource, ignore?: string[]);
-    parseDocs(): Promise<Promise<JSDOM>[]>;
+    parseDocs(): Promise<JSDOM[]>;
     private parseDoms;
-    selectElements(selectors: string): Promise<Promise<NodeListOf<Element>>[]>;
+    selectElements(selectors: string): Promise<Element[]>;
     selectFiles(opt: {
         extension?: string;
         names?: string[];
