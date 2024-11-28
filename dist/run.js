@@ -1,13 +1,16 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.run = run;
 const config_1 = require("./config");
 const data_1 = require("./data");
 const files_1 = require("./data/files");
-const paths_1 = require("./data/paths");
 const init_1 = require("./init");
 const parse_1 = require("./parse");
 const render_1 = require("./render");
+const tsxlinkLib_1 = __importDefault(require("./tsxlinkLib"));
 async function run() {
     pr(",=0=0=0=0=(__    T  S  X    L  I  N  K    __)=0=0=0=0='");
     const isUsage = ["help", "--help", "-h"].some(arg => process.argv.includes(arg));
@@ -77,10 +80,7 @@ async function updateComponents(parser, config) {
         writeLib = writeLib || usesLib;
     }
     if (writeLib) {
-        componentFileNamePromises.push(...await writeAndLogFiles(config.componentDir, [{
-                baseName: "tsxlinkLib.ts",
-                buffer: (0, files_1.readFile)((0, paths_1.filePath)(__dirname, "tsxlinkLib.ts")),
-            }]));
+        componentFileNamePromises.push(...await writeAndLogFiles(config.componentDir, [{ baseName: "tsxlinkLib.ts", content: tsxlinkLib_1.default }]));
     }
     return [
         await Promise.all(componentFileNamePromises),

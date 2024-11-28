@@ -38,7 +38,7 @@ const renderFC = (
   nextImages: boolean,
   dropAttrs: RegExp[],
 ): string => r(
-  renderImports(component, state, nextImages),
+  renderImports(state, nextImages),
   renderProps(component),
   renderClassNames(component.props),
   renderStyles(state.styles),
@@ -53,7 +53,6 @@ const renderFC = (
 );
 
 const renderImports = (
-  component: Component,
   state: RewriteResult,
   nextImages: boolean,
 ): string => r(

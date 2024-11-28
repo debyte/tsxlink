@@ -20,8 +20,8 @@ async function renderComponent(config, docs, component) {
         state.hasClasses,
     ];
 }
-const renderFC = (component, state, nextImages, dropAttrs) => r(renderImports(component, state, nextImages), renderProps(component), renderClassNames(component.props), renderStyles(state.styles), "", `${renderSignature(component)} => ${renderSwitch(state.rootVisibility)}(`, (0, indent_1.indentRows)((0, rewrite_1.rewriteTemplateHtml)(component.template.outerHTML, nextImages, dropAttrs)), ");", "", `export default ${component.name};`);
-const renderImports = (component, state, nextImages) => r("import React from \"react\";", state.hasImages && nextImages && "import Image from \"next/image\";", state.hasClasses && "import { tsxlinkClass } from \"./tsxlinkLib\";", nextImages && Object.entries(state.images).map(([id, path]) => `import ${id} from "${path}";`));
+const renderFC = (component, state, nextImages, dropAttrs) => r(renderImports(state, nextImages), renderProps(component), renderClassNames(component.props), renderStyles(state.styles), "", `${renderSignature(component)} => ${renderSwitch(state.rootVisibility)}(`, (0, indent_1.indentRows)((0, rewrite_1.rewriteTemplateHtml)(component.template.outerHTML, nextImages, dropAttrs)), ");", "", `export default ${component.name};`);
+const renderImports = (state, nextImages) => r("import React from \"react\";", state.hasImages && nextImages && "import Image from \"next/image\";", state.hasClasses && "import { tsxlinkClass } from \"./tsxlinkLib\";", nextImages && Object.entries(state.images).map(([id, path]) => `import ${id} from "${path}";`));
 const renderProps = (component) => component.props.length > 0 && r("", `export interface ${component.name}Props {`, r(component.props.map(p => `  ${p.name}${isOptionalProp(p) ? "?" : ""}: ${renderPropType(p)}`)), "}");
 const isOptionalProp = (p) => ["map", "visibility", "class"].includes(p.target);
 function renderPropType(p) {

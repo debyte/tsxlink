@@ -1,3 +1,4 @@
+export default `
 export type ClassSelection = { [cls: string]: boolean };
 
 export function classResolve(
@@ -6,6 +7,7 @@ export function classResolve(
 ): string {
   const resolved = { ...defaults || {}, ...classes };
   return Object.keys(resolved).reduce(
-    (className, k) => resolved[k] ? `${className} ${k}` : className,
+    (className, k) => resolved[k] ? \`\${className} \${k}\` : className,
   );
 }
+`;

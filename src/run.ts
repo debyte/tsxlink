@@ -1,11 +1,11 @@
 import { readConfig, removeConfig, writeConfig } from "./config";
 import { createDocPool } from "./data";
-import { readFile, removeMissingFiles, writeFiles } from "./data/files";
-import { filePath } from "./data/paths";
+import { removeMissingFiles, writeFiles } from "./data/files";
 import { applyDefaults, runInteractiveInit } from "./init";
 import { selectParser } from "./parse";
 import { BaseParser } from "./parse/BaseParser";
 import { renderComponent } from "./render";
+import tsxlinkLib from "./tsxlinkLib";
 import { Config, FileData, RuntimeConfig } from "./types";
 
 export async function run() {
@@ -107,10 +107,7 @@ async function updateComponents(
   }
   if (writeLib) {
     componentFileNamePromises.push(...await writeAndLogFiles(
-      config.componentDir, [{
-        baseName: "tsxlinkLib.ts",
-        buffer: readFile(filePath(__dirname, "tsxlinkLib.ts")),
-      }]
+      config.componentDir, [{ baseName: "tsxlinkLib.ts", content: tsxlinkLib }]
     ));
   }
   return [
