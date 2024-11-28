@@ -41,8 +41,8 @@ test("Should rewrite class names and singleton tags for tsx", async () => {
     const out = fd.content;
     if (component.name === "Testimonial") {
       expect(out).toContain("<h3 className=\"testimonial-main-heading\">");
-      expect(out).toContain("<hr/>");
-      expect(out).toMatch(/<img [^>]+\/>/);
+      expect(out).toContain("<hr />");
+      expect(out).toMatch(/<img [^>]+ \/>/);
     }
   }
 });
@@ -105,7 +105,7 @@ test("Should rewrite img to next/image", async () => {
     "import foo_png from \"../../assets/tsxlink/foo.png\""
   );
   expect(fd.content).toContain(
-    "<Image src={foo_png} width=\"300\" height=\"200\"/>"
+    "<Image src={foo_png} width=\"300\" height=\"200\" />"
   );
   expect(assets).toHaveLength(1);
   expect(assets[0].baseName).toEqual("foo.png");
@@ -128,10 +128,10 @@ test("Should render control for class(name) property", async () => {
       foo
     </a>
   `);
-  expect(fd.content).toContain("import { tsxlinkClass }");
+  expect(fd.content).toContain("import { classResolve }");
   expect(fd.content).toMatch(/"my-class": true,\s+"c2": true/);
   expect(fd.content).toContain(
-    "class={classResolve(className, classNameDefaults)}"
+    "className={classResolve(className, classNameDefaults)}"
   );
   expect(assets).toHaveLength(0);
   expect(usesLib).toBeTruthy();

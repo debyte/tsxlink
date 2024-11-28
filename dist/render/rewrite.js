@@ -129,21 +129,22 @@ function rewriteDomStyles(component, config) {
     return [styles, copyFromTo];
 }
 function rewriteTemplateHtml(template, nextImages, dropAttrs) {
-    let out = template
+    let out = template;
+    for (const re of dropAttrs) {
+        out = out.replace(re, "");
+    }
+    for (const [a, b] of REWRITE_ATTRIBUTES) {
+        out = out.replace(a, b);
+    }
+    if (nextImages) {
+        out = out.replace(/<img\s([^>]*)>/g, "<Image $1 />");
+    }
+    out = out
         .replace(/"#tsx{([^}"]+)}"/gi, "{$1}")
         .replace(mapRegExp, "{...$1}")
         .replace(condStartRegExp, "{$1 && (")
         .replace(condEndRegExp, ")}")
-        .replace(closeTagsRegexp, "<$1$2/>");
-    for (const [a, b] of REWRITE_ATTRIBUTES) {
-        out = out.replace(a, b);
-    }
-    for (const re of dropAttrs) {
-        out = out.replace(re, "");
-    }
-    if (nextImages) {
-        out = out.replace(/<img\s([^>]*)\/>/g, "<Image $1/>");
-    }
+        .replace(closeTagsRegexp, "<$1$2 />");
     return out;
 }
 const mapRegExp = new RegExp(`${INTERNAL_MAP_ATTRIBUTE}="(\\w+)"`, "gi");
@@ -167,6 +168,6 @@ const REWRITE_ATTRIBUTE_NAMES = [
 ]));
 const DROP_ON_EVENT_ATTRIBUTES = [/\son\w+="[^"]*"/g, ""];
 const REWRITE_ATTRIBUTES = [
-    ...REWRITE_ATTRIBUTE_NAMES,
     DROP_ON_EVENT_ATTRIBUTES,
+    ...REWRITE_ATTRIBUTE_NAMES,
 ];

@@ -58,7 +58,7 @@ const renderImports = (
 ): string => r(
   "import React from \"react\";",
   state.hasImages && nextImages && "import Image from \"next/image\";",
-  state.hasClasses && "import { tsxlinkClass } from \"./tsxlinkLib\";",
+  state.hasClasses && "import { classResolve } from \"./tsxlinkLib\";",
   nextImages && Object.entries(state.images).map(([id, path]) =>
     `import ${id} from "${path}";`
   ),
