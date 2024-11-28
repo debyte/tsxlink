@@ -71,5 +71,5 @@ function wildcardFileRegexp(match) {
     const e = match.endsWith("/") ? ".*" : "(/.*)?";
     return new RegExp(`^${b}${m}${e}$`);
 }
-const fileToId = (fileName) => fileName.replace(".", "_");
+const fileToId = (fileName) => fileName.replace(/[.\-@$]/g, "_");
 exports.fileToId = fileToId;
