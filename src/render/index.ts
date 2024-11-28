@@ -38,7 +38,7 @@ const renderFC = (
   nextImages: boolean,
   dropAttrs: RegExp[],
 ): string => r(
-  renderImports(state.hasImages && nextImages, state.hasClasses),
+  renderImports(component, state, nextImages),
   renderProps(component),
   renderClassNames(component.props),
   renderStyles(state.styles),
@@ -52,10 +52,17 @@ const renderFC = (
   `export default ${component.name};`,
 );
 
-const renderImports = (useImages: boolean, useClassmap: boolean): string => r(
+const renderImports = (
+  component: Component,
+  state: RewriteResult,
+  nextImages: boolean,
+): string => r(
   "import React from \"react\";",
-  useImages && "import Image from \"next/image\";",
-  useClassmap && "import { tsxlinkClass } from \"./tsxlinkLib\";",
+  state.hasImages && nextImages && "import Image from \"next/image\";",
+  state.hasClasses && "import { tsxlinkClass } from \"./tsxlinkLib\";",
+  nextImages && Object.entries(state.images).map(([id, path]) =>
+    `import ${id} from "${path}";`
+  ),
 );
 
 const renderProps = (component: Component): string | false =>

@@ -7,3 +7,4 @@ export declare function urlToFilePath(url: string | null): string | null;
 export declare function srcSetToFilePaths(srcset: string | null): (string | null)[];
 export declare function wildcardRegexp(match: string, preRegExp?: string, postRegExp?: string, flags?: string): RegExp;
 export declare function wildcardFileRegexp(match: string): RegExp;
+export declare const fileToId: (fileName: string) => string;

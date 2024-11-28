@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.baseName = exports.hasExtension = exports.ext = void 0;
+exports.fileToId = exports.baseName = exports.hasExtension = exports.ext = void 0;
 exports.filePath = filePath;
 exports.relativePath = relativePath;
 exports.urlToFilePath = urlToFilePath;
@@ -71,3 +71,5 @@ function wildcardFileRegexp(match) {
     const e = match.endsWith("/") ? ".*" : "(/.*)?";
     return new RegExp(`^${b}${m}${e}$`);
 }
+const fileToId = (fileName) => fileName.replace(".", "_");
+exports.fileToId = fileToId;

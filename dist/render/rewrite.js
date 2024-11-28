@@ -11,11 +11,11 @@ const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
 const URL_SELECTOR = URL_ELEMENTS.join(", ").toLowerCase();
 function rewriteTemplateDom(component, config, dropStyles) {
     const [rootVisibility, hasClasses] = rewriteDomProps(component);
-    const [hasImages, copyRefs] = rewriteDomUrls(component.template, config);
+    const [hasImages, images, copyRefs] = rewriteDomUrls(component, config);
     const [styles, copyUrls] = dropStyles
-        ? [[], []] : rewriteDomStyles(component.template, config);
+        ? [[], []] : rewriteDomStyles(component, config);
     const copyFromTo = [...copyRefs, ...copyUrls];
-    return { rootVisibility, hasClasses, hasImages, styles, copyFromTo };
+    return { rootVisibility, hasClasses, hasImages, images, styles, copyFromTo };
 }
 function rewriteDomProps(component) {
     let rootVisibilityProp;
@@ -69,9 +69,11 @@ function sanitizeValue(value, cut) {
     }
     return v;
 }
-function rewriteDomUrls(template, config) {
-    const copyFromTo = [];
+function rewriteDomUrls(component, config) {
     let hasImages = false;
+    const images = {};
+    const copyFromTo = [];
+    const template = component.template;
     const elements = URL_ELEMENTS.includes(template.tagName) ? [template] : [];
     elements.push(...template.querySelectorAll(URL_SELECTOR));
     for (const element of elements) {
@@ -82,27 +84,40 @@ function rewriteDomUrls(template, config) {
                 if (oldFile) {
                     const newFile = (0, paths_1.baseName)(oldFile);
                     copyFromTo.push({ from: oldFile, to: newFile });
-                    element.setAttribute(attr, (0, paths_1.filePath)(config.assetsPath, newFile));
+                    if (config.useNextJsImages) {
+                        const id = (0, paths_1.fileToId)(newFile);
+                        images[id] = newFile;
+                        element.setAttribute(attr, `#tsx{${id}}`);
+                    }
+                    else {
+                        element.setAttribute(attr, (0, paths_1.filePath)(config.assetsPath, newFile));
+                    }
                 }
             }
         }
         if (element.hasAttribute("srcset")) {
-            const value = element.getAttribute("srcset");
-            for (const oldFile of (0, paths_1.srcSetToFilePaths)(value)) {
-                if (oldFile) {
-                    const newFile = (0, paths_1.baseName)(oldFile);
-                    copyFromTo.push({ from: oldFile, to: newFile });
-                    value.replace(oldFile, newFile);
-                }
+            if (config.useNextJsImages) {
+                element.removeAttribute("srcset");
             }
-            element.setAttribute("srcset", value);
+            else {
+                const value = element.getAttribute("srcset");
+                for (const oldFile of (0, paths_1.srcSetToFilePaths)(value)) {
+                    if (oldFile) {
+                        const newFile = (0, paths_1.baseName)(oldFile);
+                        copyFromTo.push({ from: oldFile, to: newFile });
+                        value.replace(oldFile, newFile);
+                    }
+                }
+                element.setAttribute("srcset", value);
+            }
         }
     }
-    return [hasImages, copyFromTo];
+    return [hasImages, images, copyFromTo];
 }
-function rewriteDomStyles(template, config) {
+function rewriteDomStyles(component, config) {
     const styles = [];
     const copyFromTo = [];
+    const template = component.template;
     const elements = template.hasAttribute("style") ? [template] : [];
     elements.push(...template.querySelectorAll("[style]"));
     for (const element of elements) {
