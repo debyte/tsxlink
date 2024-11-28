@@ -81,4 +81,4 @@ export function wildcardFileRegexp(match: string): RegExp {
   return new RegExp(`^${b}${m}${e}$`);
 }
 
-export const fileToId = (fileName: string) => fileName.replace(".", "_");
+export const fileToId = (fileName: string) => fileName.replace(/[.-@$]/g, "_");
