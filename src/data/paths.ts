@@ -81,4 +81,10 @@ export function wildcardFileRegexp(match: string): RegExp {
   return new RegExp(`^${b}${m}${e}$`);
 }
 
-export const fileToId = (fileName: string) => fileName.replace(/[.\-@$]/g, "_");
+export function fileToId(fileName: string): string {
+  const id = fileName.replace(/[.\-@$]/g, "_");
+  if (id.match(/^\d/)) {
+    return `id${id}`;
+  }
+  return id;
+}

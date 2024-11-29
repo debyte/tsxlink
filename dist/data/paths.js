@@ -3,13 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fileToId = exports.baseName = exports.hasExtension = exports.ext = void 0;
+exports.baseName = exports.hasExtension = exports.ext = void 0;
 exports.filePath = filePath;
 exports.relativePath = relativePath;
 exports.urlToFilePath = urlToFilePath;
 exports.srcSetToFilePaths = srcSetToFilePaths;
 exports.wildcardRegexp = wildcardRegexp;
 exports.wildcardFileRegexp = wildcardFileRegexp;
+exports.fileToId = fileToId;
 const path_1 = __importDefault(require("path"));
 const ext = (extension) => extension ? `.${extension.toLowerCase()}` : null;
 exports.ext = ext;
@@ -71,5 +72,10 @@ function wildcardFileRegexp(match) {
     const e = match.endsWith("/") ? ".*" : "(/.*)?";
     return new RegExp(`^${b}${m}${e}$`);
 }
-const fileToId = (fileName) => fileName.replace(/[.\-@$]/g, "_");
-exports.fileToId = fileToId;
+function fileToId(fileName) {
+    const id = fileName.replace(/[.\-@$]/g, "_");
+    if (id.match(/^\d/)) {
+        return `id${id}`;
+    }
+    return id;
+}
