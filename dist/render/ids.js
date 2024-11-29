@@ -6,7 +6,10 @@ function safeId(name) {
         return `prop_${name}`;
     }
     if (name.match(/^[a-zA-Z_$][\w$]*$/) === null) {
-        return `prop_${name.replace(/\W/g, "")}`;
+        return `id${name.replace(/\W/g, "")}`;
+    }
+    if (name.match(/^\d/) !== null) {
+        return `id${name}`;
     }
     return name;
 }
