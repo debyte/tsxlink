@@ -3,12 +3,6 @@ import css from "css";
 export class CssTransform {
   root: css.Stylesheet;
 
-  static run(src: string): string {
-    const tr = new CssTransform(src);
-    const out = tr.tree(tr.root);
-    return tr.stringify(out);
-  }
-
   constructor(src: string) {
     this.root = css.parse(src);
   }
@@ -174,13 +168,11 @@ export class CssTransform {
     return out;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  filterSelectors(selector: string): boolean {
+  filterSelectors(_selector: string): boolean {
     return true;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  filterAtRule(atRule: string): boolean {
+  filterAtRule(_atRule: string): boolean {
     return true;
   }
 }

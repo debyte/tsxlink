@@ -2,7 +2,7 @@ import { CopyFile } from "../types";
 import { CssTransform } from "./CssTransform";
 import { baseName, urlToFilePath } from "./paths";
 
-export class CssFilterAndFixUrls extends CssTransform {
+export class CssFilterAndEdit extends CssTransform {
   select: (selector: string) => boolean;
   urlPath: (name: string) => string;
   copy: CopyFile[];
@@ -12,9 +12,18 @@ export class CssFilterAndFixUrls extends CssTransform {
     select: (selector: string) => boolean,
     urlPath?: (name: string) => string,
   ): [css: string, copyFromTo: CopyFile[]] {
-    const tr = new CssFilterAndFixUrls(src, select, urlPath);
+    const tr = new CssFilterAndEdit(src, select, urlPath);
     const out = tr.tree(tr.root);
     return [tr.stringify(out), tr.copy];
+  }
+
+  static runSingleValue(
+    value: string,
+    urlPath: (name: string) => string,
+  ): [value: string, copyFromTo: CopyFile[]] {
+    const tr = new CssFilterAndEdit("", () => true, urlPath);
+    const url = tr.value(value);
+    return [url || value, tr.copy];
   }
 
   constructor(

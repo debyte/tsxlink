@@ -7,6 +7,7 @@ import {
   InitChoiceOption,
   RuntimeConfig,
   SourceType,
+  TargetType,
 } from "./types";
 
 export const DEFAULT_COMPONENT_DIR = "./src/components/tsxlink";
@@ -15,6 +16,14 @@ export const DEFAULT_ASSETS_PATH = "/tsxlink";
 export const DEFAULT_STYLE_FILE = "export.css";
 
 const INIT_CHOICES: InitChoice[] = [
+  {
+    key: "targetType",
+    prompt: "The type of created TSX files",
+    options: [
+      ["react", "React (https://react.dev/)"],
+      ["solid", "SolidJS (https://www.solidjs.com/)"],
+    ],
+  },
   {
     key: "sourceType",
     prompt: "The type of source HTML",
@@ -41,11 +50,6 @@ const INIT_CHOICES: InitChoice[] = [
     key: "exportStyleElements",
     prompt: "Export CSS from possible style elements to assets",
     default: "yes",
-  },
-  {
-    key: "useNextJsImages",
-    prompt: "Replace <img> with Next.js <Image> to optimize image files",
-    default: "no",
   },
   {
     key: "componentDir",
@@ -81,12 +85,12 @@ const INIT_CHOICES: InitChoice[] = [
 export function applyDefaults(config: Config): RuntimeConfig {
   const rt = {
     version: config.version || 1,
+    targetType: config.targetType || "solid",
     sourceType: config.sourceType || "custom",
     source: config.source,
     copyCssFiles: config.copyCssFiles || true,
     copyJsFiles: config.copyJsFiles || false,
     exportStyleElements: config.exportStyleElements || true,
-    useNextJsImages: config.useNextJsImages || false,
     componentDir: config.componentDir || DEFAULT_COMPONENT_DIR,
     assetsDir: config.assetsDir || DEFAULT_ASSETS_DIR,
     assetsPath: config.assetsPath || DEFAULT_ASSETS_PATH,
@@ -94,6 +98,8 @@ export function applyDefaults(config: Config): RuntimeConfig {
     ignoreFiles: config.ignoreFiles || [],
     dropStyles: config.dropStyles || [],
     dropAttributes: config.dropAttributes || [],
+    importImageFiles: config.importImageFiles || false,
+    useNextJsImages: config.useNextJsImages || false,
   };
   if (rt.assetsPath === "@") {
     rt.assetsPath = relativePath(rt.componentDir, rt.assetsDir);
@@ -144,12 +150,12 @@ export async function runInteractiveInit(
     }
   }
   return {
+    targetType: map.get("targetType") as TargetType,
     sourceType: map.get("sourceType") as SourceType,
     source: map.get("source"),
     copyCssFiles: isTrue(map.get("copyCssFiles")),
     copyJsFiles: isTrue(map.get("copyJsFiles")),
     exportStyleElements: isTrue(map.get("exportStyleElements")),
-    useNextJsImages: isTrue(map.get("useNextJsImages")),
     componentDir: map.get("componentDir"),
     assetsDir: map.get("assetsDir"),
     assetsPath: map.get("assetsPath"),
@@ -157,6 +163,8 @@ export async function runInteractiveInit(
     ignoreFiles: current?.ignoreFiles || [],
     dropStyles: current?.dropStyles || [],
     dropAttributes: current?.dropAttributes || [],
+    importImageFiles: current?.importImageFiles || false,
+    useNextJsImages: current?.useNextJsImages || false,
     configExtension: map.get("configExtension") as ConfigExtension,
   };
 }

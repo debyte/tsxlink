@@ -1,11 +1,11 @@
 export type Config = {
   version?: number;
+  targetType?: TargetType;
   sourceType?: SourceType;
   source?: string;
   copyCssFiles?: boolean;
   copyJsFiles?: boolean;
   exportStyleElements?: boolean;
-  useNextJsImages?: boolean;
   componentDir?: string;
   assetsDir?: string;
   assetsPath?: string;
@@ -13,17 +13,19 @@ export type Config = {
   ignoreFiles?: string[];
   dropStyles?: string[];
   dropAttributes?: string[];
+  importImageFiles?: boolean;
+  useNextJsImages?: boolean;
   configExtension?: ConfigExtension;
 };
 
 export type RuntimeConfig = {
   version: number;
+  targetType: TargetType;
   sourceType: SourceType;
   source?: string;
   copyCssFiles: boolean;
   copyJsFiles: boolean;
   exportStyleElements: boolean;
-  useNextJsImages: boolean;
   componentDir: string;
   assetsDir: string;
   assetsPath: string;
@@ -31,8 +33,11 @@ export type RuntimeConfig = {
   ignoreFiles: string[];
   dropStyles: string[];
   dropAttributes: string[];
+  importImageFiles: boolean;
+  useNextJsImages: boolean;
 };
 
+export type TargetType = "react" | "solid";
 export type SourceType = "custom" | "webflow/export";
 export type ConfigExtension = "mjs" | "cjs" | "js" | "json";
 

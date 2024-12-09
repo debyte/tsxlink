@@ -16,6 +16,15 @@ export default tseslint.config(
       "@stylistic/indent": ["warn", 2],
       "@stylistic/quotes": ["warn", "double"],
       "@stylistic/max-len": ["warn", { "code": 80, "tabWidth": 2 }],
+      "@typescript-eslint/no-unused-vars": ["error", {
+        "args": "all",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }]
     },
   }
 );

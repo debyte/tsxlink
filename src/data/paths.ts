@@ -51,20 +51,6 @@ export function srcSetToFilePaths(srcset: string | null): (string | null)[] {
   return paths;
 }
 
-export function wildcardRegexp(
-  match: string,
-  preRegExp?: string,
-  postRegExp?: string,
-  flags?: string,
-): RegExp {
-  const b = preRegExp || "^";
-  const m = match
-    .replace(/(?<!\\)\?/g, ".?")
-    .replace(/(?<!\\)\*/g, ".*");
-  const e = postRegExp || "$";
-  return new RegExp(`${b}${m}${e}`, flags);
-}
-
 export function wildcardFileRegexp(match: string): RegExp {
 
   // If no slashes, match against base name

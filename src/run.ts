@@ -4,7 +4,7 @@ import { removeMissingFiles, writeFiles } from "./data/files";
 import { applyDefaults, runInteractiveInit } from "./init";
 import { selectParser } from "./parse";
 import { BaseParser } from "./parse/BaseParser";
-import { renderComponent } from "./render";
+import { selectRender } from "./render";
 import tsxlinkLib from "./tsxlinkLib";
 import { Config, FileData, RuntimeConfig } from "./types";
 
@@ -90,22 +90,19 @@ async function updateComponents(
   parser: BaseParser,
   config: RuntimeConfig,
 ): Promise<[componentFileNames: string[], assetFileNames: string[]]> {
+  const render = selectRender(parser.docs, config);
   const componentFileNamePromises: Promise<string>[] = [];
   const assetFileNamePromises: Promise<string>[] = [];
-  let writeLib = false;
   for (const component of await parser.getComponents()) {
-    const [componentFile, assetFiles, usesLib] = await renderComponent(
-      config, parser.docs, component,
-    )
+    const [componentFile, assetFiles] = await render.render(component);
     componentFileNamePromises.push(...await writeAndLogFiles(
       config.componentDir, [componentFile]
     ));
     assetFileNamePromises.push(...await writeAndLogFiles(
       config.assetsDir, assetFiles
     ));
-    writeLib = writeLib || usesLib;
   }
-  if (writeLib) {
+  if (render.doesUseLib()) {
     componentFileNamePromises.push(...await writeAndLogFiles(
       config.componentDir, [{ baseName: "tsxlinkLib.ts", content: tsxlinkLib }]
     ));

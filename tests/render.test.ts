@@ -2,15 +2,17 @@ import { expect, test } from "@jest/globals";
 import { DocPool } from "../src/data/DocPool";
 import { applyDefaults } from "../src/init";
 import { selectParser } from "../src/parse";
-import { renderComponent } from "../src/render";
+import { selectRender } from "../src/render";
 import { Config, FileData } from "../src/types";
 import { getReadmeHtmlExample, WEBFLOWISH_CODE } from "./helpers";
 
 test("Should render React.FC from detected components", async () => {
+  const config = applyDefaults({ targetType: "react" });
   const docs = new DocPool(await getReadmeHtmlExample());
-  const parser = selectParser(docs, applyDefaults({}));
+  const parser = selectParser(docs, config);
+  const render = selectRender(docs, config);
   for (const component of await parser.getComponents()) {
-    const [fd] = await renderComponent(parser.config, docs, component);
+    const [fd] = await render.render(component);
     const out = fd.content;
     if (component.name === "Search") {
       expect(out).toContain("Search: React.FC<SearchProps>");
@@ -18,31 +20,33 @@ test("Should render React.FC from detected components", async () => {
       expect(out).toContain(
         "query?: React.InputHTMLAttributes<HTMLInputElement>"
       );
-      expect(out).toMatch(/<input [^>]*{...query}/);
-      expect(out).toMatch(/{loading && \(.+\)}/s);
-      expect(out).toMatch(/<div[^>]*>{results}<\/div>/);
+      expect(out).toMatch(/<input [^>]*{...props.query}/);
+      expect(out).toMatch(/{props.loading && \(.+\)}/s);
+      expect(out).toMatch(/<div[^>]*>{props.results}<\/div>/);
     }
     if (component.name === "SearchResult") {
       expect(out).toContain("image: string");
       expect(out).toContain("code: number");
-      expect(out).toMatch(/<img [^>]*src={image}/);
-      expect(out).toContain("<span>{code}</span>");
+      expect(out).toMatch(/<img [^>]*src={props.image}/);
+      expect(out).toContain("<span>{props.code}</span>");
     }
   }
 });
 
 test("Should rewrite class names and singleton tags for tsx", async () => {
+  const config = applyDefaults(
+    { targetType: "react", sourceType: "webflow/export" }
+  );
   const docs = new DocPool(WEBFLOWISH_CODE);
-  const parser = selectParser(docs, applyDefaults({
-    sourceType: "webflow/export",
-  }));
+  const parser = selectParser(docs, config);
+  const render = selectRender(docs, config);
   for (const component of await parser.getComponents()) {
-    const [fd] = await renderComponent(parser.config, docs, component);
+    const [fd] = await render.render(component);
     const out = fd.content;
     if (component.name === "Testimonial") {
       expect(out).toContain("<h3 className=\"testimonial-main-heading\">");
-      expect(out).toContain("<hr />");
-      expect(out).toMatch(/<img [^>]+ \/>/);
+      expect(out).toContain("<hr/>");
+      expect(out).toMatch(/<img [^>]+\/>/);
     }
   }
 });
@@ -53,8 +57,8 @@ test("Should render root element visibility", async () => {
       data-tsx-prop="visibility" data-tsx-slot="children"
     />
   `);
-  expect(fd.content).toContain("=> visibility && (");
-  expect(fd.content).toMatch(/<div [^>]+>{children}<\/div>/);
+  expect(fd.content).toContain("=> props.visibility && (");
+  expect(fd.content).toMatch(/<div [^>]+>{props.children}<\/div>/);
 });
 
 test("Should render replace property correctly", async () => {
@@ -64,7 +68,7 @@ test("Should render replace property correctly", async () => {
     </div>
   `);
   expect(fd.content).toContain("world: React.ReactNode");
-  expect(fd.content).toContain("Hello {world}");
+  expect(fd.content).toContain("Hello {props.world}");
 });
 
 test("Should rewrite style attribute for tsx", async () => {
@@ -96,6 +100,7 @@ test("Should rewrite img to next/image", async () => {
       <img src="images/foo.png" width="300" height="200">
     </div>
   `, {
+    importImageFiles: true,
     useNextJsImages: true,
     assetsDir: "./src/assets/tsxlink",
     assetsPath: "@",
@@ -105,7 +110,7 @@ test("Should rewrite img to next/image", async () => {
     "import foo_png from \"../../assets/tsxlink/foo.png\""
   );
   expect(fd.content).toContain(
-    "<Image src={foo_png} width=\"300\" height=\"200\" />"
+    "<Image src={foo_png} width=\"300\" height=\"200\"/>"
   );
   expect(assets).toHaveLength(1);
   expect(assets[0].baseName).toEqual("foo.png");
@@ -131,7 +136,7 @@ test("Should render control for class(name) property", async () => {
   expect(fd.content).toContain("import { classResolve }");
   expect(fd.content).toMatch(/"my-class": true,\s+"c2": true/);
   expect(fd.content).toContain(
-    "className={classResolve(className, classNameDefaults)}"
+    "className={classResolve(props.className, classNameDefaults)}"
   );
   expect(assets).toHaveLength(0);
   expect(usesLib).toBeTruthy();
@@ -141,10 +146,12 @@ async function renderSingleComponent(
   src: string,
   opt?: Config,
 ): Promise<[component: FileData, assets: FileData[], usesLib: boolean]> {
-  const config = applyDefaults(opt || {});
+  const config = applyDefaults({ ...(opt || {}), targetType: "react" });
   const docs = new DocPool({ type: "string", data: src });
   const parser = selectParser(docs, config);
+  const render = selectRender(docs, config);
   const components = await parser.getComponents();
   expect(components).toHaveLength(1);
-  return await renderComponent(config, docs, components[0]);
+  const [component, assets] = await render.render(components[0]);
+  return [component, assets, render.doesUseLib()];
 }

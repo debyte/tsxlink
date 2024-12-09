@@ -1,33 +1,18 @@
-import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
-import { filePath } from "../data/paths";
-import { CopyFile } from "../types";
+import { kebabToCamelCase } from "../data/strings";
 
 export type StyleObject = { [property: string]: string };
 
-export function styleToObject(
-  src: string | null,
-  assetsPath: string,
-): [styles: StyleObject, copy: CopyFile[]] {
+export function styleToObject(src: string): StyleObject {
   const out: StyleObject = {};
-  const copy: CopyFile[] = [];
-  const css = new CssFilterAndFixUrls(
-    "",
-    () => true,
-    name => filePath(assetsPath, name),
-  );
-  for (const part of (src || "").split(";")) {
+  for (const part of src.split(";")) {
     const d = part.trim();
     if (d !== "") {
-      const [property, rawValue] = d.split(":", 2);
-      css.copy = [];
-      out[toCamelCase(property.trimEnd())] = css.value(rawValue.trimStart())!;
-      copy.push(...css.copy);
+      const [property, value] = d.split(":", 2);
+      out[toCamelCase(property.trimEnd())] = value.trimStart();
     }
   }
-  return [out, copy];
+  return out;
 }
-
-const dashRegexp = /-(\w|$)/g;
 
 export function toCamelCase(property: string): string {
   const p = property.toLowerCase();
@@ -35,7 +20,21 @@ export function toCamelCase(property: string): string {
     return "cssFloat";
   }
   if (p.startsWith("-ms-")) {
-    return p.substring(1).replace(dashRegexp, (_, l) => l.toUpperCase());
+    return kebabToCamelCase(p.substring(1));
   }
-  return p.replace(dashRegexp, (_, l) => l.toUpperCase());
+  return kebabToCamelCase(p);
+}
+
+export type ClassNameObject = { [name: string]: boolean };
+
+export function classNamesToObject(src: string) {
+  const out: ClassNameObject = {};
+  for (const name of src.split(" ")) {
+    out[name.trim()] = true;
+  }
+  return out;
+}
+
+export function classNamesJson(src: string) {
+  return JSON.stringify(classNamesToObject(src), null, 2);
 }

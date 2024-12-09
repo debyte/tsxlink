@@ -1,11 +1,7 @@
-import { CssFilterAndFixUrls } from "../data/CssFilterAndFixUrls";
+import { CssFilterAndEdit } from "../data/CssFilterAndEdit";
 import { DocPool } from "../data/DocPool";
-import {
-  baseName,
-  srcSetToFilePaths,
-  urlToFilePath,
-  wildcardRegexp,
-} from "../data/paths";
+import { baseName, srcSetToFilePaths, urlToFilePath } from "../data/paths";
+import { wildcardRegexp } from "../data/strings";
 import { Component, CopyFile, FileData, RuntimeConfig } from "../types";
 import { NamedComponent } from "./NamedComponent";
 import { NamedObjectSet } from "./NamedObject";
@@ -192,7 +188,7 @@ export class BaseParser {
   }
 
   protected async rewriteCss(data: FileData): Promise<FileData[]> {
-    const [css, copyFromTo] = CssFilterAndFixUrls.runWithCopyFiles(
+    const [css, copyFromTo] = CssFilterAndEdit.runWithCopyFiles(
       data.buffer !== undefined
         ? (await data.buffer).toString()
         : data.content || "",
