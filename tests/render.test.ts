@@ -33,6 +33,31 @@ test("Should render React.FC from detected components", async () => {
   }
 });
 
+test("Should render solid-js/Component from detected components", async () => {
+  const config = applyDefaults({ targetType: "solid" });
+  const docs = new DocPool(await getReadmeHtmlExample());
+  const parser = selectParser(docs, config);
+  const render = selectRender(docs, config);
+  for (const component of await parser.getComponents()) {
+    const [fd] = await render.render(component);
+    const out = fd.content;
+    if (component.name === "Search") {
+      expect(out).toContain("Search: Component<SearchProps>");
+      expect(out).toContain("export default Search;");
+      expect(out).toContain("query?: { [attr: string]: unknown }");
+      expect(out).toMatch(/<input [^>]*{...props.query}/);
+      expect(out).toMatch(/{props.loading && \(.+\)}/s);
+      expect(out).toMatch(/<div[^>]*>{props.results}<\/div>/);
+    }
+    if (component.name === "SearchResult") {
+      expect(out).toContain("image: string");
+      expect(out).toContain("code: number");
+      expect(out).toMatch(/<img [^>]*src={props.image}/);
+      expect(out).toContain("<span>{props.code}</span>");
+    }
+  }
+});
+
 test("Should rewrite class names and singleton tags for tsx", async () => {
   const config = applyDefaults(
     { targetType: "react", sourceType: "webflow/export" }
@@ -127,7 +152,7 @@ test("Should drop configured attributes", async () => {
   expect(assets).toHaveLength(0);
 });
 
-test("Should render control for class(name) property", async () => {
+test("Should render React control for class(name) property", async () => {
   const [fd, assets, usesLib] = await renderSingleComponent(`
     <a class="my-class c2" data-tsx="Test" data-tsx-prop="className:class">
       foo
@@ -142,11 +167,26 @@ test("Should render control for class(name) property", async () => {
   expect(usesLib).toBeTruthy();
 });
 
+test("Should render Solid control for class(list) property", async () => {
+  const [fd, assets, usesLib] = await renderSingleComponent(`
+    <a class="my-class c2" data-tsx="Test" data-tsx-prop="className:class">
+      foo
+    </a>
+  `, { targetType: "solid" });
+  expect(fd.content).not.toContain("import { classResolve }");
+  expect(fd.content).toMatch(/"my-class": true,\s+"c2": true/);
+  expect(fd.content).toContain(
+    "classList={{ ...classNameDefaults, ...props.className }}"
+  );
+  expect(assets).toHaveLength(0);
+  expect(usesLib).toBeFalsy();
+});
+
 async function renderSingleComponent(
   src: string,
   opt?: Config,
 ): Promise<[component: FileData, assets: FileData[], usesLib: boolean]> {
-  const config = applyDefaults({ ...(opt || {}), targetType: "react" });
+  const config = applyDefaults({ targetType: "react", ...(opt || {}) });
   const docs = new DocPool({ type: "string", data: src });
   const parser = selectParser(docs, config);
   const render = selectRender(docs, config);

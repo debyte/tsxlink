@@ -248,7 +248,7 @@ export class BaseRender {
 
   renderXml(xml: string): string {
     return xml
-      .replace(/"#tsx{([^}"]+)}"/gi, "{$1}")
+      .replace(/"#tsx{(.+?)}"/gi, "{$1}")
       .replace(mapRegExp, "{...$1}")
       .replace(condStartRegExp, "{$1 && (")
       .replace(condEndRegExp, ")}");
