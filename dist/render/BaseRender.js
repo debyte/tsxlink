@@ -25,7 +25,6 @@ class BaseRender {
         this.sanitizeNames(component);
         this.applyProps(component);
         const [xml, copy] = this.transform(component);
-        this.applyChanges(xml);
         const jsx = this.renderJsx(component, xml.outerHTML);
         return [
             { baseName: `${component.name}.tsx`, content: jsx },
@@ -34,7 +33,9 @@ class BaseRender {
     }
     transform(component) {
         try {
-            return DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
+            const [xml, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
+            this.applyChanges(xml);
+            return [xml, copy];
         }
         catch (e) {
             throw new Error(`Transform error ${component.name}: ${e}`);
@@ -58,38 +59,43 @@ class BaseRender {
     applyProps(component) {
         this.rootVisibilityProp = null;
         for (const p of component.props) {
-            if (p.target === "text" || p.target === "slot"
-                || (p.target === "replace" && p.element === component.template)) {
-                p.data = this.commentValue(p.element.textContent);
-                p.element.textContent = this.renderToText(this.prop(p.name));
-            }
-            else if (p.target === "replace") {
-                p.data = this.commentValue(p.element.textContent);
-                const ph = p.element.ownerDocument.createTextNode(this.renderToText(this.prop(p.name)));
-                p.element.replaceWith(ph);
-            }
-            else if (p.target === "visibility") {
-                if (p.element === component.template) {
-                    this.rootVisibilityProp = this.prop(p.name);
+            try {
+                if (p.target === "text" || p.target === "slot"
+                    || (p.target === "replace" && p.element === component.template)) {
+                    p.data = this.commentValue(p.element.textContent);
+                    p.element.textContent = this.renderToText(this.prop(p.name));
+                }
+                else if (p.target === "replace") {
+                    p.data = this.commentValue(p.element.textContent);
+                    const ph = p.element.ownerDocument.createTextNode(this.renderToText(this.prop(p.name)));
+                    p.element.replaceWith(ph);
+                }
+                else if (p.target === "visibility") {
+                    if (p.element === component.template) {
+                        this.rootVisibilityProp = this.prop(p.name);
+                    }
+                    else {
+                        const pre = p.element.ownerDocument.createElement("div");
+                        pre.setAttribute(INTERNAL_COND_ATTRIBUTE, this.prop(p.name));
+                        p.element.before(pre);
+                        const post = p.element.ownerDocument.createElement("div");
+                        post.setAttribute(INTERNAL_COND_ATTRIBUTE, "");
+                        p.element.after(post);
+                    }
+                }
+                else if (p.target === "map") {
+                    p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, this.prop(p.name));
+                }
+                else if (p.target === "class") {
+                    this.applyClassProp(p);
                 }
                 else {
-                    const pre = p.element.ownerDocument.createElement("div");
-                    pre.setAttribute(INTERNAL_COND_ATTRIBUTE, this.prop(p.name));
-                    p.element.before(pre);
-                    const post = p.element.ownerDocument.createElement("div");
-                    post.setAttribute(INTERNAL_COND_ATTRIBUTE, "");
-                    p.element.after(post);
+                    p.data = this.commentValue(p.element.getAttribute(p.target));
+                    p.element.setAttribute(p.target, this.renderToAttribute(this.prop(p.name)));
                 }
             }
-            else if (p.target === "map") {
-                p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, this.prop(p.name));
-            }
-            else if (p.target === "class") {
-                this.applyClassProp(p);
-            }
-            else {
-                p.data = this.commentValue(p.element.getAttribute(p.target));
-                p.element.setAttribute(p.target, this.renderToAttribute(this.prop(p.name)));
+            catch (e) {
+                throw new Error(`Prop error ${component.name}.${p.name}: ${e}`);
             }
         }
     }
