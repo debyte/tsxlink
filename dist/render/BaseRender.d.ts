@@ -1,5 +1,5 @@
 import { DocPool } from "../data/DocPool";
-import { Component, FileData, Prop, RuntimeConfig } from "../types";
+import { Component, CopyFile, FileData, Prop, RuntimeConfig } from "../types";
 export declare class BaseRender {
     docs: DocPool;
     config: RuntimeConfig;
@@ -10,6 +10,7 @@ export declare class BaseRender {
     imageImports: [id: string, src: string][];
     constructor(docs: DocPool, config: RuntimeConfig);
     render(component: Component): Promise<[component: FileData, assets: FileData[]]>;
+    transform(component: Component): [xml: Element, copyFromTo: CopyFile[]];
     getDropAttributes(): RegExp[];
     getRenameAttributes(): [from: string, to: string][];
     sanitizeNames(component: Component): void;

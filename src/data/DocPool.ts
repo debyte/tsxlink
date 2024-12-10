@@ -35,8 +35,12 @@ export class DocPool {
 
   private async parseDoms(data: FileData[]): Promise<JSDOM[]> {
     const doms: JSDOM[] = [];
-    for (const { buffer } of data) {
-      doms.push(new JSDOM(await buffer));
+    for (const file of data) {
+      try {
+        doms.push(new JSDOM(await file.buffer));
+      } catch (e) {
+        throw new Error(`Parsing error ${file.baseName}: ${e}`);
+      }
     }
     return doms;
   }

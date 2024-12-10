@@ -24,13 +24,21 @@ class BaseRender {
     async render(component) {
         this.sanitizeNames(component);
         this.applyProps(component);
-        const [xml, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
+        const [xml, copy] = this.transform(component);
         this.applyChanges(xml);
         const jsx = this.renderJsx(component, xml.outerHTML);
         return [
             { baseName: `${component.name}.tsx`, content: jsx },
             await this.docs.copyFiles(".", copy),
         ];
+    }
+    transform(component) {
+        try {
+            return DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
+        }
+        catch (e) {
+            throw new Error(`Transform error ${component.name}: ${e}`);
+        }
     }
     getDropAttributes() {
         return [

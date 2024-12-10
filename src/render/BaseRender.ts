@@ -2,7 +2,7 @@ import { DocPool } from "../data/DocPool";
 import { DomFilterAndEdit } from "../data/DomFilterAndEdit";
 import { baseName, fileToId } from "../data/paths";
 import { r, wildcardRegexp } from "../data/strings";
-import { Component, FileData, Prop, RuntimeConfig } from "../types";
+import { Component, CopyFile, FileData, Prop, RuntimeConfig } from "../types";
 import { safeId } from "./ids";
 import { indentRows } from "./indent";
 
@@ -41,18 +41,26 @@ export class BaseRender {
   ): Promise<[component: FileData, assets: FileData[]]> {
     this.sanitizeNames(component);
     this.applyProps(component);
-    const [xml, copy] = DomFilterAndEdit.runWithCopyFiles(
-      component.template,
-      this.config.assetsPath,
-      this.dropAttrs,
-      this.renameAttrs,
-    );
+    const [xml, copy] = this.transform(component);
     this.applyChanges(xml);
     const jsx = this.renderJsx(component, xml.outerHTML);
     return [
       { baseName: `${component.name}.tsx`, content: jsx },
       await this.docs.copyFiles(".", copy),
     ];
+  }
+
+  transform(component: Component): [xml: Element, copyFromTo: CopyFile[]] {
+    try {
+      return DomFilterAndEdit.runWithCopyFiles(
+        component.template,
+        this.config.assetsPath,
+        this.dropAttrs,
+        this.renameAttrs,
+      );
+    } catch (e) {
+      throw new Error(`Transform error ${component.name}: ${e}`);
+    }
   }
 
   getDropAttributes(): RegExp[] {
