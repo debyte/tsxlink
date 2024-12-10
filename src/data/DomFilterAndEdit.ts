@@ -9,6 +9,7 @@ const URL_ATTRIBUTES = ["src", "srcset", "href"];
 const STYLE_ATTRIBUTE = "style";
 
 export class DomFilterAndEdit extends DomTransform {
+  dropTags: RegExp[];
   dropAttributes: RegExp[];
   renameAttributes: { [name: string]: string | undefined };
   assetsPath: string;
@@ -17,11 +18,12 @@ export class DomFilterAndEdit extends DomTransform {
   static runWithCopyFiles(
     root: Element,
     assetsPath: string,
+    dropTags: RegExp[],
     dropAttributes: RegExp[],
     renameAttributes: [from: string, to: string][],
   ): [xml: JSDOM, root: Element, copyFromTo: CopyFile[]] {
     const tr = new DomFilterAndEdit(
-      root, assetsPath, dropAttributes, renameAttributes
+      root, assetsPath, dropTags, dropAttributes, renameAttributes
     );
     tr.element(tr.xmlRoot, tr.root);
     return [tr.xml, tr.xmlRoot, tr.copy];
@@ -30,14 +32,20 @@ export class DomFilterAndEdit extends DomTransform {
   constructor(
     root: Element,
     assetsPath: string,
+    dropTags: RegExp[],
     dropAttributes: RegExp[],
     renameAttributes: [from: string, to: string][],
   ) {
     super(root);
+    this.dropTags = dropTags;
     this.dropAttributes = dropAttributes;
     this.renameAttributes = Object.fromEntries(renameAttributes);
     this.assetsPath = assetsPath;
     this.copy = [];
+  }
+
+  filterElement(_element: Element, tagName: string): boolean {
+    return this.dropTags.every(re => tagName.match(re) === null);
   }
 
   filterAttribute(_element: Element, attribute: Attr): boolean {

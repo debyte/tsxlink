@@ -14,10 +14,10 @@ class SolidRender extends BaseRender_1.BaseRender {
         p.element.removeAttribute("class");
     }
     renderImports(props) {
-        return (0, strings_1.r)(`import { Component${this.renderElementImport(props)} } from "solid-js";`, super.renderImports(props));
+        return (0, strings_1.r)(`import { Component${this.renderJsxImport(props)} } from "solid-js";`, super.renderImports(props));
     }
-    renderElementImport(props) {
-        if (props.find(p => p.target === "slot" || p.target === "replace")) {
+    renderJsxImport(props) {
+        if (props.find(p => ["slot", "replace", "map"].includes(p.target))) {
             return ", JSX";
         }
         return "";
@@ -25,8 +25,9 @@ class SolidRender extends BaseRender_1.BaseRender {
     renderElementType() {
         return "JSX.Element";
     }
-    renderMapType(_p) {
-        return "{ [attr: string]: unknown }";
+    renderMapType(p) {
+        const tag = p.element.tagName.toLowerCase();
+        return `JSX.IntrinsicElements["${tag}"]`;
     }
     renderConsts(props) {
         const cls = props.filter(p => p.target === "class" && p.data !== undefined);

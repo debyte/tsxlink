@@ -17,9 +17,7 @@ test("Should render React.FC from detected components", async () => {
     if (component.name === "Search") {
       expect(out).toContain("Search: React.FC<SearchProps>");
       expect(out).toContain("export default Search;");
-      expect(out).toContain(
-        "query?: React.InputHTMLAttributes<HTMLInputElement>"
-      );
+      expect(out).toContain("query?: JSX.IntrinsicElements[\"input\"]");
       expect(out).toMatch(/<input [^>]*{...props.query}/);
       expect(out).toMatch(/{props.loading && \(.+\)}/s);
       expect(out).toMatch(/<div[^>]*>{props.results}<\/div>/);
@@ -44,7 +42,7 @@ test("Should render solid-js/Component from detected components", async () => {
     if (component.name === "Search") {
       expect(out).toContain("Search: Component<SearchProps>");
       expect(out).toContain("export default Search;");
-      expect(out).toContain("query?: { [attr: string]: unknown }");
+      expect(out).toContain("query?: JSX.IntrinsicElements[\"input\"]");
       expect(out).toMatch(/<input [^>]*{...props.query}/);
       expect(out).toMatch(/{props.loading && \(.+\)}/s);
       expect(out).toMatch(/<div[^>]*>{props.results}<\/div>/);
@@ -201,9 +199,9 @@ test("Should tolerate comments in style", async () => {
 /* smooth scrolling on iOS devices */
 .fs-cc-prefs_content{-webkit-overflow-scrolling: touch}
 </style>
-    </div>
+</div>
   `, { targetType: "solid" });
-  expect(fd.content).toContain("/* smooth scrolling");
+  expect(fd.content).not.toContain("/* smooth scrolling");
 });
 
 async function renderSingleComponent(

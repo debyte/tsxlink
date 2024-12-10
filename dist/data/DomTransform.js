@@ -40,8 +40,15 @@ class DomTransform {
         const out = parent.ownerDocument.createComment(comment.data);
         parent.appendChild(out);
     }
-    tagName(node) {
-        return node.tagName.toLowerCase();
+    tagName(element) {
+        const tag = element.tagName.toLowerCase();
+        if (!this.filterElement(element, tag)) {
+            return null;
+        }
+        return tag;
+    }
+    filterElement(_element, _tag) {
+        return true;
     }
     attribute(element, attribute) {
         if (!this.filterAttribute(element, attribute)) {

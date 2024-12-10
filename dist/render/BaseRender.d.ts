@@ -3,6 +3,7 @@ import { Component, CopyFile, FileData, Prop, RuntimeConfig } from "../types";
 export declare class BaseRender {
     docs: DocPool;
     config: RuntimeConfig;
+    dropTags: RegExp[];
     dropAttrs: RegExp[];
     renameAttrs: [from: string, to: string][];
     rootVisibilityProp: string | null;
@@ -11,6 +12,7 @@ export declare class BaseRender {
     constructor(docs: DocPool, config: RuntimeConfig);
     render(component: Component): Promise<[component: FileData, assets: FileData[]]>;
     transform(component: Component): [xml: string, copyFromTo: CopyFile[]];
+    getDropTags(): RegExp[];
     getDropAttributes(): RegExp[];
     getRenameAttributes(): [from: string, to: string][];
     sanitizeNames(component: Component): void;

@@ -27,27 +27,6 @@ const RENAME_ATTRIBUTES: [from: string, to: string][] = [
   ),
 ];
 
-const ATTRIBUTE_TYPES = new Map<string, string>([
-  ["HTMLAnchorElement", "AnchorHTMLAttributes"],
-  ["HTMLAudioElement", "AudioHTMLAttributes"],
-  ["HTMLButtonElement", "ButtonHTMLAttributes"],
-  ["HTMLFormElement", "FormHTMLAttributes"],
-  ["HTMLIFrameElement", "IframeHTMLAttributes"],
-  ["HTMLImageElement", "ImgHTMLAttributes"],
-  ["HTMLInputElement", "InputHTMLAttributes"],
-  ["HTMLLabelElement", "LabelHTMLAttributes"],
-  ["HTMLLinkElement", "LinkHTMLAttributes"],
-  ["HTMLMediaElement", "MediaHTMLAttributes"],
-  ["HTMLObjectElement", "ObjectHTMLAttributes"],
-  ["HTMLOptionElement", "OptionHTMLAttributes"],
-  ["HTMLScriptElement", "ScriptHTMLAttributes"],
-  ["HTMLSelectElement", "SelectHTMLAttributes"],
-  ["HTMLSourceElement", "SourceHTMLAttributes"],
-  ["HTMLTableElement", "TableHTMLAttributes"],
-  ["HTMLTextAreaElement", "TextareaHTMLAttributes"],
-  ["HTMLVideoElement", "VideoHTMLAttributes"],
-]);
-
 export class ReactRender extends BaseRender {
   usesLib: boolean = false;
   styleObjects: StyleObject[] = [];
@@ -85,7 +64,7 @@ export class ReactRender extends BaseRender {
 
   renderImports(props: Prop[]): string {
     return r(
-      "import React from \"react\";",
+      `import React${this.renderJsxImport(props)} from "react";`,
       this.hasImages && this.config.useNextJsImages
       && "import Image from \"next/image\";",
       this.usesLib && "import { classResolve } from \"./tsxlinkLib\";",
@@ -93,14 +72,20 @@ export class ReactRender extends BaseRender {
     );
   }
 
+  renderJsxImport(props: Prop[]): string {
+    if (props.find(p => p.target === "map")) {
+      return ", { JSX }";
+    }
+    return "";
+  }
+
   renderElementType(): string {
     return "React.ReactNode";
   }
 
   renderMapType(p: Prop): string {
-    const cls = p.element.constructor.name;
-    const reactClass = ATTRIBUTE_TYPES.get(cls) || "AllHTMLAttributes"
-    return `React.${reactClass}<${cls}>`;
+    const tag = p.element.tagName.toLowerCase();
+    return `JSX.IntrinsicElements["${tag}"]`;
   }
 
   renderConsts(props: Prop[]): string | false {

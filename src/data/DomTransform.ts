@@ -44,8 +44,16 @@ export class DomTransform {
     parent.appendChild(out);
   }
 
-  tagName(node: Element): string | null {
-    return node.tagName.toLowerCase();
+  tagName(element: Element): string | null {
+    const tag = element.tagName.toLowerCase();
+    if (!this.filterElement(element, tag)) {
+      return null;
+    }
+    return tag;
+  }
+
+  filterElement(_element: Element, _tag: string): boolean {
+    return true;
   }
 
   attribute(element: Element, attribute: Attr): [string | null, string | null] {

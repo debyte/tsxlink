@@ -4,6 +4,7 @@ exports.BaseRender = void 0;
 const DomFilterAndEdit_1 = require("../data/DomFilterAndEdit");
 const paths_1 = require("../data/paths");
 const strings_1 = require("../data/strings");
+const html_1 = require("./html");
 const ids_1 = require("./ids");
 const indent_1 = require("./indent");
 const INTERNAL_MAP_ATTRIBUTE = "data-tsx-map";
@@ -18,6 +19,7 @@ class BaseRender {
         this.imageImports = [];
         this.docs = docs;
         this.config = config;
+        this.dropTags = this.getDropTags();
         this.dropAttrs = this.getDropAttributes();
         this.renameAttrs = this.getRenameAttributes();
     }
@@ -32,15 +34,19 @@ class BaseRender {
         ];
     }
     transform(component) {
-        const [xml, root, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
+        const [xml, root, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropTags, this.dropAttrs, this.renameAttrs);
         this.applyChanges(root);
         const out = xml.serialize();
         const m = out.match(/<root>(.*?)<\/root>/s);
         return [m !== null ? m[1] : "", copy];
     }
+    getDropTags() {
+        return [/^style$/];
+    }
     getDropAttributes() {
         return [
-            /on[A-Z]\w+/,
+            /^on[A-Z]\w+$/,
+            ...html_1.FORBIDDEN_ATTRIBUTES.map(m => (0, strings_1.wildcardRegexp)(m)),
             ...this.config.dropAttributes.map(m => (0, strings_1.wildcardRegexp)(m)),
         ];
     }
@@ -175,7 +181,7 @@ class BaseRender {
         return [
             "export const ",
             this.renderComponentNameAndType(name, props),
-            " = (props) =>",
+            ` = (${props.length > 0 ? "props" : ""}) =>`,
             this.renderSwitch(this.rootVisibilityProp),
         ].join("");
     }

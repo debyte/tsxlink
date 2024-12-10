@@ -13,26 +13,6 @@ const RENAME_ATTRIBUTES = [
     ...html_1.KEBAB_ATTRIBUTES.map(a => [a, (0, strings_1.kebabToCamelCase)(a)]),
     ...html_1.FULLSTOP_ATTRIBUTES.map(a => [a, (0, strings_1.kebabToCamelCase)(a.replace(":", "-"))]),
 ];
-const ATTRIBUTE_TYPES = new Map([
-    ["HTMLAnchorElement", "AnchorHTMLAttributes"],
-    ["HTMLAudioElement", "AudioHTMLAttributes"],
-    ["HTMLButtonElement", "ButtonHTMLAttributes"],
-    ["HTMLFormElement", "FormHTMLAttributes"],
-    ["HTMLIFrameElement", "IframeHTMLAttributes"],
-    ["HTMLImageElement", "ImgHTMLAttributes"],
-    ["HTMLInputElement", "InputHTMLAttributes"],
-    ["HTMLLabelElement", "LabelHTMLAttributes"],
-    ["HTMLLinkElement", "LinkHTMLAttributes"],
-    ["HTMLMediaElement", "MediaHTMLAttributes"],
-    ["HTMLObjectElement", "ObjectHTMLAttributes"],
-    ["HTMLOptionElement", "OptionHTMLAttributes"],
-    ["HTMLScriptElement", "ScriptHTMLAttributes"],
-    ["HTMLSelectElement", "SelectHTMLAttributes"],
-    ["HTMLSourceElement", "SourceHTMLAttributes"],
-    ["HTMLTableElement", "TableHTMLAttributes"],
-    ["HTMLTextAreaElement", "TextareaHTMLAttributes"],
-    ["HTMLVideoElement", "VideoHTMLAttributes"],
-]);
 class ReactRender extends BaseRender_1.BaseRender {
     constructor() {
         super(...arguments);
@@ -63,16 +43,21 @@ class ReactRender extends BaseRender_1.BaseRender {
         }
     }
     renderImports(props) {
-        return (0, strings_1.r)("import React from \"react\";", this.hasImages && this.config.useNextJsImages
+        return (0, strings_1.r)(`import React${this.renderJsxImport(props)} from "react";`, this.hasImages && this.config.useNextJsImages
             && "import Image from \"next/image\";", this.usesLib && "import { classResolve } from \"./tsxlinkLib\";", super.renderImports(props));
+    }
+    renderJsxImport(props) {
+        if (props.find(p => p.target === "map")) {
+            return ", { JSX }";
+        }
+        return "";
     }
     renderElementType() {
         return "React.ReactNode";
     }
     renderMapType(p) {
-        const cls = p.element.constructor.name;
-        const reactClass = ATTRIBUTE_TYPES.get(cls) || "AllHTMLAttributes";
-        return `React.${reactClass}<${cls}>`;
+        const tag = p.element.tagName.toLowerCase();
+        return `JSX.IntrinsicElements["${tag}"]`;
     }
     renderConsts(props) {
         const cls = props.filter(p => p.target === "class" && p.data !== undefined);

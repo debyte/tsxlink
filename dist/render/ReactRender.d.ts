@@ -9,6 +9,7 @@ export declare class ReactRender extends BaseRender {
     applyChanges(xml: Element): void;
     applyStyleObjects(xml: Element): void;
     renderImports(props: Prop[]): string;
+    renderJsxImport(props: Prop[]): string;
     renderElementType(): string;
     renderMapType(p: Prop): string;
     renderConsts(props: Prop[]): string | false;

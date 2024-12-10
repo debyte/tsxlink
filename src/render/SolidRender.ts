@@ -19,13 +19,13 @@ export class SolidRender extends BaseRender {
 
   renderImports(props: Prop[]): string {
     return r(
-      `import { Component${this.renderElementImport(props)} } from "solid-js";`,
+      `import { Component${this.renderJsxImport(props)} } from "solid-js";`,
       super.renderImports(props),
     );
   }
 
-  renderElementImport(props: Prop[]): string {
-    if (props.find(p => p.target === "slot" || p.target === "replace")) {
+  renderJsxImport(props: Prop[]): string {
+    if (props.find(p => ["slot", "replace", "map"].includes(p.target))) {
       return ", JSX";
     }
     return "";
@@ -35,8 +35,9 @@ export class SolidRender extends BaseRender {
     return "JSX.Element";
   }
 
-  renderMapType(_p: Prop): string {
-    return "{ [attr: string]: unknown }";
+  renderMapType(p: Prop): string {
+    const tag = p.element.tagName.toLowerCase();
+    return `JSX.IntrinsicElements["${tag}"]`;
   }
 
   renderConsts(props: Prop[]): string | false {

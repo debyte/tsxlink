@@ -193,21 +193,6 @@ export const FULLSTOP_ATTRIBUTES = [
   "xml:space",
 ];
 
-export const SINGLETON_TAGS = [
-  "area",
-  "base",
-  "br",
-  "col",
-  "command",
-  "embed",
-  "hr",
-  "img",
-  "input",
-  "keygen",
-  "link",
-  "meta",
-  "param",
-  "source",
-  "track",
-  "wbr",
+export const FORBIDDEN_ATTRIBUTES = [
+  "focusable",
 ];

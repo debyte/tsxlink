@@ -7,7 +7,8 @@ export declare class DomTransform {
     element(parent: Element, element: Element): void;
     text(parent: Element, text: Text): void;
     comment(parent: Element, comment: Comment): void;
-    tagName(node: Element): string | null;
+    tagName(element: Element): string | null;
+    filterElement(_element: Element, _tag: string): boolean;
     attribute(element: Element, attribute: Attr): [string | null, string | null];
     filterAttribute(_element: Element, _attribute: Attr): boolean;
     renameAttribute(_element: Element, attribute: Attr): string | null;

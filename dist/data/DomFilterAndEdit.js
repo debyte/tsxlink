@@ -8,17 +8,21 @@ const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
 const URL_ATTRIBUTES = ["src", "srcset", "href"];
 const STYLE_ATTRIBUTE = "style";
 class DomFilterAndEdit extends DomTransform_1.DomTransform {
-    static runWithCopyFiles(root, assetsPath, dropAttributes, renameAttributes) {
-        const tr = new DomFilterAndEdit(root, assetsPath, dropAttributes, renameAttributes);
+    static runWithCopyFiles(root, assetsPath, dropTags, dropAttributes, renameAttributes) {
+        const tr = new DomFilterAndEdit(root, assetsPath, dropTags, dropAttributes, renameAttributes);
         tr.element(tr.xmlRoot, tr.root);
         return [tr.xml, tr.xmlRoot, tr.copy];
     }
-    constructor(root, assetsPath, dropAttributes, renameAttributes) {
+    constructor(root, assetsPath, dropTags, dropAttributes, renameAttributes) {
         super(root);
+        this.dropTags = dropTags;
         this.dropAttributes = dropAttributes;
         this.renameAttributes = Object.fromEntries(renameAttributes);
         this.assetsPath = assetsPath;
         this.copy = [];
+    }
+    filterElement(_element, tagName) {
+        return this.dropTags.every(re => tagName.match(re) === null);
     }
     filterAttribute(_element, attribute) {
         return this.dropAttributes.every(re => attribute.name.match(re) === null);
