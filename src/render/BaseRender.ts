@@ -179,7 +179,7 @@ export class BaseRender {
   renderJsx(component: Component, xml: Element): string {
     try {
       return r(
-        this.renderImports(),
+        this.renderImports(component.props),
         this.renderProps(component.name, component.props),
         this.renderConsts(component.props),
         "",
@@ -190,14 +190,16 @@ export class BaseRender {
         `export default ${component.name};`,
       );
     } catch (e) {
-      throw new Error(`Render error ${component.name}: ${e}`);
+      throw new Error(
+        `Render error ${component.name}: ${e}\n${component.template.outerHTML}`
+      );
     }
   }
 
-  renderImports(): string {
-    return r(this.imageImports.map(
-      ([id, src]) => `import ${id} from "${src}";`)
-    );
+  renderImports(_props: Prop[]): string | false {
+    return this.imageImports.length > 0 && r(this.imageImports.map(
+      ([id, src]) => `import ${id} from "${src}";`
+    ));
   }
 
   renderProps(name: string, props: Prop[]): string | false {

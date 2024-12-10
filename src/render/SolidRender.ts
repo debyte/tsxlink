@@ -17,11 +17,18 @@ export class SolidRender extends BaseRender {
     p.element.removeAttribute("class");
   }
 
-  renderImports(): string {
+  renderImports(props: Prop[]): string {
     return r(
-      "import { Component, JSX } from \"solid-js\";",
-      super.renderImports(),
+      `import { Component${this.renderElementImport(props)} } from "solid-js";`,
+      super.renderImports(props),
     );
+  }
+
+  renderElementImport(props: Prop[]): string {
+    if (props.find(p => p.target === "slot" || p.target === "replace")) {
+      return ", JSX";
+    }
+    return "";
   }
 
   renderElementType(): string {
@@ -33,10 +40,11 @@ export class SolidRender extends BaseRender {
   }
 
   renderConsts(props: Prop[]): string | false {
-    return r(
-      props.map(p => p.target === "class" && p.data !== undefined && r(
+    const cls = props.filter(p => p.target === "class" && p.data !== undefined);
+    return cls.length > 0 && r(
+      cls.map(p => r(
         "",
-        `const ${p.name}Defaults = ${classNamesJson(p.data)};`,
+        `const ${p.name}Defaults = ${classNamesJson(p.data!)};`,
       )),
     );
   }

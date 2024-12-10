@@ -142,14 +142,14 @@ class BaseRender {
     }
     renderJsx(component, xml) {
         try {
-            return (0, strings_1.r)(this.renderImports(), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml.outerHTML)), ");", "", `export default ${component.name};`);
+            return (0, strings_1.r)(this.renderImports(component.props), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml.outerHTML)), ");", "", `export default ${component.name};`);
         }
         catch (e) {
-            throw new Error(`Render error ${component.name}: ${e}`);
+            throw new Error(`Render error ${component.name}: ${e}\n${component.template.outerHTML}`);
         }
     }
-    renderImports() {
-        return (0, strings_1.r)(this.imageImports.map(([id, src]) => `import ${id} from "${src}";`));
+    renderImports(_props) {
+        return this.imageImports.length > 0 && (0, strings_1.r)(this.imageImports.map(([id, src]) => `import ${id} from "${src}";`));
     }
     renderProps(name, props) {
         return props.length > 0 && (0, strings_1.r)("", `export interface ${name}Props {`, (0, strings_1.r)(props.map(p => `  ${this.renderPropName(p)}: ${this.renderPropType(p)}`)), "}");

@@ -13,8 +13,14 @@ class SolidRender extends BaseRender_1.BaseRender {
         p.element.setAttribute("classlist", this.renderToAttribute(`{ ${p.data ? `...${p.name}Defaults, ` : ""}...${this.prop(p.name)} }`));
         p.element.removeAttribute("class");
     }
-    renderImports() {
-        return (0, strings_1.r)("import { Component, JSX } from \"solid-js\";", super.renderImports());
+    renderImports(props) {
+        return (0, strings_1.r)(`import { Component${this.renderElementImport(props)} } from "solid-js";`, super.renderImports(props));
+    }
+    renderElementImport(props) {
+        if (props.find(p => p.target === "slot" || p.target === "replace")) {
+            return ", JSX";
+        }
+        return "";
     }
     renderElementType() {
         return "JSX.Element";
@@ -23,7 +29,8 @@ class SolidRender extends BaseRender_1.BaseRender {
         return "{ [attr: string]: unknown }";
     }
     renderConsts(props) {
-        return (0, strings_1.r)(props.map(p => p.target === "class" && p.data !== undefined && (0, strings_1.r)("", `const ${p.name}Defaults = ${(0, styles_1.classNamesJson)(p.data)};`)));
+        const cls = props.filter(p => p.target === "class" && p.data !== undefined);
+        return cls.length > 0 && (0, strings_1.r)(cls.map(p => (0, strings_1.r)("", `const ${p.name}Defaults = ${(0, styles_1.classNamesJson)(p.data)};`)));
     }
     renderComponentNameAndType(name) {
         return `${name}: Component<${name}Props>`;

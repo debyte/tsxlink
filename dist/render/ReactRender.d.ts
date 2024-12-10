@@ -8,7 +8,7 @@ export declare class ReactRender extends BaseRender {
     applyClassProp(p: Prop): void;
     applyChanges(xml: Element): void;
     applyStyleObjects(xml: Element): void;
-    renderImports(): string;
+    renderImports(props: Prop[]): string;
     renderElementType(): string;
     renderMapType(p: Prop): string;
     renderConsts(props: Prop[]): string | false;

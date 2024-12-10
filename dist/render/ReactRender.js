@@ -62,9 +62,9 @@ class ReactRender extends BaseRender_1.BaseRender {
             }
         }
     }
-    renderImports() {
+    renderImports(props) {
         return (0, strings_1.r)("import React from \"react\";", this.hasImages && this.config.useNextJsImages
-            && "import Image from \"next/image\";", this.usesLib && "import { classResolve } from \"./tsxlinkLib\";", super.renderImports());
+            && "import Image from \"next/image\";", this.usesLib && "import { classResolve } from \"./tsxlinkLib\";", super.renderImports(props));
     }
     renderElementType() {
         return "React.ReactNode";
@@ -75,7 +75,8 @@ class ReactRender extends BaseRender_1.BaseRender {
         return `React.${reactClass}<${cls}>`;
     }
     renderConsts(props) {
-        return (0, strings_1.r)(props.map(p => p.target === "class" && p.data !== undefined && (0, strings_1.r)("", `const ${p.name}Defaults = ${(0, styles_1.classNamesJson)(p.data)};`)), this.styleObjects.length > 0 && (0, strings_1.r)("", `const inlineStyles = ${JSON.stringify(this.styleObjects, null, 2)};`));
+        const cls = props.filter(p => p.target === "class" && p.data !== undefined);
+        return (cls.length > 0 || this.styleObjects.length > 0) && (0, strings_1.r)(cls.map(p => (0, strings_1.r)("", `const ${p.name}Defaults = ${(0, styles_1.classNamesJson)(p.data)};`)), this.styleObjects.length > 0 && (0, strings_1.r)("", `const inlineStyles = ${JSON.stringify(this.styleObjects, null, 2)};`));
     }
     renderComponentNameAndType(name) {
         return `${name}: React.FC<${name}Props>`;

@@ -83,13 +83,13 @@ export class ReactRender extends BaseRender {
     }
   }
 
-  renderImports(): string {
+  renderImports(props: Prop[]): string {
     return r(
       "import React from \"react\";",
       this.hasImages && this.config.useNextJsImages
       && "import Image from \"next/image\";",
       this.usesLib && "import { classResolve } from \"./tsxlinkLib\";",
-      super.renderImports(),
+      super.renderImports(props),
     );
   }
 
@@ -104,10 +104,11 @@ export class ReactRender extends BaseRender {
   }
 
   renderConsts(props: Prop[]): string | false {
-    return r(
-      props.map(p => p.target === "class" && p.data !== undefined && r(
+    const cls = props.filter(p => p.target === "class" && p.data !== undefined);
+    return (cls.length > 0 || this.styleObjects.length > 0) && r(
+      cls.map(p => r(
         "",
-        `const ${p.name}Defaults = ${classNamesJson(p.data)};`,
+        `const ${p.name}Defaults = ${classNamesJson(p.data!)};`,
       )),
       this.styleObjects.length > 0 && r(
         "",
