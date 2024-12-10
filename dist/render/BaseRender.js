@@ -16,7 +16,7 @@ class BaseRender {
     constructor(docs, config) {
         this.rootVisibilityProp = null;
         this.hasImages = false;
-        this.imageImports = [];
+        this.imageImports = new Map();
         this.docs = docs;
         this.config = config;
         this.dropTags = this.getDropTags();
@@ -106,7 +106,7 @@ class BaseRender {
     applyImageImports(xml) {
         const images = xml.querySelectorAll("img");
         this.hasImages = images.length > 0;
-        this.imageImports = [];
+        this.imageImports.clear();
         if (this.config.importImageFiles) {
             for (const img of images) {
                 const src = img.getAttribute("src");
@@ -114,7 +114,7 @@ class BaseRender {
                     const id = (0, paths_1.fileToId)((0, paths_1.baseName)(src));
                     img.setAttribute("src", this.renderToAttribute(id));
                     img.removeAttribute("srcset");
-                    this.imageImports.push([id, src]);
+                    this.imageImports.set(id, src);
                 }
             }
         }
@@ -142,7 +142,7 @@ class BaseRender {
         return (0, strings_1.r)(this.renderImports(component.props), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name, component.props)} (`, (0, indent_1.indentRows)(this.renderXml(xml)), ");", "", `export default ${component.name};`);
     }
     renderImports(_props) {
-        return this.imageImports.length > 0 && (0, strings_1.r)(this.imageImports.map(([id, src]) => `import ${id} from "${src}";`));
+        return this.imageImports.size > 0 && (0, strings_1.r)(Array.from(this.imageImports.entries()).map(([id, src]) => `import ${id} from "${src}";`));
     }
     renderProps(name, props) {
         return props.length > 0 && (0, strings_1.r)("", `export interface ${name}Props {`, (0, strings_1.r)(props.map(p => `  ${this.renderPropName(p)}: ${this.renderPropType(p)}`)), "}");

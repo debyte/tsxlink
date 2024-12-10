@@ -8,7 +8,7 @@ export declare class BaseRender {
     renameAttrs: [from: string, to: string][];
     rootVisibilityProp: string | null;
     hasImages: boolean;
-    imageImports: [id: string, src: string][];
+    imageImports: Map<string, string>;
     constructor(docs: DocPool, config: RuntimeConfig);
     render(component: Component): Promise<[component: FileData, assets: FileData[]]>;
     transform(component: Component): [xml: string, copyFromTo: CopyFile[]];

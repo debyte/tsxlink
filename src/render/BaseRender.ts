@@ -29,7 +29,7 @@ export class BaseRender {
 
   rootVisibilityProp: string | null = null;
   hasImages: boolean = false;
-  imageImports: [id: string, src: string][] = [];
+  imageImports = new Map<string, string>();
 
   constructor(docs: DocPool, config: RuntimeConfig) {
     this.docs = docs;
@@ -139,7 +139,7 @@ export class BaseRender {
   applyImageImports(xml: Element) {
     const images = xml.querySelectorAll("img");
     this.hasImages = images.length > 0;
-    this.imageImports = [];
+    this.imageImports.clear();
     if (this.config.importImageFiles) {
       for (const img of images) {
         const src = img.getAttribute("src");
@@ -147,7 +147,7 @@ export class BaseRender {
           const id = fileToId(baseName(src));
           img.setAttribute("src", this.renderToAttribute(id));
           img.removeAttribute("srcset");
-          this.imageImports.push([id, src]);
+          this.imageImports.set(id, src);
         }
       }
     }
@@ -194,9 +194,11 @@ export class BaseRender {
   }
 
   renderImports(_props: Prop[]): string | false {
-    return this.imageImports.length > 0 && r(this.imageImports.map(
-      ([id, src]) => `import ${id} from "${src}";`
-    ));
+    return this.imageImports.size > 0 && r(
+      Array.from(this.imageImports.entries()).map(
+        ([id, src]) => `import ${id} from "${src}";`
+      )
+    );
   }
 
   renderProps(name: string, props: Prop[]): string | false {
