@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FULLSTOP_ATTRIBUTES = exports.KEBAB_ATTRIBUTES = exports.CAMEL_ATTRIBUTES = void 0;
+exports.SINGLETON_TAGS = exports.FULLSTOP_ATTRIBUTES = exports.KEBAB_ATTRIBUTES = exports.CAMEL_ATTRIBUTES = void 0;
 exports.CAMEL_ATTRIBUTES = [
     "acceptCharset",
     "allowFullScreen",
@@ -191,4 +191,22 @@ exports.FULLSTOP_ATTRIBUTES = [
     "xlink:type",
     "xml:lang",
     "xml:space",
+];
+exports.SINGLETON_TAGS = [
+    "area",
+    "base",
+    "br",
+    "col",
+    "command",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "keygen",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
 ];

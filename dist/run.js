@@ -70,16 +70,15 @@ async function prepareForComponents(parser, config) {
     return await Promise.all(fileNamePromises);
 }
 async function updateComponents(parser, config) {
+    const render = (0, render_1.selectRender)(parser.docs, config);
     const componentFileNamePromises = [];
     const assetFileNamePromises = [];
-    let writeLib = false;
     for (const component of await parser.getComponents()) {
-        const [componentFile, assetFiles, usesLib] = await (0, render_1.renderComponent)(config, parser.docs, component);
+        const [componentFile, assetFiles] = await render.render(component);
         componentFileNamePromises.push(...await writeAndLogFiles(config.componentDir, [componentFile]));
         assetFileNamePromises.push(...await writeAndLogFiles(config.assetsDir, assetFiles));
-        writeLib = writeLib || usesLib;
     }
-    if (writeLib) {
+    if (render.doesUseLib()) {
         componentFileNamePromises.push(...await writeAndLogFiles(config.componentDir, [{ baseName: "tsxlinkLib.ts", content: tsxlinkLib_1.default }]));
     }
     return [

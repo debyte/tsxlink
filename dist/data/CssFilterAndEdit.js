@@ -1,13 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CssFilterAndFixUrls = void 0;
+exports.CssFilterAndEdit = void 0;
 const CssTransform_1 = require("./CssTransform");
 const paths_1 = require("./paths");
-class CssFilterAndFixUrls extends CssTransform_1.CssTransform {
+class CssFilterAndEdit extends CssTransform_1.CssTransform {
     static runWithCopyFiles(src, select, urlPath) {
-        const tr = new CssFilterAndFixUrls(src, select, urlPath);
+        const tr = new CssFilterAndEdit(src, select, urlPath);
         const out = tr.tree(tr.root);
         return [tr.stringify(out), tr.copy];
+    }
+    static runSingleValue(value, urlPath) {
+        const tr = new CssFilterAndEdit("", () => true, urlPath);
+        const url = tr.value(value);
+        return [url || value, tr.copy];
     }
     constructor(src, select, urlPath) {
         super(src);
@@ -44,4 +49,4 @@ class CssFilterAndFixUrls extends CssTransform_1.CssTransform {
         return val;
     }
 }
-exports.CssFilterAndFixUrls = CssFilterAndFixUrls;
+exports.CssFilterAndEdit = CssFilterAndEdit;

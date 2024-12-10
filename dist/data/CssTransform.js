@@ -6,11 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CssTransform = void 0;
 const css_1 = __importDefault(require("css"));
 class CssTransform {
-    static run(src) {
-        const tr = new CssTransform(src);
-        const out = tr.tree(tr.root);
-        return tr.stringify(out);
-    }
     constructor(src) {
         this.root = css_1.default.parse(src);
     }
@@ -155,12 +150,10 @@ class CssTransform {
         }
         return out;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    filterSelectors(selector) {
+    filterSelectors(_selector) {
         return true;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    filterAtRule(atRule) {
+    filterAtRule(_atRule) {
         return true;
     }
 }

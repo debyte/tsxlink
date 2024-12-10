@@ -14,6 +14,14 @@ exports.DEFAULT_ASSETS_PATH = "/tsxlink";
 exports.DEFAULT_STYLE_FILE = "export.css";
 const INIT_CHOICES = [
     {
+        key: "targetType",
+        prompt: "The type of created TSX files",
+        options: [
+            ["react", "React (https://react.dev/)"],
+            ["solid", "SolidJS (https://www.solidjs.com/)"],
+        ],
+    },
+    {
         key: "sourceType",
         prompt: "The type of source HTML",
         options: [
@@ -39,11 +47,6 @@ const INIT_CHOICES = [
         key: "exportStyleElements",
         prompt: "Export CSS from possible style elements to assets",
         default: "yes",
-    },
-    {
-        key: "useNextJsImages",
-        prompt: "Replace <img> with Next.js <Image> to optimize image files",
-        default: "no",
     },
     {
         key: "componentDir",
@@ -78,12 +81,12 @@ const INIT_CHOICES = [
 function applyDefaults(config) {
     const rt = {
         version: config.version || 1,
+        targetType: config.targetType || "solid",
         sourceType: config.sourceType || "custom",
         source: config.source,
         copyCssFiles: config.copyCssFiles || true,
         copyJsFiles: config.copyJsFiles || false,
         exportStyleElements: config.exportStyleElements || true,
-        useNextJsImages: config.useNextJsImages || false,
         componentDir: config.componentDir || exports.DEFAULT_COMPONENT_DIR,
         assetsDir: config.assetsDir || exports.DEFAULT_ASSETS_DIR,
         assetsPath: config.assetsPath || exports.DEFAULT_ASSETS_PATH,
@@ -91,6 +94,8 @@ function applyDefaults(config) {
         ignoreFiles: config.ignoreFiles || [],
         dropStyles: config.dropStyles || [],
         dropAttributes: config.dropAttributes || [],
+        importImageFiles: config.importImageFiles || false,
+        useNextJsImages: config.useNextJsImages || false,
     };
     if (rt.assetsPath === "@") {
         rt.assetsPath = (0, paths_1.relativePath)(rt.componentDir, rt.assetsDir);
@@ -135,12 +140,12 @@ async function runInteractiveInit(current) {
         }
     }
     return {
+        targetType: map.get("targetType"),
         sourceType: map.get("sourceType"),
         source: map.get("source"),
         copyCssFiles: isTrue(map.get("copyCssFiles")),
         copyJsFiles: isTrue(map.get("copyJsFiles")),
         exportStyleElements: isTrue(map.get("exportStyleElements")),
-        useNextJsImages: isTrue(map.get("useNextJsImages")),
         componentDir: map.get("componentDir"),
         assetsDir: map.get("assetsDir"),
         assetsPath: map.get("assetsPath"),
@@ -148,6 +153,8 @@ async function runInteractiveInit(current) {
         ignoreFiles: (current === null || current === void 0 ? void 0 : current.ignoreFiles) || [],
         dropStyles: (current === null || current === void 0 ? void 0 : current.dropStyles) || [],
         dropAttributes: (current === null || current === void 0 ? void 0 : current.dropAttributes) || [],
+        importImageFiles: (current === null || current === void 0 ? void 0 : current.importImageFiles) || false,
+        useNextJsImages: (current === null || current === void 0 ? void 0 : current.useNextJsImages) || false,
         configExtension: map.get("configExtension"),
     };
 }

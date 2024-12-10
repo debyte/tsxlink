@@ -8,7 +8,6 @@ exports.filePath = filePath;
 exports.relativePath = relativePath;
 exports.urlToFilePath = urlToFilePath;
 exports.srcSetToFilePaths = srcSetToFilePaths;
-exports.wildcardRegexp = wildcardRegexp;
 exports.wildcardFileRegexp = wildcardFileRegexp;
 exports.fileToId = fileToId;
 const path_1 = __importDefault(require("path"));
@@ -51,14 +50,6 @@ function srcSetToFilePaths(srcset) {
         }
     }
     return paths;
-}
-function wildcardRegexp(match, preRegExp, postRegExp, flags) {
-    const b = preRegExp || "^";
-    const m = match
-        .replace(/(?<!\\)\?/g, ".?")
-        .replace(/(?<!\\)\*/g, ".*");
-    const e = postRegExp || "$";
-    return new RegExp(`${b}${m}${e}`, flags);
 }
 function wildcardFileRegexp(match) {
     // If no slashes, match against base name

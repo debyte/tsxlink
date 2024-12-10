@@ -1,0 +1,37 @@
+import { DocPool } from "../data/DocPool";
+import { Component, FileData, Prop, RuntimeConfig } from "../types";
+export declare class BaseRender {
+    docs: DocPool;
+    config: RuntimeConfig;
+    dropAttrs: RegExp[];
+    renameAttrs: [from: string, to: string][];
+    rootVisibilityProp: string | null;
+    hasImages: boolean;
+    imageImports: [id: string, src: string][];
+    constructor(docs: DocPool, config: RuntimeConfig);
+    render(component: Component): Promise<[component: FileData, assets: FileData[]]>;
+    getDropAttributes(): RegExp[];
+    getRenameAttributes(): [from: string, to: string][];
+    sanitizeNames(component: Component): void;
+    applyProps(component: Component): void;
+    applyClassProp(p: Prop): void;
+    applyChanges(xml: Element): void;
+    applyImageImports(xml: Element): void;
+    commentValue(value: string | null, cut?: boolean): string | undefined;
+    prop(id: string): string;
+    renderToText(statement: string): string;
+    renderToAttribute(statement: string): string;
+    renderJsx(component: Component, xml: string): string;
+    renderImports(): string;
+    renderProps(name: string, props: Prop[]): string | false;
+    renderPropName(p: Prop): string;
+    renderPropType(p: Prop): string;
+    renderElementType(): string;
+    renderMapType(_p: Prop): string;
+    renderConsts(_props: Prop[]): string | false;
+    renderSignature(name: string): string;
+    renderComponentNameAndType(name: string): string;
+    renderSwitch(propName: string | null): string;
+    renderXml(xml: string): string;
+    doesUseLib(): boolean;
+}

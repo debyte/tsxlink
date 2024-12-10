@@ -1,7 +1,6 @@
 import css from "css";
 export declare class CssTransform {
     root: css.Stylesheet;
-    static run(src: string): string;
     constructor(src: string);
     stringify(root: css.Stylesheet | false): string;
     tree<T extends css.Node | css.KeyFrame>(node: T): T | false;
@@ -23,6 +22,6 @@ export declare class CssTransform {
     document(node: css.Document): css.Document | false;
     value(value: string | undefined): string | undefined;
     nodeList<T extends css.Node | css.KeyFrame>(nodes: T[] | undefined): T[] | undefined;
-    filterSelectors(selector: string): boolean;
-    filterAtRule(atRule: string): boolean;
+    filterSelectors(_selector: string): boolean;
+    filterAtRule(_atRule: string): boolean;
 }

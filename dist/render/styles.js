@@ -2,31 +2,37 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.styleToObject = styleToObject;
 exports.toCamelCase = toCamelCase;
-const CssFilterAndFixUrls_1 = require("../data/CssFilterAndFixUrls");
-const paths_1 = require("../data/paths");
-function styleToObject(src, assetsPath) {
+exports.classNamesToObject = classNamesToObject;
+exports.classNamesJson = classNamesJson;
+const strings_1 = require("../data/strings");
+function styleToObject(src) {
     const out = {};
-    const copy = [];
-    const css = new CssFilterAndFixUrls_1.CssFilterAndFixUrls("", () => true, name => (0, paths_1.filePath)(assetsPath, name));
-    for (const part of (src || "").split(";")) {
+    for (const part of src.split(";")) {
         const d = part.trim();
         if (d !== "") {
-            const [property, rawValue] = d.split(":", 2);
-            css.copy = [];
-            out[toCamelCase(property.trimEnd())] = css.value(rawValue.trimStart());
-            copy.push(...css.copy);
+            const [property, value] = d.split(":", 2);
+            out[toCamelCase(property.trimEnd())] = value.trimStart();
         }
     }
-    return [out, copy];
+    return out;
 }
-const dashRegexp = /-(\w|$)/g;
 function toCamelCase(property) {
     const p = property.toLowerCase();
     if (p === "float") {
         return "cssFloat";
     }
     if (p.startsWith("-ms-")) {
-        return p.substring(1).replace(dashRegexp, (_, l) => l.toUpperCase());
+        return (0, strings_1.kebabToCamelCase)(p.substring(1));
     }
-    return p.replace(dashRegexp, (_, l) => l.toUpperCase());
+    return (0, strings_1.kebabToCamelCase)(p);
+}
+function classNamesToObject(src) {
+    const out = {};
+    for (const name of src.split(" ")) {
+        out[name.trim()] = true;
+    }
+    return out;
+}
+function classNamesJson(src) {
+    return JSON.stringify(classNamesToObject(src), null, 2);
 }

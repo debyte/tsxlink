@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseParser = exports.DROP_ATTRIBUTE = exports.ASSET_ATTRIBUTE = exports.REPLACE_ATTRIBUTE = exports.SLOT_ATTRIBUTE = exports.PROPERTY_ATTRIBUTE = exports.COMPONENT_ATTRIBUTE = void 0;
-const CssFilterAndFixUrls_1 = require("../data/CssFilterAndFixUrls");
+const CssFilterAndEdit_1 = require("../data/CssFilterAndEdit");
 const paths_1 = require("../data/paths");
+const strings_1 = require("../data/strings");
 const NamedComponent_1 = require("./NamedComponent");
 const NamedObject_1 = require("./NamedObject");
 const NamedProp_1 = require("./NamedProp");
@@ -16,7 +17,7 @@ class BaseParser {
     constructor(docs, config) {
         this.docs = docs;
         this.config = config;
-        this.dropCss = config.dropStyles.map(m => (0, paths_1.wildcardRegexp)(m));
+        this.dropCss = config.dropStyles.map(m => (0, strings_1.wildcardRegexp)(m));
     }
     async getComponents() {
         const out = [];
@@ -157,7 +158,7 @@ class BaseParser {
         }
     }
     async rewriteCss(data) {
-        const [css, copyFromTo] = CssFilterAndFixUrls_1.CssFilterAndFixUrls.runWithCopyFiles(data.buffer !== undefined
+        const [css, copyFromTo] = CssFilterAndEdit_1.CssFilterAndEdit.runWithCopyFiles(data.buffer !== undefined
             ? (await data.buffer).toString()
             : data.content || "", s => this.dropCss.every(re => s.match(re) === null));
         return [

@@ -1,3 +1,4 @@
 import { DocPool } from "../data/DocPool";
-import { Component, FileData, RuntimeConfig } from "../types";
-export declare function renderComponent(config: RuntimeConfig, docs: DocPool, component: Component): Promise<[component: FileData, assets: FileData[], usesLib: boolean]>;
+import { RuntimeConfig } from "../types";
+import { BaseRender } from "./BaseRender";
+export declare function selectRender(docs: DocPool, config: RuntimeConfig): BaseRender;
