@@ -42,7 +42,7 @@ export class BaseRender {
     this.sanitizeNames(component);
     this.applyProps(component);
     const [xml, copy] = this.transform(component);
-    const jsx = this.renderJsx(component, xml.outerHTML);
+    const jsx = this.renderJsx(component, xml);
     return [
       { baseName: `${component.name}.tsx`, content: jsx },
       await this.docs.copyFiles(".", copy),
@@ -176,18 +176,22 @@ export class BaseRender {
     return `#tsx{${statement}}`;
   }
 
-  renderJsx(component: Component, xml: string): string {
-    return r(
-      this.renderImports(),
-      this.renderProps(component.name, component.props),
-      this.renderConsts(component.props),
-      "",
-      `${this.renderSignature(component.name)} (`,
-      indentRows(this.renderXml(xml)),
-      ");",
-      "",
-      `export default ${component.name};`,
-    );
+  renderJsx(component: Component, xml: Element): string {
+    try {
+      return r(
+        this.renderImports(),
+        this.renderProps(component.name, component.props),
+        this.renderConsts(component.props),
+        "",
+        `${this.renderSignature(component.name)} (`,
+        indentRows(this.renderXml(xml.outerHTML)),
+        ");",
+        "",
+        `export default ${component.name};`,
+      );
+    } catch (e) {
+      throw new Error(`Render error ${component.name}: ${e}`);
+    }
   }
 
   renderImports(): string {

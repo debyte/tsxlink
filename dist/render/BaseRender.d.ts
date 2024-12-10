@@ -22,7 +22,7 @@ export declare class BaseRender {
     prop(id: string): string;
     renderToText(statement: string): string;
     renderToAttribute(statement: string): string;
-    renderJsx(component: Component, xml: string): string;
+    renderJsx(component: Component, xml: Element): string;
     renderImports(): string;
     renderProps(name: string, props: Prop[]): string | false;
     renderPropName(p: Prop): string;

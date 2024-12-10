@@ -25,7 +25,7 @@ class BaseRender {
         this.sanitizeNames(component);
         this.applyProps(component);
         const [xml, copy] = this.transform(component);
-        const jsx = this.renderJsx(component, xml.outerHTML);
+        const jsx = this.renderJsx(component, xml);
         return [
             { baseName: `${component.name}.tsx`, content: jsx },
             await this.docs.copyFiles(".", copy),
@@ -141,7 +141,12 @@ class BaseRender {
         return `#tsx{${statement}}`;
     }
     renderJsx(component, xml) {
-        return (0, strings_1.r)(this.renderImports(), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml)), ");", "", `export default ${component.name};`);
+        try {
+            return (0, strings_1.r)(this.renderImports(), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml.outerHTML)), ");", "", `export default ${component.name};`);
+        }
+        catch (e) {
+            throw new Error(`Render error ${component.name}: ${e}`);
+        }
     }
     renderImports() {
         return (0, strings_1.r)(this.imageImports.map(([id, src]) => `import ${id} from "${src}";`));
