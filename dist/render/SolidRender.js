@@ -32,8 +32,8 @@ class SolidRender extends BaseRender_1.BaseRender {
         const cls = props.filter(p => p.target === "class" && p.data !== undefined);
         return cls.length > 0 && (0, strings_1.r)(cls.map(p => (0, strings_1.r)("", `const ${p.name}Defaults = ${(0, styles_1.classNamesJson)(p.data)};`)));
     }
-    renderComponentNameAndType(name) {
-        return `${name}: Component<${name}Props>`;
+    renderComponentNameAndType(name, props) {
+        return `${name}: Component${props.length > 0 ? `<${name}Props>` : ""}`;
     }
 }
 exports.SolidRender = SolidRender;

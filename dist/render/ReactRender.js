@@ -78,8 +78,8 @@ class ReactRender extends BaseRender_1.BaseRender {
         const cls = props.filter(p => p.target === "class" && p.data !== undefined);
         return (cls.length > 0 || this.styleObjects.length > 0) && (0, strings_1.r)(cls.map(p => (0, strings_1.r)("", `const ${p.name}Defaults = ${(0, styles_1.classNamesJson)(p.data)};`)), this.styleObjects.length > 0 && (0, strings_1.r)("", `const inlineStyles = ${JSON.stringify(this.styleObjects, null, 2)};`));
     }
-    renderComponentNameAndType(name) {
-        return `${name}: React.FC<${name}Props>`;
+    renderComponentNameAndType(name, props) {
+        return `${name}: React.FC${props.length > 0 ? `<${name}Props>` : ""}`;
     }
     renderXml(xml) {
         const out = super.renderXml(xml);

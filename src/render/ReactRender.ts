@@ -117,8 +117,8 @@ export class ReactRender extends BaseRender {
     );
   }
 
-  renderComponentNameAndType(name: string) {
-    return `${name}: React.FC<${name}Props>`;
+  renderComponentNameAndType(name: string, props: Prop[]) {
+    return `${name}: React.FC${props.length > 0 ? `<${name}Props>` : ""}`;
   }
 
   renderXml(xml: string): string {

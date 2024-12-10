@@ -194,6 +194,18 @@ test("Should tolerate svg xmlns", async () => {
   expect(fd.content).toContain(" xmlns=\"http://www.w3.org/2000/svg\"");
 });
 
+test("Should tolerate comments in style", async () => {
+  const [fd] = await renderSingleComponent(`
+    <div data-tsx="Test">
+      <style>
+/* smooth scrolling on iOS devices */
+.fs-cc-prefs_content{-webkit-overflow-scrolling: touch}
+</style>
+    </div>
+  `, { targetType: "solid" });
+  expect(fd.content).toContain("/* smooth scrolling");
+});
+
 async function renderSingleComponent(
   src: string,
   opt?: Config,

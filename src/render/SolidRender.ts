@@ -49,7 +49,7 @@ export class SolidRender extends BaseRender {
     );
   }
 
-  renderComponentNameAndType(name: string) {
-    return `${name}: Component<${name}Props>`;
+  renderComponentNameAndType(name: string, props: Prop[]) {
+    return `${name}: Component${props.length > 0 ? `<${name}Props>` : ""}`;
   }
 }

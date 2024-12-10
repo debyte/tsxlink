@@ -8,5 +8,5 @@ export declare class SolidRender extends BaseRender {
     renderElementType(): string;
     renderMapType(_p: Prop): string;
     renderConsts(props: Prop[]): string | false;
-    renderComponentNameAndType(name: string): string;
+    renderComponentNameAndType(name: string, props: Prop[]): string;
 }

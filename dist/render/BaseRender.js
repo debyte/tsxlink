@@ -133,7 +133,7 @@ class BaseRender {
         return `#tsx{${statement}}`;
     }
     renderJsx(component, xml) {
-        return (0, strings_1.r)(this.renderImports(component.props), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml)), ");", "", `export default ${component.name};`);
+        return (0, strings_1.r)(this.renderImports(component.props), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name, component.props)} (`, (0, indent_1.indentRows)(this.renderXml(xml)), ");", "", `export default ${component.name};`);
     }
     renderImports(_props) {
         return this.imageImports.length > 0 && (0, strings_1.r)(this.imageImports.map(([id, src]) => `import ${id} from "${src}";`));
@@ -171,15 +171,15 @@ class BaseRender {
     renderConsts(_props) {
         return false;
     }
-    renderSignature(name) {
+    renderSignature(name, props) {
         return [
             "export const ",
-            this.renderComponentNameAndType(name),
+            this.renderComponentNameAndType(name, props),
             " = (props) =>",
             this.renderSwitch(this.rootVisibilityProp),
         ].join("");
     }
-    renderComponentNameAndType(name) {
+    renderComponentNameAndType(name, _props) {
         return name;
     }
     renderSwitch(propName) {

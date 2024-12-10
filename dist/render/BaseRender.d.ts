@@ -30,8 +30,8 @@ export declare class BaseRender {
     renderElementType(): string;
     renderMapType(_p: Prop): string;
     renderConsts(_props: Prop[]): string | false;
-    renderSignature(name: string): string;
-    renderComponentNameAndType(name: string): string;
+    renderSignature(name: string, props: Prop[]): string;
+    renderComponentNameAndType(name: string, _props: Prop[]): string;
     renderSwitch(propName: string | null): string;
     renderXml(xml: string): string;
     doesUseLib(): boolean;

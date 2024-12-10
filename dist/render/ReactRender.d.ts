@@ -12,7 +12,7 @@ export declare class ReactRender extends BaseRender {
     renderElementType(): string;
     renderMapType(p: Prop): string;
     renderConsts(props: Prop[]): string | false;
-    renderComponentNameAndType(name: string): string;
+    renderComponentNameAndType(name: string, props: Prop[]): string;
     renderXml(xml: string): string;
     doesUseLib(): boolean;
 }

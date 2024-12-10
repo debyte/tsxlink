@@ -8,14 +8,14 @@ export function indentRows(src: string) {
       rows[0] = addIndent(rows[0], 2 - ind);
     }
     if (rows.length > 1) {
-      const nInd = getIndent(rows[1]);
-      if (nInd > 4) {
+      const nInd = getIndent(rows[1]) - 4;
+      if (nInd > 0) {
         for (let i = 1; i < rows.length; i++) {
-          rows[i] = rows[i].substring(nInd - 4);
+          rows[i] = rows[i].substring(Math.min(getIndent(rows[i]), nInd));
         }
-      } else if (nInd < 4) {
+      } else if (nInd < 0) {
         for (let i = 1; i < rows.length; i++) {
-          rows[i] = addIndent(rows[i], 4 - nInd);
+          rows[i] = addIndent(rows[i], -nInd);
         }
       }
     }

@@ -176,7 +176,7 @@ export class BaseRender {
       this.renderProps(component.name, component.props),
       this.renderConsts(component.props),
       "",
-      `${this.renderSignature(component.name)} (`,
+      `${this.renderSignature(component.name, component.props)} (`,
       indentRows(this.renderXml(xml)),
       ");",
       "",
@@ -236,16 +236,16 @@ export class BaseRender {
     return false;
   }
 
-  renderSignature(name: string) {
+  renderSignature(name: string, props: Prop[]) {
     return [
       "export const ",
-      this.renderComponentNameAndType(name),
+      this.renderComponentNameAndType(name, props),
       " = (props) =>",
       this.renderSwitch(this.rootVisibilityProp),
     ].join("");
   }
 
-  renderComponentNameAndType(name: string) {
+  renderComponentNameAndType(name: string, _props: Prop[]) {
     return name;
   }
 
