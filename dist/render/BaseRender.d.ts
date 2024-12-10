@@ -10,7 +10,7 @@ export declare class BaseRender {
     imageImports: [id: string, src: string][];
     constructor(docs: DocPool, config: RuntimeConfig);
     render(component: Component): Promise<[component: FileData, assets: FileData[]]>;
-    transform(component: Component): [xml: Element, copyFromTo: CopyFile[]];
+    transform(component: Component): [xml: string, copyFromTo: CopyFile[]];
     getDropAttributes(): RegExp[];
     getRenameAttributes(): [from: string, to: string][];
     sanitizeNames(component: Component): void;
@@ -22,7 +22,7 @@ export declare class BaseRender {
     prop(id: string): string;
     renderToText(statement: string): string;
     renderToAttribute(statement: string): string;
-    renderJsx(component: Component, xml: Element): string;
+    renderJsx(component: Component, xml: string): string;
     renderImports(_props: Prop[]): string | false;
     renderProps(name: string, props: Prop[]): string | false;
     renderPropName(p: Prop): string;

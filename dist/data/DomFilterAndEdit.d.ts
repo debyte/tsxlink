@@ -1,3 +1,4 @@
+import { JSDOM } from "jsdom";
 import { CopyFile } from "../types";
 import { DomTransform } from "./DomTransform";
 export declare class DomFilterAndEdit extends DomTransform {
@@ -7,7 +8,7 @@ export declare class DomFilterAndEdit extends DomTransform {
     };
     assetsPath: string;
     copy: CopyFile[];
-    static runWithCopyFiles(root: Element, assetsPath: string, dropAttributes: RegExp[], renameAttributes: [from: string, to: string][]): [xml: Element, copyFromTo: CopyFile[]];
+    static runWithCopyFiles(root: Element, assetsPath: string, dropAttributes: RegExp[], renameAttributes: [from: string, to: string][]): [xml: JSDOM, root: Element, copyFromTo: CopyFile[]];
     constructor(root: Element, assetsPath: string, dropAttributes: RegExp[], renameAttributes: [from: string, to: string][]);
     filterAttribute(_element: Element, attribute: Attr): boolean;
     renameAttribute(_element: Element, attribute: Attr): string | null;

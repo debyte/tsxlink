@@ -1,3 +1,4 @@
+import { JSDOM } from "jsdom";
 import { CopyFile } from "../types";
 import { CssFilterAndEdit } from "./CssFilterAndEdit";
 import { DomTransform } from "./DomTransform";
@@ -18,16 +19,12 @@ export class DomFilterAndEdit extends DomTransform {
     assetsPath: string,
     dropAttributes: RegExp[],
     renameAttributes: [from: string, to: string][],
-  ): [xml: Element, copyFromTo: CopyFile[]] {
+  ): [xml: JSDOM, root: Element, copyFromTo: CopyFile[]] {
     const tr = new DomFilterAndEdit(
       root, assetsPath, dropAttributes, renameAttributes
     );
     tr.element(tr.xmlRoot, tr.root);
-    const out = tr.xmlRoot.children.item(0);
-    if (out === null) {
-      throw new Error("XML root is missing after transform");
-    }
-    return [out, tr.copy];
+    return [tr.xml, tr.xmlRoot, tr.copy];
   }
 
   constructor(

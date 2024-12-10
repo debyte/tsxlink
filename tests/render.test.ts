@@ -182,6 +182,18 @@ test("Should render Solid control for class(list) property", async () => {
   expect(usesLib).toBeFalsy();
 });
 
+test("Should tolerate svg xmlns", async () => {
+  const [fd] = await renderSingleComponent(`
+    <div data-tsx="Test" class="dropdown-chevron">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M2.55806 6.29544C2.46043 6.19781 2.46043">
+        </path>
+      </svg>
+    </div>
+  `);
+  expect(fd.content).toContain(" xmlns=\"http://www.w3.org/2000/svg\"");
+});
+
 async function renderSingleComponent(
   src: string,
   opt?: Config,

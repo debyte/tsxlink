@@ -32,14 +32,11 @@ class BaseRender {
         ];
     }
     transform(component) {
-        try {
-            const [xml, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
-            this.applyChanges(xml);
-            return [xml, copy];
-        }
-        catch (e) {
-            throw new Error(`Transform error ${component.name}: ${e}`);
-        }
+        const [xml, root, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropAttrs, this.renameAttrs);
+        this.applyChanges(root);
+        const out = xml.serialize();
+        const m = out.match(/<root>(.*?)<\/root>/s);
+        return [m !== null ? m[1] : "", copy];
     }
     getDropAttributes() {
         return [
@@ -59,43 +56,38 @@ class BaseRender {
     applyProps(component) {
         this.rootVisibilityProp = null;
         for (const p of component.props) {
-            try {
-                if (p.target === "text" || p.target === "slot"
-                    || (p.target === "replace" && p.element === component.template)) {
-                    p.data = this.commentValue(p.element.textContent);
-                    p.element.textContent = this.renderToText(this.prop(p.name));
-                }
-                else if (p.target === "replace") {
-                    p.data = this.commentValue(p.element.textContent);
-                    const ph = p.element.ownerDocument.createTextNode(this.renderToText(this.prop(p.name)));
-                    p.element.replaceWith(ph);
-                }
-                else if (p.target === "visibility") {
-                    if (p.element === component.template) {
-                        this.rootVisibilityProp = this.prop(p.name);
-                    }
-                    else {
-                        const pre = p.element.ownerDocument.createElement("div");
-                        pre.setAttribute(INTERNAL_COND_ATTRIBUTE, this.prop(p.name));
-                        p.element.before(pre);
-                        const post = p.element.ownerDocument.createElement("div");
-                        post.setAttribute(INTERNAL_COND_ATTRIBUTE, "");
-                        p.element.after(post);
-                    }
-                }
-                else if (p.target === "map") {
-                    p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, this.prop(p.name));
-                }
-                else if (p.target === "class") {
-                    this.applyClassProp(p);
+            if (p.target === "text" || p.target === "slot"
+                || (p.target === "replace" && p.element === component.template)) {
+                p.data = this.commentValue(p.element.textContent);
+                p.element.textContent = this.renderToText(this.prop(p.name));
+            }
+            else if (p.target === "replace") {
+                p.data = this.commentValue(p.element.textContent);
+                const ph = p.element.ownerDocument.createTextNode(this.renderToText(this.prop(p.name)));
+                p.element.replaceWith(ph);
+            }
+            else if (p.target === "visibility") {
+                if (p.element === component.template) {
+                    this.rootVisibilityProp = this.prop(p.name);
                 }
                 else {
-                    p.data = this.commentValue(p.element.getAttribute(p.target));
-                    p.element.setAttribute(p.target, this.renderToAttribute(this.prop(p.name)));
+                    const pre = p.element.ownerDocument.createElement("div");
+                    pre.setAttribute(INTERNAL_COND_ATTRIBUTE, this.prop(p.name));
+                    p.element.before(pre);
+                    const post = p.element.ownerDocument.createElement("div");
+                    post.setAttribute(INTERNAL_COND_ATTRIBUTE, "");
+                    p.element.after(post);
                 }
             }
-            catch (e) {
-                throw new Error(`Prop error ${component.name}.${p.name}: ${e}`);
+            else if (p.target === "map") {
+                p.element.setAttribute(INTERNAL_MAP_ATTRIBUTE, this.prop(p.name));
+            }
+            else if (p.target === "class") {
+                this.applyClassProp(p);
+            }
+            else {
+                p.data = this.commentValue(p.element.getAttribute(p.target));
+                p.element.setAttribute(p.target, this.renderToAttribute(this.prop(p.name)));
             }
         }
     }
@@ -106,7 +98,7 @@ class BaseRender {
         this.applyImageImports(xml);
     }
     applyImageImports(xml) {
-        const images = xml.parentElement.querySelectorAll("img");
+        const images = xml.querySelectorAll("img");
         this.hasImages = images.length > 0;
         this.imageImports = [];
         if (this.config.importImageFiles) {
@@ -141,12 +133,7 @@ class BaseRender {
         return `#tsx{${statement}}`;
     }
     renderJsx(component, xml) {
-        try {
-            return (0, strings_1.r)(this.renderImports(component.props), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml.outerHTML)), ");", "", `export default ${component.name};`);
-        }
-        catch (e) {
-            throw new Error(`Render error ${component.name}: ${e}\n${component.template.outerHTML}`);
-        }
+        return (0, strings_1.r)(this.renderImports(component.props), this.renderProps(component.name, component.props), this.renderConsts(component.props), "", `${this.renderSignature(component.name)} (`, (0, indent_1.indentRows)(this.renderXml(xml)), ");", "", `export default ${component.name};`);
     }
     renderImports(_props) {
         return this.imageImports.length > 0 && (0, strings_1.r)(this.imageImports.map(([id, src]) => `import ${id} from "${src}";`));

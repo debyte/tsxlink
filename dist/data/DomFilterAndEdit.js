@@ -11,11 +11,7 @@ class DomFilterAndEdit extends DomTransform_1.DomTransform {
     static runWithCopyFiles(root, assetsPath, dropAttributes, renameAttributes) {
         const tr = new DomFilterAndEdit(root, assetsPath, dropAttributes, renameAttributes);
         tr.element(tr.xmlRoot, tr.root);
-        const out = tr.xmlRoot.children.item(0);
-        if (out === null) {
-            throw new Error("XML root is missing after transform");
-        }
-        return [out, tr.copy];
+        return [tr.xml, tr.xmlRoot, tr.copy];
     }
     constructor(root, assetsPath, dropAttributes, renameAttributes) {
         super(root);

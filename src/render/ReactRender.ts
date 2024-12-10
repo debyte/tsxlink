@@ -71,7 +71,7 @@ export class ReactRender extends BaseRender {
 
   applyStyleObjects(xml: Element) {
     this.styleObjects = [];
-    for (const elem of xml.parentElement!.querySelectorAll("[style]")) {
+    for (const elem of xml.querySelectorAll("[style]")) {
       const value = elem.getAttribute("style");
       if (value) {
         const i = this.styleObjects.length;
