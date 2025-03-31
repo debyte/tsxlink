@@ -17,7 +17,7 @@ export class DomTransform {
       const out = parent.ownerDocument.createElement(tag);
       parent.appendChild(out);
       for (const attr of element.attributes) {
-        const [name, value] = this.attribute(element, attr);
+        const [name, value] = this.attribute(element, tag, attr);
         if (name !== null && value !== null) {
           out.setAttribute(name, value);
         }
@@ -52,29 +52,33 @@ export class DomTransform {
     return tag;
   }
 
-  filterElement(_element: Element, _tag: string): boolean {
+  filterElement(_elem: Element, _tag: string): boolean {
     return true;
   }
 
-  attribute(element: Element, attribute: Attr): [string | null, string | null] {
-    if (!this.filterAttribute(element, attribute)) {
+  attribute(
+    element: Element,
+    tag: string,
+    attribute: Attr,
+  ): [string | null, string | null] {
+    if (!this.filterAttribute(element, tag, attribute)) {
       return [null, null];
     }
     return [
-      this.renameAttribute(element, attribute),
-      this.changeAttribute(element, attribute),
+      this.renameAttribute(element, tag, attribute),
+      this.changeAttribute(element, tag, attribute),
     ];
   }
 
-  filterAttribute(_element: Element, _attribute: Attr): boolean {
+  filterAttribute(_elem: Element, _tag: string, _attr: Attr): boolean {
     return true;
   }
 
-  renameAttribute(_element: Element, attribute: Attr): string | null {
-    return attribute.name;
+  renameAttribute(_elem: Element, _tag: string, attr: Attr): string | null {
+    return attr.name;
   }
 
-  changeAttribute(_element: Element, attribute: Attr): string | null {
-    return attribute.value;
+  changeAttribute(_elem: Element, _tag: string, attr: Attr): string | null {
+    return attr.value;
   }
 }

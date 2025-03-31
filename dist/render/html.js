@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FORBIDDEN_ATTRIBUTES = exports.FULLSTOP_ATTRIBUTES = exports.KEBAB_ATTRIBUTES = exports.CAMEL_ATTRIBUTES = void 0;
+exports.LIMITED_ATTRIBUTES = exports.FORBIDDEN_ATTRIBUTES = exports.FULLSTOP_ATTRIBUTES = exports.KEBAB_ATTRIBUTES = exports.CAMEL_ATTRIBUTES = void 0;
 exports.CAMEL_ATTRIBUTES = [
     "acceptCharset",
     "allowFullScreen",
@@ -195,3 +195,6 @@ exports.FULLSTOP_ATTRIBUTES = [
 exports.FORBIDDEN_ATTRIBUTES = [
     "focusable",
 ];
+exports.LIMITED_ATTRIBUTES = {
+    "for": ["label", "output"],
+};

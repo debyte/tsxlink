@@ -3,7 +3,7 @@ import { DomFilterAndEdit } from "../data/DomFilterAndEdit";
 import { baseName, fileToId } from "../data/paths";
 import { r, wildcardRegexp } from "../data/strings";
 import { Component, CopyFile, FileData, Prop, RuntimeConfig } from "../types";
-import { FORBIDDEN_ATTRIBUTES } from "./html";
+import { FORBIDDEN_ATTRIBUTES, LIMITED_ATTRIBUTES } from "./html";
 import { safeId } from "./ids";
 import { indentRows } from "./indent";
 
@@ -25,6 +25,7 @@ export class BaseRender {
   config: RuntimeConfig;
   dropTags: RegExp[];
   dropAttrs: RegExp[];
+  limitAttrs: { [attr: string]: string[] };
   renameAttrs: [from: string, to: string][];
 
   rootVisibilityProp: string | null = null;
@@ -36,6 +37,7 @@ export class BaseRender {
     this.config = config;
     this.dropTags = this.getDropTags();
     this.dropAttrs = this.getDropAttributes();
+    this.limitAttrs = this.getLimitAttributes();
     this.renameAttrs = this.getRenameAttributes();
   }
 
@@ -58,6 +60,7 @@ export class BaseRender {
       this.config.assetsPath,
       this.dropTags,
       this.dropAttrs,
+      this.limitAttrs,
       this.renameAttrs,
     );
     this.applyChanges(root);
@@ -76,6 +79,10 @@ export class BaseRender {
       ...FORBIDDEN_ATTRIBUTES.map(m => wildcardRegexp(m)),
       ...this.config.dropAttributes.map(m => wildcardRegexp(m)),
     ];
+  }
+
+  getLimitAttributes(): { [attr: string]: string[] } {
+    return LIMITED_ATTRIBUTES;
   }
 
   getRenameAttributes(): [from: string, to: string][] {

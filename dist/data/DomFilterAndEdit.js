@@ -4,42 +4,47 @@ exports.DomFilterAndEdit = void 0;
 const CssFilterAndEdit_1 = require("./CssFilterAndEdit");
 const DomTransform_1 = require("./DomTransform");
 const paths_1 = require("./paths");
-const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
+const URL_ELEMENTS = ["img", "script", "link"];
 const URL_ATTRIBUTES = ["src", "srcset", "href"];
 const STYLE_ATTRIBUTE = "style";
 class DomFilterAndEdit extends DomTransform_1.DomTransform {
-    static runWithCopyFiles(root, assetsPath, dropTags, dropAttributes, renameAttributes) {
-        const tr = new DomFilterAndEdit(root, assetsPath, dropTags, dropAttributes, renameAttributes);
+    static runWithCopyFiles(root, assetsPath, dropTags, dropAttr, limitAttr, renameAttr) {
+        const tr = new DomFilterAndEdit(root, assetsPath, dropTags, dropAttr, limitAttr, renameAttr);
         tr.element(tr.xmlRoot, tr.root);
         return [tr.xml, tr.xmlRoot, tr.copy];
     }
-    constructor(root, assetsPath, dropTags, dropAttributes, renameAttributes) {
+    constructor(root, assetsPath, dropTags, dropAttr, limitAttr, renameAttr) {
         super(root);
         this.dropTags = dropTags;
-        this.dropAttributes = dropAttributes;
-        this.renameAttributes = Object.fromEntries(renameAttributes);
+        this.dropAttributes = dropAttr;
+        this.limitAttributes = limitAttr;
+        this.renameAttributes = Object.fromEntries(renameAttr);
         this.assetsPath = assetsPath;
         this.copy = [];
     }
-    filterElement(_element, tagName) {
-        return this.dropTags.every(re => tagName.match(re) === null);
+    filterElement(_elem, tag) {
+        return this.dropTags.every(re => tag.match(re) === null);
     }
-    filterAttribute(_element, attribute) {
-        return this.dropAttributes.every(re => attribute.name.match(re) === null);
-    }
-    renameAttribute(_element, attribute) {
-        const to = this.renameAttributes[attribute.name];
-        return to || attribute.name;
-    }
-    changeAttribute(element, attribute) {
-        if (URL_ELEMENTS.includes(element.tagName)
-            && URL_ATTRIBUTES.includes(attribute.name)) {
-            return this.fixUrl(attribute.name, attribute.value);
+    filterAttribute(_elem, tag, attr) {
+        if (this.dropAttributes.some(re => attr.name.match(re) !== null)) {
+            return false;
         }
-        if (attribute.name === STYLE_ATTRIBUTE) {
-            return this.fixStyle(attribute.value);
+        const limitTags = this.limitAttributes[attr.name];
+        return limitTags === undefined || limitTags.includes(tag);
+    }
+    renameAttribute(_elem, _tag, attr) {
+        const to = this.renameAttributes[attr.name];
+        return to || attr.name;
+    }
+    changeAttribute(_elem, tag, attr) {
+        if (URL_ELEMENTS.includes(tag)
+            && URL_ATTRIBUTES.includes(attr.name)) {
+            return this.fixUrl(attr.name, attr.value);
         }
-        return attribute.value;
+        if (attr.name === STYLE_ATTRIBUTE) {
+            return this.fixStyle(attr.value);
+        }
+        return attr.value;
     }
     fixUrl(attr, value) {
         if (attr === "srcset" && value !== null) {

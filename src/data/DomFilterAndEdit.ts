@@ -4,13 +4,14 @@ import { CssFilterAndEdit } from "./CssFilterAndEdit";
 import { DomTransform } from "./DomTransform";
 import { baseName, filePath, srcSetToFilePaths, urlToFilePath } from "./paths";
 
-const URL_ELEMENTS = ["IMG", "SCRIPT", "LINK"];
+const URL_ELEMENTS = ["img", "script", "link"];
 const URL_ATTRIBUTES = ["src", "srcset", "href"];
 const STYLE_ATTRIBUTE = "style";
 
 export class DomFilterAndEdit extends DomTransform {
   dropTags: RegExp[];
   dropAttributes: RegExp[];
+  limitAttributes: { [name: string]: string[] | undefined };
   renameAttributes: { [name: string]: string | undefined };
   assetsPath: string;
   copy: CopyFile[];
@@ -19,11 +20,12 @@ export class DomFilterAndEdit extends DomTransform {
     root: Element,
     assetsPath: string,
     dropTags: RegExp[],
-    dropAttributes: RegExp[],
-    renameAttributes: [from: string, to: string][],
+    dropAttr: RegExp[],
+    limitAttr: { [attr: string]: string[] },
+    renameAttr: [from: string, to: string][],
   ): [xml: JSDOM, root: Element, copyFromTo: CopyFile[]] {
     const tr = new DomFilterAndEdit(
-      root, assetsPath, dropTags, dropAttributes, renameAttributes
+      root, assetsPath, dropTags, dropAttr, limitAttr, renameAttr
     );
     tr.element(tr.xmlRoot, tr.root);
     return [tr.xml, tr.xmlRoot, tr.copy];
@@ -33,41 +35,47 @@ export class DomFilterAndEdit extends DomTransform {
     root: Element,
     assetsPath: string,
     dropTags: RegExp[],
-    dropAttributes: RegExp[],
-    renameAttributes: [from: string, to: string][],
+    dropAttr: RegExp[],
+    limitAttr: { [attr: string]: string[] },
+    renameAttr: [from: string, to: string][],
   ) {
     super(root);
     this.dropTags = dropTags;
-    this.dropAttributes = dropAttributes;
-    this.renameAttributes = Object.fromEntries(renameAttributes);
+    this.dropAttributes = dropAttr;
+    this.limitAttributes = limitAttr;
+    this.renameAttributes = Object.fromEntries(renameAttr);
     this.assetsPath = assetsPath;
     this.copy = [];
   }
 
-  filterElement(_element: Element, tagName: string): boolean {
-    return this.dropTags.every(re => tagName.match(re) === null);
+  filterElement(_elem: Element, tag: string): boolean {
+    return this.dropTags.every(re => tag.match(re) === null);
   }
 
-  filterAttribute(_element: Element, attribute: Attr): boolean {
-    return this.dropAttributes.every(re => attribute.name.match(re) === null);
+  filterAttribute(_elem: Element, tag: string, attr: Attr): boolean {
+    if (this.dropAttributes.some(re => attr.name.match(re) !== null)) {
+      return false;
+    }
+    const limitTags = this.limitAttributes[attr.name];
+    return limitTags === undefined || limitTags.includes(tag);
   }
 
-  renameAttribute(_element: Element, attribute: Attr): string | null {
-    const to = this.renameAttributes[attribute.name];
-    return to || attribute.name;
+  renameAttribute(_elem: Element, _tag: string, attr: Attr): string | null {
+    const to = this.renameAttributes[attr.name];
+    return to || attr.name;
   }
 
-  changeAttribute(element: Element, attribute: Attr): string | null {
+  changeAttribute(_elem: Element, tag: string, attr: Attr): string | null {
     if (
-      URL_ELEMENTS.includes(element.tagName)
-      && URL_ATTRIBUTES.includes(attribute.name)
+      URL_ELEMENTS.includes(tag)
+      && URL_ATTRIBUTES.includes(attr.name)
     ) {
-      return this.fixUrl(attribute.name, attribute.value);
+      return this.fixUrl(attr.name, attr.value);
     }
-    if (attribute.name === STYLE_ATTRIBUTE) {
-      return this.fixStyle(attribute.value);
+    if (attr.name === STYLE_ATTRIBUTE) {
+      return this.fixStyle(attr.value);
     }
-    return attribute.value;
+    return attr.value;
   }
 
   fixUrl(attr: string, value: string): string {

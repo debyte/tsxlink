@@ -21,6 +21,7 @@ class BaseRender {
         this.config = config;
         this.dropTags = this.getDropTags();
         this.dropAttrs = this.getDropAttributes();
+        this.limitAttrs = this.getLimitAttributes();
         this.renameAttrs = this.getRenameAttributes();
     }
     async render(component) {
@@ -34,7 +35,7 @@ class BaseRender {
         ];
     }
     transform(component) {
-        const [xml, root, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropTags, this.dropAttrs, this.renameAttrs);
+        const [xml, root, copy] = DomFilterAndEdit_1.DomFilterAndEdit.runWithCopyFiles(component.template, this.config.assetsPath, this.dropTags, this.dropAttrs, this.limitAttrs, this.renameAttrs);
         this.applyChanges(root);
         const out = xml.serialize();
         const m = out.match(/<root>(.*?)<\/root>/s);
@@ -49,6 +50,9 @@ class BaseRender {
             ...html_1.FORBIDDEN_ATTRIBUTES.map(m => (0, strings_1.wildcardRegexp)(m)),
             ...this.config.dropAttributes.map(m => (0, strings_1.wildcardRegexp)(m)),
         ];
+    }
+    getLimitAttributes() {
+        return html_1.LIMITED_ATTRIBUTES;
     }
     getRenameAttributes() {
         return [];

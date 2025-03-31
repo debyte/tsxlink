@@ -196,3 +196,7 @@ export const FULLSTOP_ATTRIBUTES = [
 export const FORBIDDEN_ATTRIBUTES = [
   "focusable",
 ];
+
+export const LIMITED_ATTRIBUTES = {
+  "for": ["label", "output"],
+};

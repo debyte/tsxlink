@@ -5,6 +5,9 @@ export declare class BaseRender {
     config: RuntimeConfig;
     dropTags: RegExp[];
     dropAttrs: RegExp[];
+    limitAttrs: {
+        [attr: string]: string[];
+    };
     renameAttrs: [from: string, to: string][];
     rootVisibilityProp: string | null;
     hasImages: boolean;
@@ -14,6 +17,9 @@ export declare class BaseRender {
     transform(component: Component): [xml: string, copyFromTo: CopyFile[]];
     getDropTags(): RegExp[];
     getDropAttributes(): RegExp[];
+    getLimitAttributes(): {
+        [attr: string]: string[];
+    };
     getRenameAttributes(): [from: string, to: string][];
     sanitizeNames(component: Component): void;
     applyProps(component: Component): void;
