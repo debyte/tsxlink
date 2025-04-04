@@ -29,7 +29,6 @@ const INIT_CHOICES: InitChoice[] = [
     prompt: "The type of source HTML",
     options: [
       ["custom", "Custom HTML relying on data-tsx* attributes.", true],
-      ["webflow/export", "HTML exported from a Webflow.com site."],
     ],
   },
   {

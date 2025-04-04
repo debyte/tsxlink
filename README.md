@@ -12,15 +12,16 @@ The link is based on the concept of nested components and their properties.
 Reusable components need to be recognized and marked in the design so that
 they can be instantiated with actual data and events in the React environment.
 The design components are replicated as TSX files, which each define a
-corresponding React.FunctionComponent (FC). The React components are dumb, or
-in other words, presentation components. Programmers should not edit the
-automatically built TSX files but wrap them into other components that take
-care of the necessary logic and state.
+corresponding `React.FunctionComponent` (FC) or a `solid-js.Component`. The
+defined components are dumb, or in other words, presentation components.
+Programmers should not edit the automatically built TSX files but wrap them
+into other components that take care of the necessary logic and state.
 
-The design systems may not enforce a compatible and openly available support
-for the concept of components. When necessary, additional custom tags are
-inserted to the design elements in order to convey the necessary information
-to the HTML output of the design system.
+The available design tools may support the concept of components. Currently,
+tsxlink does not support any specific tool interfaces. Additional custom
+attributes, i.e. `data-tsx` and `data-tsx-prop`, must be inserted to the
+design elements in order to convey the necessary component structure to the
+HTML output of the design tool. For details, see the attributes section below.
 
 ## Usage
 
@@ -36,11 +37,16 @@ configuration into a `tsxlink.config.(mjs|cjs|js|json)` file to the project
 root. Few configuration options exists that are not covered in the interactive
 `init` prompts. All of the options are reviewed next.
 
+* `targetType`
+
+  The type of TSX files must be selected according to the programming project.
+  * `react` - [React](https://react.dev/)
+  * `solid` - [SolidJS](https://www.solidjs.com/)
+
 * `sourceType` (default: custom)
   
   The type of source HTML affects how the documents are analyzed.
   * `custom` - Custom HTML relying on `data-tsx*` attributes.
-  * `webflow/export` - HTML exported from a Webflow.com site.
 
 * `source`
 
@@ -63,11 +69,6 @@ root. Few configuration options exists that are not covered in the interactive
 
   Selects to export CSS from possible `<style>` elements in any HTML files.
   Yes by default, and the considerations for the `copyCssFiles` apply.
-
-* `useNextJsImages` (default: No)
-
-  Replaces `<img>` elements with Next.js `<Image>` components. Next.js helps
-  to automate image optimization for web delivery.
 
 * `componentDir` (default: ./src/components/tsxlink)
 
@@ -128,7 +129,18 @@ Additional options that are not covered in the interactive prompts:
   An array of attribute name patterns that are dropped from the DOM and do not
   appear in the components. Wildcards `?` and `*` can be used.
 
-## Custom tags
+* `importImageFiles` (default: No)
+
+  Creates `import` declarations for image assets used in the HTML design. This
+  allows the build system to process images into loaded packages.
+
+* `useNextJsImages` (default: No)
+
+  Replaces `<img>` elements with Next.js `<Image>` components. Next.js helps
+  to automate image optimization for web delivery. Requires `targetType`
+  configured as `react`.
+
+## Custom attributes
 
 * **`data-tsx="ComponentName"`**
 
